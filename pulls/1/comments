@@ -1,0 +1,38 @@
+## Review Feedback — Please fix the following:
+
+### 1. 🔴 `install.sh` — Security issue with hardcoded `/tmp` path (lines 77-79)
+
+The current code uses a hardcoded `/tmp/claude_updated.md` path which is a race condition and security risk on multi-user systems.
+
+**Current:**
+```bash
+' "CLAUDE.md" > /tmp/claude_updated.md
+mv /tmp/claude_updated.md "CLAUDE.md"
+```
+
+**Fix:** Use `mktemp` instead:
+```bash
+tmpfile="$(mktemp)"
+# ... awk command output goes to "$tmpfile" ...
+mv "$tmpfile" "CLAUDE.md"
+```
+
+### 2. 🟡 `templates/STATE.md` — Done section uses `- [ ]` instead of `- [x]`
+
+The "Done" section should show checked checkboxes `- [x]` as examples since it represents **completed** items. `- [ ]` is appropriate for "Planned" but not for "Done".
+
+**Current:**
+```markdown
+## Done
+- [ ] <!-- completed item -->
+```
+
+**Fix:**
+```markdown
+## Done
+- [x] <!-- completed item -->
+```
+
+### 3. 🟡 `commands/do.md` — Add explicit skip note for Small scope
+
+The workflow jumps from Step 1 (scope detection) to Step 3 (PLAN) for Small scope, but this isn't stated explicitly. Please add a note like: _"For Small scope, skip directly to Step 3._" at the end of Step 1 or beginning of Step 2.
