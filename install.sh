@@ -34,6 +34,14 @@ install_global() {
   cp "$SCRIPT_DIR/templates/STATE.md"            "$templates_dest/STATE.md"
   cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
 
+  local meta_prompts_dest="$HOME/.claude/crafter/meta-prompts"
+  mkdir -p "$meta_prompts_dest"
+  cp "$SCRIPT_DIR/meta-prompts/planner.md"   "$meta_prompts_dest/planner.md"
+  cp "$SCRIPT_DIR/meta-prompts/implement.md" "$meta_prompts_dest/implement.md"
+  cp "$SCRIPT_DIR/meta-prompts/verify.md"    "$meta_prompts_dest/verify.md"
+  cp "$SCRIPT_DIR/meta-prompts/review.md"    "$meta_prompts_dest/review.md"
+  cp "$SCRIPT_DIR/meta-prompts/analyze.md"   "$meta_prompts_dest/analyze.md"
+
   echo ""
   echo "✓ Crafter installed globally."
   echo ""
