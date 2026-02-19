@@ -5,7 +5,9 @@ description: "Perform a change using Crafter workflow (adaptive: small/medium/la
 
 Read and follow all rules from `~/.claude/crafter/rules.md`.
 
-Then read the project context files (if they exist):
+You are the **orchestrator**. Your job is to manage the workflow, communicate with the user, and delegate work to subagents. You do not analyze code, implement changes, or review diffs yourself — you pass context to the right subagent and relay results back to the user.
+
+Read the project context files for basic orientation (if they exist):
 - `.planning/PROJECT.md`
 - `.planning/ARCHITECTURE.md`
 - `.planning/STATE.md`
@@ -16,7 +18,7 @@ The user's request is: $ARGUMENTS
 
 ## Step 1 — Auto-detect scope
 
-Analyze the request and classify it:
+Based on the project context files and the request, classify the scope:
 
 - **Small** — touches 1–3 files, intent is clear, change is isolated
 - **Medium** — touches multiple files, intent is clear, change is cross-cutting
@@ -26,48 +28,58 @@ For **Small** scope, skip directly to Step 3.
 
 ## Step 2 — DISCUSS / RESEARCH (Large scope only)
 
-If scope is **Large**, pause here. Ask the user clarifying questions before planning:
+If scope is **Large**, pause and ask the user clarifying questions:
 - What is the desired outcome?
 - Are there constraints or preferences?
 - Are there approaches to explore?
 
-Do not proceed until you have enough information to write a solid plan.
+For complex research tasks, delegate to the **Analyzer** subagent (see `~/.claude/crafter/meta-prompts/analyze.md`) with the relevant source files as context. Present the Analyzer's findings to the user to inform the discussion.
+
+Do not proceed to planning until you have enough information.
 
 ## Step 3 — PLAN
 
-Write a plan in plain, conversational language. Include:
+Delegate planning to the **Planner** subagent:
 
-- **What** you will do and **why**
-- **Files** that will be affected
-- **Alternatives considered** (for Medium and Large scope)
-- **Verification criteria** — how you and the user will know the change is correct
+1. Spawn a subagent using `~/.claude/crafter/meta-prompts/planner.md` as its system prompt.
+2. Provide it with: the user's request, relevant `.planning/` file excerpts, and the relevant source files.
+3. Receive the plan from the subagent.
+4. Present the plan to the user clearly.
+5. **Wait for explicit user approval before proceeding.**
 
-**Wait for explicit user approval before proceeding.**
-
-If the user has concerns or requests changes to the plan, revise it and wait again.
+If the user requests changes, send the revised request back to the Planner and repeat until approved.
 
 ## Step 4 — EXECUTE
 
-Implement exactly what was approved in the plan.
+Delegate implementation to the **Implementer** subagent:
 
-- Never auto-commit.
-- Never change architecture without a discussion.
-- If you discover something unexpected mid-execution that would change the plan, stop and inform the user.
+1. Spawn a subagent using `~/.claude/crafter/meta-prompts/implement.md` as its system prompt.
+2. Provide it with: the approved plan, relevant `.planning/` file excerpts, and the relevant source files.
+3. Receive the implementation summary from the subagent.
+4. If the subagent reports a blocker, stop and discuss it with the user before continuing.
 
-For **Medium** and **Large** scope: execute one step at a time and pause for verification and review after each step.
+For **Medium** and **Large** scope: execute one step at a time and run Steps 5–6 after each step.
 
 ## Step 5 — VERIFY
 
-Check each verification criterion defined in the plan:
+Delegate verification to the **Verifier** subagent:
 
-- Run relevant tests if applicable.
-- Report clearly what passed and what (if anything) did not.
+1. Spawn a subagent using `~/.claude/crafter/meta-prompts/verify.md` as its system prompt.
+2. Provide it with: the plan's verification criteria, the list of changed files, and relevant test files.
+3. Receive the verification report.
+4. Present the report to the user clearly.
+
+If the Verifier reports failures, discuss them with the user and decide whether to re-delegate to the Implementer or adjust the plan.
 
 ## Step 6 — REVIEW
 
-Show a diff of all changes made. Highlight any deviation from the approved plan, even minor ones.
+Delegate code review to the **Reviewer** subagent:
 
-Wait for the user's assessment.
+1. Spawn a subagent using `~/.claude/crafter/meta-prompts/review.md` as its system prompt.
+2. Provide it with: the approved plan, the changed files, and `.planning/ARCHITECTURE.md` if available.
+3. Receive the review report.
+4. Present the report to the user clearly.
+5. Wait for the user's assessment before moving on.
 
 ## Step 7 — COMMIT
 

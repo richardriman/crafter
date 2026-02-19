@@ -83,6 +83,48 @@ When scope is ambiguous, ask the user rather than guessing.
 
 ---
 
+## Subagent Delegation
+
+Crafter commands run as **orchestrators**: the main context window manages the workflow and communicates with the user, while specialized subagents do the actual work in fresh context windows.
+
+### Why this matters
+
+Running planning, implementation, verification, and review all in one context window leads to context rot, compaction, and hallucinations as the conversation grows. Each subagent starts clean, with only the context it needs for its specific role.
+
+### How it works
+
+Use the Task tool or `claude --print` to spawn subagents. Each subagent:
+- Receives the appropriate meta-prompt from `~/.claude/crafter/meta-prompts/` as its system prompt
+- Gets only the context it needs (relevant `.planning/` excerpts + task-specific files)
+- Returns a structured result to the orchestrator
+- Has no memory of previous steps or other subagents
+
+The orchestrator never analyzes code, never implements, and never reviews. It only holds: the current plan, the status of each step, and result summaries from subagents.
+
+### Context budget per subagent
+
+Pass only what the subagent's role requires:
+
+| Subagent | Receives |
+|---|---|
+| Planner | User request + relevant `.planning/` excerpts + relevant source files |
+| Implementer | Approved plan + relevant `.planning/` excerpts + relevant source files |
+| Verifier | Verification criteria + changed files + relevant test files |
+| Reviewer | Approved plan + changed files + `.planning/ARCHITECTURE.md` (if available) |
+| Analyzer | Codebase structure files + package manifests + existing docs + `.planning/` files |
+
+### Role reference
+
+| Role | Meta-prompt | When used |
+|---|---|---|
+| **Planner** | `meta-prompts/planner.md` | PLAN step in `/crafter:do` |
+| **Implementer** | `meta-prompts/implement.md` | EXECUTE step in `/crafter:do` and fix step in `/crafter:debug` |
+| **Verifier** | `meta-prompts/verify.md` | VERIFY step in `/crafter:do` and `/crafter:debug` |
+| **Reviewer** | `meta-prompts/review.md` | REVIEW step in `/crafter:do` |
+| **Analyzer** | `meta-prompts/analyze.md` | `/crafter:map-project`, research phase in Large scope tasks, hypothesis analysis in `/crafter:debug` |
+
+---
+
 ## BMAD Party Mode Integration
 
 If the user's request involves any of the following, consider suggesting a BMAD party mode session first:
