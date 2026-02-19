@@ -1,0 +1,2 @@
+# crafter
+AI development method
