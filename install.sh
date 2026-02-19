@@ -14,12 +14,16 @@ Choose one. Then open Claude Code and run /crafter:map-project to set up project
 EOF
 }
 
-install_global() {
-  local commands_dest="$HOME/.claude/commands/crafter"
-  local rules_dest="$HOME/.claude/crafter"
-  local templates_dest="$HOME/.claude/crafter/templates"
+install_to() {
+  local base="$1"
+  local label="$2"
 
-  echo "Installing Crafter globally..."
+  local commands_dest="$base/commands/crafter"
+  local rules_dest="$base/crafter"
+  local templates_dest="$base/crafter/templates"
+  local meta_prompts_dest="$base/crafter/meta-prompts"
+
+  echo "Installing Crafter $label..."
 
   mkdir -p "$commands_dest"
   cp "$SCRIPT_DIR/commands/do.md"          "$commands_dest/do.md"
@@ -36,14 +40,16 @@ install_global() {
   cp "$SCRIPT_DIR/templates/STATE.md"            "$templates_dest/STATE.md"
   cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
 
-  local meta_prompts_dest="$HOME/.claude/crafter/meta-prompts"
   mkdir -p "$meta_prompts_dest"
   cp "$SCRIPT_DIR/meta-prompts/planner.md"   "$meta_prompts_dest/planner.md"
   cp "$SCRIPT_DIR/meta-prompts/implement.md" "$meta_prompts_dest/implement.md"
   cp "$SCRIPT_DIR/meta-prompts/verify.md"    "$meta_prompts_dest/verify.md"
   cp "$SCRIPT_DIR/meta-prompts/review.md"    "$meta_prompts_dest/review.md"
   cp "$SCRIPT_DIR/meta-prompts/analyze.md"   "$meta_prompts_dest/analyze.md"
+}
 
+install_global() {
+  install_to "$HOME/.claude" "globally"
   echo ""
   echo "✓ Crafter installed globally."
   echo ""
@@ -52,35 +58,7 @@ install_global() {
 }
 
 install_local() {
-  local commands_dest=".claude/commands/crafter"
-  local rules_dest=".claude/crafter"
-  local templates_dest=".claude/crafter/templates"
-
-  echo "Installing Crafter locally in $(pwd)..."
-
-  mkdir -p "$commands_dest"
-  cp "$SCRIPT_DIR/commands/do.md"          "$commands_dest/do.md"
-  cp "$SCRIPT_DIR/commands/debug.md"       "$commands_dest/debug.md"
-  cp "$SCRIPT_DIR/commands/status.md"      "$commands_dest/status.md"
-  cp "$SCRIPT_DIR/commands/map-project.md" "$commands_dest/map-project.md"
-
-  mkdir -p "$rules_dest"
-  cp "$SCRIPT_DIR/rules/rules.md" "$rules_dest/rules.md"
-
-  mkdir -p "$templates_dest"
-  cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
-  cp "$SCRIPT_DIR/templates/ARCHITECTURE.md"     "$templates_dest/ARCHITECTURE.md"
-  cp "$SCRIPT_DIR/templates/STATE.md"            "$templates_dest/STATE.md"
-  cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
-
-  local meta_prompts_dest=".claude/crafter/meta-prompts"
-  mkdir -p "$meta_prompts_dest"
-  cp "$SCRIPT_DIR/meta-prompts/planner.md"   "$meta_prompts_dest/planner.md"
-  cp "$SCRIPT_DIR/meta-prompts/implement.md" "$meta_prompts_dest/implement.md"
-  cp "$SCRIPT_DIR/meta-prompts/verify.md"    "$meta_prompts_dest/verify.md"
-  cp "$SCRIPT_DIR/meta-prompts/review.md"    "$meta_prompts_dest/review.md"
-  cp "$SCRIPT_DIR/meta-prompts/analyze.md"   "$meta_prompts_dest/analyze.md"
-
+  install_to "$(pwd)/.claude" "locally in $(pwd)"
   echo ""
   echo "✓ Crafter installed locally in this project."
   echo ""
