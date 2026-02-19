@@ -12,8 +12,8 @@
 
 ## Done
 
-- [ ] <!-- completed item -->
-- [ ] <!-- completed item -->
+- [x] <!-- completed item -->
+- [x] <!-- completed item -->
 
 ## Planned
 

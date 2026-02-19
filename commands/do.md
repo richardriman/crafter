@@ -22,6 +22,8 @@ Analyze the request and classify it:
 - **Medium** — touches multiple files, intent is clear, change is cross-cutting
 - **Large** — vague or ambiguous request, architectural impact, many files, or unfamiliar territory
 
+For **Small** scope, skip directly to Step 3.
+
 ## Step 2 — DISCUSS / RESEARCH (Large scope only)
 
 If scope is **Large**, pause here. Ask the user clarifying questions before planning:

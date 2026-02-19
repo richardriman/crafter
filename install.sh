@@ -70,13 +70,15 @@ install_local() {
     echo "  ✓ Created CLAUDE.md with Crafter snippet"
   elif grep -q "<!-- crafter:start -->" "CLAUDE.md"; then
     # Marker exists — replace only the crafter section
+    local tmpfile
+    tmpfile="$(mktemp)"
     awk -v snippet="$snippet_content" '
       /<!-- crafter:start -->/ { print snippet; skip=1; next }
       /<!-- crafter:end -->/   { skip=0; next }
       !skip                    { print }
-    ' "CLAUDE.md" > /tmp/claude_updated.md
+    ' "CLAUDE.md" > "$tmpfile"
 
-    mv /tmp/claude_updated.md "CLAUDE.md"
+    mv "$tmpfile" "CLAUDE.md"
     echo "  ✓ Updated Crafter section in existing CLAUDE.md"
   else
     # CLAUDE.md exists but no marker — append the snippet
