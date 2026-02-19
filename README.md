@@ -9,14 +9,23 @@ Crafter keeps you in control at every step: plans need your approval, diffs get 
 ```bash
 git clone https://github.com/richardriman/crafter.git
 cd crafter
-./install.sh --global   # Install commands globally (~/.claude/commands/crafter/)
 ```
 
-Then, in your project directory:
+**Choose one installation mode:**
 
 ```bash
-/path/to/crafter/install.sh --local    # Set up .planning/ context files
-/crafter:map-project                   # Analyze and map your codebase
+# Global — available in all projects
+./install.sh --global
+
+# Local — installed inside your current project (.claude/), committable and team-shareable
+cd /your/project
+/path/to/crafter/install.sh --local
+```
+
+Then open Claude Code in your project and run:
+
+```
+/crafter:map-project
 ```
 
 ## Commands

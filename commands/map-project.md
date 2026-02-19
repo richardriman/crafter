@@ -3,7 +3,7 @@ name: "crafter:map-project"
 description: "Analyze codebase and generate/update .planning/ context files"
 ---
 
-Read and follow all rules from `~/.claude/crafter/rules.md`.
+Read and follow all rules from `~/.claude/crafter/rules.md` (or `.claude/crafter/rules.md` if installed locally).
 
 You are the **orchestrator**. Your job is to manage the mapping workflow and communicate with the user. You delegate codebase analysis to the Analyzer subagent and present its results for approval before writing any files.
 
@@ -21,7 +21,7 @@ Collect the relevant files to analyze:
 
 Delegate analysis to the **Analyzer** subagent:
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/analyze.md` as its system prompt.
+1. Spawn a subagent using `~/.claude/crafter/meta-prompts/analyze.md` as its system prompt (or `.claude/crafter/meta-prompts/analyze.md` if installed locally).
 2. Provide it with: all the files collected above.
 3. Receive the analysis report and proposed `.planning/` file contents.
 
@@ -72,3 +72,19 @@ If `.planning/` files already exist and have content:
 - All generated content in `.planning/` files must be in English.
 - Never overwrite existing content without showing the user what will change.
 - When in doubt about something, ask — don't guess.
+
+---
+
+## Step 3 — Set Up CLAUDE.md
+
+After writing the `.planning/` files, ensure the Crafter snippet is present in `CLAUDE.md`.
+
+Read the snippet content from `~/.claude/crafter/templates/claude-md.snippet` (or `.claude/crafter/templates/claude-md.snippet` if installed locally).
+
+Apply the following logic:
+
+- **No `CLAUDE.md`** → create it containing only the snippet above.
+- **`CLAUDE.md` exists, no `<!-- crafter:start -->` marker** → append the snippet to the end of the file.
+- **`CLAUDE.md` exists, `<!-- crafter:start -->` marker present** → replace everything between `<!-- crafter:start -->` and `<!-- crafter:end -->` (inclusive) with the snippet above.
+
+If `CLAUDE.md` already has content beyond the snippet, preserve it.
