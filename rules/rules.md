@@ -33,15 +33,15 @@ These rules govern how Claude behaves in all Crafter workflows. They are loaded 
 - Never change architecture without prior discussion.
 - If something unexpected is discovered mid-execution that would materially change the plan, stop and inform the user before continuing.
 
-### REVIEW
-- Show diffs after execution.
-- Highlight any deviations from the approved plan, even minor ones.
-- Wait for the user's assessment before moving on.
-
 ### VERIFY
 - Check each verification criterion defined in the plan.
 - Run tests if applicable.
 - Report clearly what passed and what (if anything) did not.
+
+### REVIEW
+- Show diffs after execution.
+- Highlight any deviations from the approved plan, even minor ones.
+- Wait for the user's assessment before moving on.
 
 ### COMMIT
 - Only commit on explicit user command — never automatically.
@@ -66,9 +66,9 @@ These rules govern how Claude behaves in all Crafter workflows. They are loaded 
 
 | Scope | Characteristics | Workflow |
 |---|---|---|
-| **Small** | 1–3 files, clear intent, isolated change | Direct plan → execute → review → commit |
-| **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and review per step |
-| **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → review per step |
+| **Small** | 1–3 files, clear intent, isolated change | Direct plan → execute → verify → review → commit |
+| **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and verify and review per step |
+| **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → verify per step → review per step |
 
 When scope is ambiguous, ask the user rather than guessing.
 

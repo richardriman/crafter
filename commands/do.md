@@ -54,20 +54,20 @@ Implement exactly what was approved in the plan.
 - Never change architecture without a discussion.
 - If you discover something unexpected mid-execution that would change the plan, stop and inform the user.
 
-For **Medium** and **Large** scope: execute one step at a time and pause for review after each step.
+For **Medium** and **Large** scope: execute one step at a time and pause for verification and review after each step.
 
-## Step 5 — REVIEW
-
-Show a diff of all changes made. Highlight any deviation from the approved plan, even minor ones.
-
-Wait for the user's assessment.
-
-## Step 6 — VERIFY
+## Step 5 — VERIFY
 
 Check each verification criterion defined in the plan:
 
 - Run relevant tests if applicable.
 - Report clearly what passed and what (if anything) did not.
+
+## Step 6 — REVIEW
+
+Show a diff of all changes made. Highlight any deviation from the approved plan, even minor ones.
+
+Wait for the user's assessment.
 
 ## Step 7 — COMMIT
 
