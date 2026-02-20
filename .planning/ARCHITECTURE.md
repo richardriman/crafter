@@ -62,6 +62,10 @@ Commands act as orchestrators: they manage workflow and user communication but n
 
 Each subagent receives its role definition from `meta-prompts/` and a dynamically assembled `$CONTEXT` block with relevant project files.
 
+### Model Selection
+
+Each subagent role has an assigned model tier (opus / sonnet / haiku) based on task complexity. Configuration lives in `rules/delegation.md` alongside other delegation rules. The Analyzer role is adaptive — it uses sonnet by default but upgrades to opus for Large scope tasks.
+
 ### Subagent Context Budget
 
 | Subagent | Receives |
