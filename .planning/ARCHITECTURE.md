@@ -23,11 +23,13 @@ crafter/
 │   ├── do-workflow.md           # Standard Change workflow rules
 │   ├── debug-workflow.md        # Debug workflow rules
 │   ├── delegation.md            # Subagent spawning instruction
-│   └── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
+│   ├── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
+│   └── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
 ├── templates/                   # Templates for .planning/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md
 │   ├── STATE.md                 # Template for target project's STATE.md
+│   ├── TASK.md                  # Template for task files (.planning/tasks/)
 │   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
 ├── install.sh                   # Installer (--global or --local)
 └── README.md                    # Project overview
@@ -43,8 +45,10 @@ crafter/
 | Debug workflow rules | `rules/debug-workflow.md` |
 | Subagent delegation rules | `rules/delegation.md` |
 | Shared post-change steps | `rules/post-change.md` |
+| Task file lifecycle rules | `rules/task-lifecycle.md` |
 | Subagent system prompts | `meta-prompts/*.md` |
 | Planning file templates | `templates/*.md` |
+| Task file template | `templates/TASK.md` |
 | CLAUDE.md injection snippet | `templates/claude-md.snippet` |
 | Installer | `install.sh` |
 | Design philosophy | `docs/philosophy.md` |
@@ -85,6 +89,10 @@ Every significant action requires explicit user approval: plan approval before e
 ### Adaptive Scope Detection
 
 `/crafter:do` auto-classifies tasks as Small (1-3 files, direct flow), Medium (multiple files, step-by-step), or Large (research first, then step-by-step).
+
+### Task Lifecycle
+
+Task files in `.planning/tasks/` are created and managed by the orchestrator during workflows. Each task file serves dual purposes: active resume state while work is in progress (allowing sessions to resume after interruption) and a permanent decision record once completed (preserving the plan, outcome, and rationale for future reference).
 
 ### Template-Driven .planning/ Initialization
 

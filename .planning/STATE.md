@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-20 | Added session workflow guidance (P2a) and task state persistence with decision records (P2b) | fdc881c |
 | 2026-02-20 | Added review-fix loop to do-workflow (Step 6 with severity-based fix delegation, 3-iteration cap) | 4ba6c1d |
 | 2026-02-20 | Split rules.md into per-concern fragments, optimized context window loading | 143ec46 |
 | 2026-02-20 | Added Ideas section to STATE.md and template | ab13162 |
@@ -30,11 +31,11 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [x] Update STATE.md after completing and approving each step
 - [x] Update documentation before committing
 - [x] **P1** Add review-fix loop to do-workflow (review findings → Implementer fix → Verify → Review → repeat or proceed)
+- [x] **P2** Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter)
+- [x] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<topic>.md` tracked in git; active task state (resume) during work, permanent decision record after completion
 
 ## Planned
 
-- [ ] **P2** Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter)
-- [ ] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<topic>.md` tracked in git; active task state (resume) during work, permanent decision record after completion
 - [ ] **P3** Detect new Crafter releases and notify the user in Claude Code
 
 ## Ideas
