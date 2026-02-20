@@ -28,3 +28,13 @@ After a successful commit, update `.planning/STATE.md`:
 - Remove or update any relevant **Known Issues** entries
 
 Show the user what was updated.
+
+## Complete Task File
+
+If a task file exists for the current workflow (in `.planning/tasks/`), complete it per `~/.claude/crafter/rules/task-lifecycle.md`.
+
+## Session Wrap-Up
+
+After completing the task, suggest that the user can start a fresh session for the next piece of work:
+
+> If there's more to do, you might want to run `/clear` and then start your next task with `/crafter:do` or `/crafter:debug` to keep the context clean.

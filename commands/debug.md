@@ -7,6 +7,7 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/core.md`
 - `~/.claude/crafter/rules/debug-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`
+- `~/.claude/crafter/rules/task-lifecycle.md`
 
 You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, and verification to subagents with fresh context.
 
@@ -20,6 +21,13 @@ The problem to debug: $ARGUMENTS
 
 ---
 
+## Step 0 — Resume Detection
+
+Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
+
+If resuming an active task, skip ahead to the appropriate step based on the task file contents.
+If not resuming, continue to Step 1.
+
 ## Step 1 — Collect Symptoms
 
 Before jumping to conclusions, gather a complete picture through dialog with the user:
@@ -31,6 +39,8 @@ Before jumping to conclusions, gather a complete picture through dialog with the
 - When did it start? Was anything changed recently?
 
 Do not proceed until you have a clear symptom picture.
+
+After collecting symptoms, create the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Step 2 — Formulate a Hypothesis
 
@@ -61,6 +71,8 @@ Present the fix clearly to the user:
 
 **Wait for explicit user approval before making any changes.**
 
+After fix approval, update the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+
 ## Step 5 — Apply Fix
 
 Delegate the fix to the **Implementer** subagent:
@@ -78,6 +90,8 @@ Delegate verification to the **Verifier** subagent:
 3. Receive and present the verification report.
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
+
+After verification, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Steps 7–9 — Post-Change
 

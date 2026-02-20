@@ -7,6 +7,7 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/core.md`
 - `~/.claude/crafter/rules/do-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`
+- `~/.claude/crafter/rules/task-lifecycle.md`
 
 You are the **orchestrator**. Your job is to manage the workflow, communicate with the user, and delegate work to subagents. You do not analyze code, implement changes, or review diffs yourself — you pass context to the right subagent and relay results back to the user.
 
@@ -20,6 +21,13 @@ The user's request is: $ARGUMENTS
 
 ---
 
+## Step 0 — Resume Detection
+
+Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
+
+If resuming an active task, skip ahead to the appropriate step based on the task file contents.
+If not resuming, continue to Step 1.
+
 ## Step 1 — Auto-detect scope
 
 Based on the project context files and the request, classify the scope:
@@ -29,6 +37,8 @@ Based on the project context files and the request, classify the scope:
 - **Large** — vague or ambiguous request, architectural impact, many files, or unfamiliar territory
 
 For **Small** scope, skip directly to Step 3.
+
+After detecting scope, create the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Step 2 — DISCUSS / RESEARCH (Large scope only)
 
@@ -52,6 +62,8 @@ Delegate planning to the **Planner** subagent:
 5. **Wait for explicit user approval before proceeding.**
 
 If the user requests changes, send the revised request back to the Planner and repeat until approved.
+
+After plan approval, update the task file with the approved plan per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Step 4 — EXECUTE
 
@@ -95,6 +107,8 @@ g. If the user chooses to fix:
    3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
    4. Re-run **Step 5 (VERIFY)** on the newly changed files.
    5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
+
+After review completes, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Steps 7–9 — Post-Change
 

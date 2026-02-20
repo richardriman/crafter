@@ -37,12 +37,14 @@ install_to() {
   cp "$SCRIPT_DIR/rules/debug-workflow.md" "$rules_dest/debug-workflow.md"
   cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
+  cp "$SCRIPT_DIR/rules/task-lifecycle.md"    "$rules_dest/task-lifecycle.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
   cp "$SCRIPT_DIR/templates/ARCHITECTURE.md"     "$templates_dest/ARCHITECTURE.md"
   cp "$SCRIPT_DIR/templates/STATE.md"            "$templates_dest/STATE.md"
   cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
+  cp "$SCRIPT_DIR/templates/TASK.md"            "$templates_dest/TASK.md"
 
   mkdir -p "$meta_prompts_dest"
   cp "$SCRIPT_DIR/meta-prompts/planner.md"   "$meta_prompts_dest/planner.md"
