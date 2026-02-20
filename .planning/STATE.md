@@ -28,6 +28,9 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 - [x] Update STATE.md after completing and approving each step
 - [x] Update documentation before committing
+## Ideas
+
+- `/crafter:add-planned` — quick command for adding planned items to STATE.md
 
 ## Known Issues
 

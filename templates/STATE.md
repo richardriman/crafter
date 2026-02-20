@@ -20,6 +20,10 @@
 - [ ] <!-- upcoming item -->
 - [ ] <!-- upcoming item -->
 
+## Ideas
+
+<!-- Loose ideas, possible improvements, things to explore later -->
+
 ## Known Issues
 
 - <!-- Bug, tech debt item, or TODO — include severity if relevant -->
