@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-20 | Enforced STATE.md and documentation update rules in all commands | ed48a88 |
 | 2026-02-19 | Extracted install_to() to eliminate duplication in install.sh | 8e9fad5 |
 | 2026-02-19 | Refactored install.sh to support --global and --local modes | c7bc499 |
 | 2026-02-19 | Added meta-prompts and converted commands to orchestrator pattern | bdc4440 |
@@ -25,8 +26,8 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Planned
 
-- [ ] Update STATE.md after completing and approving each step
-- [ ] Update documentation before committing
+- [x] Update STATE.md after completing and approving each step
+- [x] Update documentation before committing
 
 ## Known Issues
 
