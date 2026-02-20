@@ -31,10 +31,10 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 - [x] Update STATE.md after completing and approving each step
 - [x] Update documentation before committing
-- [ ] Detect new Crafter releases and notify the user in Claude Code
-- [ ] Add review-fix loop to do-workflow (review findings → Implementer fix → Verify → Review → repeat or proceed)
-- [ ] Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter)
-- [ ] Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<branch>.md` tracked in git; active task state (resume) during work, permanent decision record after completion; Crafter detects active task by matching current branch name
+- [ ] **P1** Add review-fix loop to do-workflow (review findings → Implementer fix → Verify → Review → repeat or proceed)
+- [ ] **P2** Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter) — depends on P1
+- [ ] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<branch>.md` tracked in git; active task state (resume) during work, permanent decision record after completion; Crafter detects active task by matching current branch name — depends on P1, P2 above
+- [ ] **P3** Detect new Crafter releases and notify the user in Claude Code
 
 ## Ideas
 
