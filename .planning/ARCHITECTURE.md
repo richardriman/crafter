@@ -73,14 +73,14 @@ Each subagent receives its role definition from `meta-prompts/` and a dynamicall
 | Role | Meta-prompt | When used |
 |---|---|---|
 | **Planner** | `meta-prompts/planner.md` | PLAN step in `/crafter:do` |
-| **Implementer** | `meta-prompts/implement.md` | EXECUTE step in `/crafter:do` and fix step in `/crafter:debug` |
+| **Implementer** | `meta-prompts/implement.md` | EXECUTE step in `/crafter:do`, review-fix loop in `/crafter:do`, and fix step in `/crafter:debug` |
 | **Verifier** | `meta-prompts/verify.md` | VERIFY step in `/crafter:do` and `/crafter:debug` |
 | **Reviewer** | `meta-prompts/review.md` | REVIEW step in `/crafter:do` |
 | **Analyzer** | `meta-prompts/analyze.md` | `/crafter:map-project`, research phase in Large scope tasks, hypothesis analysis in `/crafter:debug` |
 
 ### Human-in-the-Loop Gates
 
-Every significant action requires explicit user approval: plan approval before execution, diff review before commit, commit only on user command.
+Every significant action requires explicit user approval: plan approval before execution, review-fix loop consent for Critical/Major findings, diff review before commit, commit only on user command.
 
 ### Adaptive Scope Detection
 

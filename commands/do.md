@@ -77,13 +77,24 @@ If the Verifier reports failures, discuss them with the user and decide whether 
 
 ## Step 6 — REVIEW
 
-Delegate code review to the **Reviewer** subagent:
+Delegate code review to the **Reviewer** subagent and handle findings. The review-fix iteration count starts at 0.
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/review.md` as its system prompt.
-2. Provide it with: the approved plan, the changed files, and `.planning/ARCHITECTURE.md` if available.
-3. Receive the review report.
-4. Present the report to the user clearly.
-5. Wait for the user's assessment before moving on.
+a. Spawn a subagent using `~/.claude/crafter/meta-prompts/review.md` as its system prompt.
+b. Provide it with: the approved plan, the changed files, and `.planning/ARCHITECTURE.md` if available.
+c. Receive the review report.
+d. Present the full report to the user.
+e. Categorize findings by severity. Minor and Suggestion-level findings are informational only and do not trigger the fix loop.
+   - If there are **no Critical or Major issues**: wait for the user's acknowledgment, then proceed to Steps 7–9.
+   - If there are **Critical or Major issues**: continue to sub-step (f).
+f. Present the Critical and Major issues to the user and ask:
+   - **"Fix and re-review"** (recommended) — continue to sub-step (g).
+   - **"Proceed anyway"** — skip to Steps 7–9.
+g. If the user chooses to fix:
+   1. Check the iteration count. If this would exceed the **3rd review-fix iteration**, do not proceed — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (g.2).
+   2. Spawn the **Implementer** subagent. Provide it with: the list of Critical/Major issues from the review (severity, file, line, description), the original approved plan for context, and the relevant source files.
+   3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
+   4. Re-run **Step 5 (VERIFY)** on the newly changed files.
+   5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
 
 ## Steps 7–9 — Post-Change
 

@@ -25,14 +25,19 @@
 ### REVIEW
 - Show diffs after execution.
 - Highlight any deviations from the approved plan, even minor ones.
-- Wait for the user's assessment before moving on.
+- After receiving the review report, categorize issues by severity.
+- If Critical or Major issues exist, present them to the user with two options: fix automatically or proceed anyway.
+- If the user chooses to fix: delegate only the Critical/Major issues to the Implementer, then re-Verify and re-Review.
+- Cap the review-fix loop at 3 iterations. After the 3rd review, present remaining issues and recommend the user decide manually.
+- Minor issues and Suggestions are informational — they do not trigger the fix loop.
+- Always wait for the user's assessment before moving on.
 
 ## Scope Detection
 
 | Scope | Characteristics | Workflow |
 |---|---|---|
-| **Small** | 1–3 files, clear intent, isolated change | Direct plan → execute → verify → review → commit |
-| **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and verify and review per step |
-| **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → verify per step → review per step |
+| **Small** | 1–3 files, clear intent, isolated change | Direct plan → execute → verify → review (with fix loop) → commit |
+| **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and verify and review (with fix loop) per step |
+| **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → verify per step → review (with fix loop) per step |
 
 When scope is ambiguous, ask the user rather than guessing.
