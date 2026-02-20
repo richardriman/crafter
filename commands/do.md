@@ -81,7 +81,18 @@ Delegate code review to the **Reviewer** subagent:
 4. Present the report to the user clearly.
 5. Wait for the user's assessment before moving on.
 
-## Step 7 — COMMIT
+## Step 7 — Check Documentation
+
+Review whether the changes affect any `.planning/` context files beyond STATE.md:
+
+- **PROJECT.md** — update if the stack, dependencies, or conventions changed.
+- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed.
+
+If updates are needed, show the proposed changes to the user and wait for approval before applying.
+
+If nothing needs updating, move on silently.
+
+## Step 8 — COMMIT
 
 **Only commit when the user explicitly says to.**
 
@@ -95,7 +106,7 @@ Use conventional commits format:
 
 One logical change = one commit.
 
-## Step 8 — Update STATE.md
+## Step 9 — Update STATE.md
 
 After a successful commit, update `.planning/STATE.md`:
 - Add an entry to **Recent Changes**

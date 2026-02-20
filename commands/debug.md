@@ -75,6 +75,29 @@ Delegate verification to the **Verifier** subagent:
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
 
-## Step 7 — Update STATE.md (if relevant)
+## Step 7 — Check Documentation
 
-If this bug was tracked in `.planning/STATE.md` (Known Issues), remove or update the entry. Show the user what changed.
+Review whether the fix affects any `.planning/` context files beyond STATE.md:
+
+- **PROJECT.md** — update if the stack, dependencies, or conventions changed.
+- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed.
+
+If updates are needed, show the proposed changes to the user and wait for approval before applying.
+
+If nothing needs updating, move on silently.
+
+## Step 8 — COMMIT
+
+**Only commit when the user explicitly says to.**
+
+Use conventional commits format (`fix:` is typically appropriate for debug workflows). One logical change = one commit.
+
+## Step 9 — Update STATE.md
+
+After a successful commit, update `.planning/STATE.md`:
+- Add an entry to **Recent Changes**
+- Update **Current Focus** if it has shifted
+- Check off any items in **Done**
+- Remove or update any relevant **Known Issues** entries
+
+Show the user what was updated.

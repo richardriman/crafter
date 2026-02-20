@@ -88,3 +88,12 @@ Apply the following logic:
 - **`CLAUDE.md` exists, `<!-- crafter:start -->` marker present** → replace everything between `<!-- crafter:start -->` and `<!-- crafter:end -->` (inclusive) with the snippet above.
 
 If `CLAUDE.md` already has content beyond the snippet, preserve it.
+
+## Step 4 — Update STATE.md
+
+After writing the `.planning/` files and setting up `CLAUDE.md`, update `.planning/STATE.md`:
+- Add an entry to **Recent Changes**
+- Update **Current Focus** if it has shifted
+- Check off any items in **Done**
+
+Show the user what was updated.
