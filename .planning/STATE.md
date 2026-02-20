@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-21 | Added MIT licence | 976706f |
 | 2026-02-21 | Added automatic update check with version detection (VERSION file, 24h-cached GitHub Releases API, all commands) | 850e59a |
 | 2026-02-20 | Added model configuration for subagent delegation (opus/sonnet/haiku per role) | f3de9d0 |
 | 2026-02-20 | Added session workflow guidance (P2a) and task state persistence with decision records (P2b) | fdc881c |
