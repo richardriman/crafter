@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-21 | Added automatic update check with version detection (VERSION file, 24h-cached GitHub Releases API, all commands) | 850e59a |
 | 2026-02-20 | Added model configuration for subagent delegation (opus/sonnet/haiku per role) | f3de9d0 |
 | 2026-02-20 | Added session workflow guidance (P2a) and task state persistence with decision records (P2b) | fdc881c |
 | 2026-02-20 | Added review-fix loop to do-workflow (Step 6 with severity-based fix delegation, 3-iteration cap) | 4ba6c1d |
@@ -35,10 +36,11 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [x] **P2** Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter)
 - [x] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<topic>.md` tracked in git; active task state (resume) during work, permanent decision record after completion
 - [x] **P3** Model configuration for subagent delegation — assign model tiers (opus/sonnet/haiku) per role in `rules/delegation.md`
+- [x] **P3** Detect new Crafter releases and notify the user — VERSION file, `rules/update-check.md`, 24h-cached GitHub Releases API check in all commands
 
 ## Planned
 
-- [x] **P3** Detect new Crafter releases and notify the user in Claude Code
+(No planned items — all completed. See Ideas for potential future work.)
 
 ## Ideas
 

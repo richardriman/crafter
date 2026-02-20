@@ -3,18 +3,18 @@
 ## Metadata
 - **Date:** 2026-02-20
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
 Detect new Crafter releases and notify the user in Claude Code.
 
 ## Plan
-- [ ] Create `VERSION` file at repo root with `0.1.0`
-- [ ] Create `rules/update-check.md` — rule for 24h-cached GitHub Releases API check, silent on failure, non-blocking notification
-- [ ] Modify `install.sh` to copy VERSION to install destination
-- [ ] Modify all 4 commands (do.md, debug.md, status.md, map-project.md) to load update-check rule
-- [ ] Add `/crafter:release` (internal, not distributed) to Ideas in STATE.md
+- [x] Create `VERSION` file at repo root with `0.1.0`
+- [x] Create `rules/update-check.md` — rule for 24h-cached GitHub Releases API check, silent on failure, non-blocking notification
+- [x] Modify `install.sh` to copy VERSION to install destination
+- [x] Modify all 4 commands (do.md, debug.md, status.md, map-project.md) to load update-check rule
+- [x] Add `/crafter:release` (internal, not distributed) to Ideas in STATE.md
 
 ## Decisions
 - **Decision:** Use GitHub Releases (not just git tags). **Reason:** Conventional, supports release notes.
@@ -24,4 +24,5 @@ Detect new Crafter releases and notify the user in Claude Code.
 - **Decision:** `/crafter:release` as follow-up, internal (not distributed). **Reason:** Maintainer tool, not user-facing.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+Commit `850e59a`. All plan steps implemented. Three minor review issues fixed (alignment, local install path fallback, semantic version comparison). ARCHITECTURE.md and STATE.md updated. `/crafter:release` added to Ideas as follow-up.
