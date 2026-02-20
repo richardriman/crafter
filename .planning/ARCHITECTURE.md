@@ -18,8 +18,12 @@ crafter/
 │   ├── planner.md               # Planner role
 │   ├── review.md                # Reviewer role
 │   └── verify.md                # Verifier role
-├── rules/
-│   └── rules.md                 # Core rules governing all workflows
+├── rules/                       # Per-concern rule fragments (loaded selectively by commands)
+│   ├── core.md                  # Universal rules (language, principles, context maintenance)
+│   ├── do-workflow.md           # Standard Change workflow rules
+│   ├── debug-workflow.md        # Debug workflow rules
+│   ├── delegation.md            # Subagent spawning instruction
+│   └── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
 ├── templates/                   # Templates for .planning/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md
@@ -34,7 +38,11 @@ crafter/
 | What | Where |
 |---|---|
 | Slash command definitions | `commands/*.md` |
-| Core behavioral rules | `rules/rules.md` |
+| Universal rules (language, principles) | `rules/core.md` |
+| Standard Change workflow rules | `rules/do-workflow.md` |
+| Debug workflow rules | `rules/debug-workflow.md` |
+| Subagent delegation rules | `rules/delegation.md` |
+| Shared post-change steps | `rules/post-change.md` |
 | Subagent system prompts | `meta-prompts/*.md` |
 | Planning file templates | `templates/*.md` |
 | CLAUDE.md injection snippet | `templates/claude-md.snippet` |
@@ -49,6 +57,26 @@ crafter/
 Commands act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to five specialized subagent roles (Planner, Implementer, Verifier, Reviewer, Analyzer), each spawned in a fresh context window with only the information it needs.
 
 Each subagent receives its role definition from `meta-prompts/` and a dynamically assembled `$CONTEXT` block with relevant project files.
+
+### Subagent Context Budget
+
+| Subagent | Receives |
+|---|---|
+| Planner | User request + relevant `.planning/` excerpts + relevant source files |
+| Implementer | Approved plan + relevant `.planning/` excerpts + relevant source files |
+| Verifier | Verification criteria + changed files + relevant test files |
+| Reviewer | Approved plan + changed files + `.planning/ARCHITECTURE.md` (if available) |
+| Analyzer | Codebase structure files + package manifests + existing docs + `.planning/` files |
+
+### Role Reference
+
+| Role | Meta-prompt | When used |
+|---|---|---|
+| **Planner** | `meta-prompts/planner.md` | PLAN step in `/crafter:do` |
+| **Implementer** | `meta-prompts/implement.md` | EXECUTE step in `/crafter:do` and fix step in `/crafter:debug` |
+| **Verifier** | `meta-prompts/verify.md` | VERIFY step in `/crafter:do` and `/crafter:debug` |
+| **Reviewer** | `meta-prompts/review.md` | REVIEW step in `/crafter:do` |
+| **Analyzer** | `meta-prompts/analyze.md` | `/crafter:map-project`, research phase in Large scope tasks, hypothesis analysis in `/crafter:debug` |
 
 ### Human-in-the-Loop Gates
 
@@ -71,3 +99,4 @@ Every significant action requires explicit user approval: plan approval before e
 - Command files are Markdown with YAML frontmatter
 - Meta-prompts use a `$CONTEXT` placeholder filled by the orchestrator at delegation time
 - `install.sh` uses `set -euo pipefail` for strict error handling
+- Rules are split into per-concern fragments; each command loads only the fragments it needs

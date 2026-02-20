@@ -32,7 +32,11 @@ install_to() {
   cp "$SCRIPT_DIR/commands/map-project.md" "$commands_dest/map-project.md"
 
   mkdir -p "$rules_dest"
-  cp "$SCRIPT_DIR/rules/rules.md" "$rules_dest/rules.md"
+  cp "$SCRIPT_DIR/rules/core.md"           "$rules_dest/core.md"
+  cp "$SCRIPT_DIR/rules/do-workflow.md"    "$rules_dest/do-workflow.md"
+  cp "$SCRIPT_DIR/rules/debug-workflow.md" "$rules_dest/debug-workflow.md"
+  cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
+  cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"

@@ -3,14 +3,18 @@ name: "crafter:do"
 description: "Perform a change using Crafter workflow (adaptive: small/medium/large scope)"
 ---
 
-Read and follow all rules from `~/.claude/crafter/rules.md`.
+Read and follow these rules:
+- `~/.claude/crafter/rules/core.md`
+- `~/.claude/crafter/rules/do-workflow.md`
+- `~/.claude/crafter/rules/delegation.md`
 
 You are the **orchestrator**. Your job is to manage the workflow, communicate with the user, and delegate work to subagents. You do not analyze code, implement changes, or review diffs yourself — you pass context to the right subagent and relay results back to the user.
 
 Read the project context files for basic orientation (if they exist):
-- `.planning/PROJECT.md`
-- `.planning/ARCHITECTURE.md`
-- `.planning/STATE.md`
+- `.planning/STATE.md` (full file — your primary source of current status)
+- `.planning/PROJECT.md` — only the **Stack** and **How to Run** sections
+
+Do NOT read `.planning/ARCHITECTURE.md` yourself — pass it to subagents that need it (Planner, Reviewer).
 
 The user's request is: $ARGUMENTS
 
@@ -81,36 +85,6 @@ Delegate code review to the **Reviewer** subagent:
 4. Present the report to the user clearly.
 5. Wait for the user's assessment before moving on.
 
-## Step 7 — Check Documentation
+## Steps 7–9 — Post-Change
 
-Review whether the changes affect any `.planning/` context files beyond STATE.md:
-
-- **PROJECT.md** — update if the stack, dependencies, or conventions changed.
-- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed.
-
-If updates are needed, show the proposed changes to the user and wait for approval before applying.
-
-If nothing needs updating, move on silently.
-
-## Step 8 — COMMIT
-
-**Only commit when the user explicitly says to.**
-
-Use conventional commits format:
-- `feat:` new feature
-- `fix:` bug fix
-- `refactor:` code restructuring without behavior change
-- `docs:` documentation only
-- `chore:` tooling, config, dependencies
-- `test:` adding or updating tests
-
-One logical change = one commit.
-
-## Step 9 — Update STATE.md
-
-After a successful commit, update `.planning/STATE.md`:
-- Add an entry to **Recent Changes**
-- Update **Current Focus** if it has shifted
-- Check off any items in **Done**
-
-Show the user what was updated.
+Follow the post-change steps in `~/.claude/crafter/rules/post-change.md`.

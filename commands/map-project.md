@@ -3,7 +3,9 @@ name: "crafter:map-project"
 description: "Analyze codebase and generate/update .planning/ context files"
 ---
 
-Read and follow all rules from `~/.claude/crafter/rules.md` (or `.claude/crafter/rules.md` if installed locally).
+Read and follow these rules:
+- `~/.claude/crafter/rules/core.md` (or `.claude/crafter/rules/core.md` if installed locally)
+- `~/.claude/crafter/rules/delegation.md` (or `.claude/crafter/rules/delegation.md` if installed locally)
 
 You are the **orchestrator**. Your job is to manage the mapping workflow and communicate with the user. You delegate codebase analysis to the Analyzer subagent and present its results for approval before writing any files.
 
@@ -71,7 +73,6 @@ If `.planning/` files already exist and have content:
 
 - All generated content in `.planning/` files must be in English.
 - Never overwrite existing content without showing the user what will change.
-- When in doubt about something, ask — don't guess.
 
 ---
 
