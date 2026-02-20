@@ -3,6 +3,9 @@ name: "crafter:status"
 description: "Show current project state from .planning/STATE.md"
 ---
 
+Read and follow these rules:
+- `~/.claude/crafter/rules/update-check.md`
+
 Read `.planning/STATE.md` and display its full contents.
 
 Then provide a brief, conversational summary covering:

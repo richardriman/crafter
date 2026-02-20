@@ -4,6 +4,7 @@ description: "Systematic debugging workflow with hypothesis-driven approach"
 ---
 
 Read and follow these rules:
+- `~/.claude/crafter/rules/update-check.md`
 - `~/.claude/crafter/rules/core.md`
 - `~/.claude/crafter/rules/debug-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`

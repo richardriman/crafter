@@ -4,6 +4,7 @@ description: "Perform a change using Crafter workflow (adaptive: small/medium/la
 ---
 
 Read and follow these rules:
+- `~/.claude/crafter/rules/update-check.md`
 - `~/.claude/crafter/rules/core.md`
 - `~/.claude/crafter/rules/do-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`

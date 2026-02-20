@@ -38,11 +38,12 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Planned
 
-- [ ] **P3** Detect new Crafter releases and notify the user in Claude Code
+- [x] **P3** Detect new Crafter releases and notify the user in Claude Code
 
 ## Ideas
 
 - `/crafter:add-planned` — quick command for adding planned items to STATE.md
+- `/crafter:release` — internal command (not distributed) for preparing GitHub releases with auto-generated notes
 
 ## Known Issues
 

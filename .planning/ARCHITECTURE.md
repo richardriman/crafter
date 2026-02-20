@@ -24,7 +24,8 @@ crafter/
 │   ├── debug-workflow.md        # Debug workflow rules
 │   ├── delegation.md            # Subagent spawning instruction
 │   ├── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
-│   └── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
+│   ├── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
+│   └── update-check.md          # Automatic update checking (24h-cached GitHub Releases API)
 ├── templates/                   # Templates for .planning/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md
@@ -32,6 +33,7 @@ crafter/
 │   ├── TASK.md                  # Template for task files (.planning/tasks/)
 │   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
 ├── install.sh                   # Installer (--global or --local)
+├── VERSION                      # Current version identifier
 └── README.md                    # Project overview
 ```
 
@@ -46,10 +48,12 @@ crafter/
 | Subagent delegation rules | `rules/delegation.md` |
 | Shared post-change steps | `rules/post-change.md` |
 | Task file lifecycle rules | `rules/task-lifecycle.md` |
+| Update check rules | `rules/update-check.md` |
 | Subagent system prompts | `meta-prompts/*.md` |
 | Planning file templates | `templates/*.md` |
 | Task file template | `templates/TASK.md` |
 | CLAUDE.md injection snippet | `templates/claude-md.snippet` |
+| Version identifier | `VERSION` |
 | Installer | `install.sh` |
 | Design philosophy | `docs/philosophy.md` |
 | BMAD integration guide | `docs/bmad-integration.md` |

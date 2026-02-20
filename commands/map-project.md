@@ -4,6 +4,7 @@ description: "Analyze codebase and generate/update .planning/ context files"
 ---
 
 Read and follow these rules:
+- `~/.claude/crafter/rules/update-check.md` (or `.claude/crafter/rules/update-check.md` if installed locally)
 - `~/.claude/crafter/rules/core.md` (or `.claude/crafter/rules/core.md` if installed locally)
 - `~/.claude/crafter/rules/delegation.md` (or `.claude/crafter/rules/delegation.md` if installed locally)
 
