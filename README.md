@@ -75,6 +75,3 @@ Crafter works great alongside BMAD party mode for big architectural decisions an
 
 Read more in [docs/bmad-integration.md](docs/bmad-integration.md).
 
-## License
-
-MIT

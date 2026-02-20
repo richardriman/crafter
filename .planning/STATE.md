@@ -30,7 +30,6 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Known Issues
 
-- No LICENSE file exists (README declares MIT but no license file is present)
 - No test suite for install.sh
 
 ## Notes
