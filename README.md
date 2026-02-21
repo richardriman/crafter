@@ -63,6 +63,10 @@ This matters because running planning, implementation, verification, and review 
 
 Meta-prompts for each role live in `~/.claude/crafter/meta-prompts/`. The orchestrator fills in the `$CONTEXT` placeholder dynamically with only the files each role needs.
 
+### Automatic Parallelization
+
+Claude Code automatically runs independent tool calls in parallel. In practice, this means the orchestrator may spawn **Verify and Review simultaneously** after implementation, since their inputs don't depend on each other. This is expected behavior — not a bug — and it speeds up the workflow without any loss of correctness. If the review-fix loop triggers, both steps are re-run on the updated files anyway.
+
 ## Philosophy
 
 Crafter is built on a simple principle: **you are the craftsman, AI is your tool**. The developer stays in control at every decision point — no auto-commits, no silent refactors, no guessing.
