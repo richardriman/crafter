@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-22
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -18,4 +18,4 @@ automatizace GitHub releases
 <!-- Key decisions made during the workflow, in chronological order -->
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+Commit 312b391. Created internal `/crafter:release` command in `.claude/commands/release.md`. AI-generated release notes from commit history, human-in-the-loop approval, publish via `gh` CLI. Not distributed by install.sh.
