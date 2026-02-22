@@ -23,11 +23,17 @@ None.
 
 ```bash
 # Install globally (available in all projects)
-./install.sh --global
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash
 
 # Install locally in a specific project
-cd /your/project
-/path/to/crafter/install.sh --local
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --local
+
+# Install a specific version
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --version 0.1.0
+
+# Alternative: from cloned repo
+./install.sh --global
+./install.sh --local
 
 # Then in Claude Code, initialize project context:
 /crafter:map-project

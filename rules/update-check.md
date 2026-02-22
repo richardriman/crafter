@@ -56,7 +56,7 @@ Run this check silently at command startup. It must never block the main workflo
    If the latest version is newer than the installed version, display a short, non-blocking notice **before** the command's first output:
 
    ```
-   Note: Crafter update available (installed: X.Y.Z, latest: A.B.C). Run install.sh to update.
+   Note: Crafter update available (installed: X.Y.Z, latest: A.B.C). Run: curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash
    ```
 
    If versions are equal, display nothing.

@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | pending |
 | 2026-02-21 | Added MIT licence | 976706f |
 | 2026-02-21 | Added automatic update check with version detection (VERSION file, 24h-cached GitHub Releases API, all commands) | 850e59a |
 | 2026-02-20 | Added model configuration for subagent delegation (opus/sonnet/haiku per role) | f3de9d0 |
@@ -38,10 +39,11 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [x] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<topic>.md` tracked in git; active task state (resume) during work, permanent decision record after completion
 - [x] **P3** Model configuration for subagent delegation — assign model tiers (opus/sonnet/haiku) per role in `rules/delegation.md`
 - [x] **P3** Detect new Crafter releases and notify the user — VERSION file, `rules/update-check.md`, 24h-cached GitHub Releases API check in all commands
+- [x] Remote install without cloning — curl one-liner with auto-detection, --version flag, tarball download from GitHub
 
 ## Planned
 
-(No planned items — all completed. See Ideas for potential future work.)
+- [ ] Optional project-level review rules — reviewer loads `.planning/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
 
 ## Ideas
 

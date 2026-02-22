@@ -6,26 +6,34 @@ Crafter keeps you in control at every step: plans need your approval, diffs get 
 
 ## Quick Start
 
+**Global install (default) — available in all projects:**
+
 ```bash
-git clone https://github.com/richardriman/crafter.git
-cd crafter
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash
 ```
 
-**Choose one installation mode:**
+**Additional options:**
 
 ```bash
-# Global — available in all projects
-./install.sh --global
+# Local install — inside your current project (.claude/), committable and team-shareable
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --local
 
-# Local — installed inside your current project (.claude/), committable and team-shareable
-cd /your/project
-/path/to/crafter/install.sh --local
+# Install a specific version
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --version 0.1.0
 ```
 
 Then open Claude Code in your project and run:
 
 ```
 /crafter:map-project
+```
+
+**Alternative (for contributors working on Crafter itself):**
+
+```bash
+git clone https://github.com/richardriman/crafter.git
+cd crafter
+./install.sh
 ```
 
 ## Commands

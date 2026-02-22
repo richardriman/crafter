@@ -32,7 +32,7 @@ crafter/
 │   ├── STATE.md                 # Template for target project's STATE.md
 │   ├── TASK.md                  # Template for task files (.planning/tasks/)
 │   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
-├── install.sh                   # Installer (--global or --local)
+├── install.sh                   # Installer (local or remote via curl | bash)
 ├── VERSION                      # Current version identifier
 └── README.md                    # Project overview
 ```
@@ -108,7 +108,7 @@ Task files in `.planning/tasks/` are created and managed by the orchestrator dur
 
 ### Dual Installation Model
 
-`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`). Both use a shared `install_to()` function.
+`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`). Both use a shared `install_to()` function. The script also supports remote execution via `curl | bash`: when run without a local repo present it auto-detects this mode, downloads the specified (or latest) release tarball from GitHub, and installs from it. An optional `--version` flag selects a specific release.
 
 ## Conventions
 
