@@ -12,11 +12,12 @@ Prepare a GitHub Release for this project.
 ## Step 1 — Gather Context
 
 1. Read the `VERSION` file to get the current version (referred to as `<VERSION>` below).
-2. Check whether the tag `v<VERSION>` already exists:
+2. Check whether the release `v<VERSION>` already exists — verify **both** locally and on GitHub:
    ```
    git tag --list "v<VERSION>"
+   gh release view "v<VERSION>" --json tagName 2>/dev/null
    ```
-   If this tag already exists, warn the user and stop. The release has already been published, or the VERSION file has not been updated.
+   If either check finds an existing tag/release, warn the user and stop. The release has already been published, or the VERSION file has not been updated.
 3. Run the following to find the most recent release tag:
    ```
    git tag --list 'v*' --sort=-version:refname
