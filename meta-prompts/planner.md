@@ -21,6 +21,7 @@ Write the plan in plain, conversational language — not XML, not machine-readab
 
 ## Constraints
 
+- Always write the plan in **English**, regardless of the user's language — plans are persistent artifacts stored in task files.
 - Do **not** implement anything. Do not modify any files.
 - Do **not** guess about intent — if something is unclear, flag it under "Unknowns / flags".
 - Do **not** expand scope beyond what was requested.
