@@ -151,7 +151,8 @@ install_to() {
   local label="$2"
 
   local commands_dest="$base/commands/crafter"
-  local rules_dest="$base/crafter"
+  local crafter_dest="$base/crafter"
+  local rules_dest="$base/crafter/rules"
   local templates_dest="$base/crafter/templates"
   local meta_prompts_dest="$base/crafter/meta-prompts"
 
@@ -163,8 +164,10 @@ install_to() {
   cp "$SCRIPT_DIR/commands/status.md"      "$commands_dest/status.md"
   cp "$SCRIPT_DIR/commands/map-project.md" "$commands_dest/map-project.md"
 
+  mkdir -p "$crafter_dest"
+  cp "$SCRIPT_DIR/VERSION"                 "$crafter_dest/VERSION"
+
   mkdir -p "$rules_dest"
-  cp "$SCRIPT_DIR/VERSION"                 "$rules_dest/VERSION"
   cp "$SCRIPT_DIR/rules/core.md"           "$rules_dest/core.md"
   cp "$SCRIPT_DIR/rules/do-workflow.md"    "$rules_dest/do-workflow.md"
   cp "$SCRIPT_DIR/rules/debug-workflow.md" "$rules_dest/debug-workflow.md"
