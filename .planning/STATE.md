@@ -40,6 +40,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [x] **P3** Model configuration for subagent delegation — assign model tiers (opus/sonnet/haiku) per role in `rules/delegation.md`
 - [x] **P3** Detect new Crafter releases and notify the user — VERSION file, `rules/update-check.md`, 24h-cached GitHub Releases API check in all commands
 - [x] Remote install without cloning — curl one-liner with auto-detection, --version flag, tarball download from GitHub
+- [x] Internal `/crafter:release` command for preparing GitHub Releases with AI-generated release notes (not distributed)
 
 ## Planned
 
@@ -48,7 +49,6 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 ## Ideas
 
 - `/crafter:add-planned` — quick command for adding planned items to STATE.md
-- `/crafter:release` — internal command (not distributed) for preparing GitHub releases with auto-generated notes
 
 ## Known Issues
 

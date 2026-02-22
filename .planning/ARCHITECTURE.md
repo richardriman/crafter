@@ -34,7 +34,10 @@ crafter/
 │   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
 ├── install.sh                   # Installer (local or remote via curl | bash)
 ├── VERSION                      # Current version identifier
-└── README.md                    # Project overview
+├── README.md                    # Project overview
+└── .claude/                     # Project-local Claude Code config (internal)
+    └── commands/
+        └── release.md           # /crafter:release — internal release preparation (not distributed)
 ```
 
 ## Navigation — Where to Find What
@@ -57,6 +60,7 @@ crafter/
 | Installer | `install.sh` |
 | Design philosophy | `docs/philosophy.md` |
 | BMAD integration guide | `docs/bmad-integration.md` |
+| Internal release command | `.claude/commands/release.md` |
 
 ## Key Patterns & Decisions
 
