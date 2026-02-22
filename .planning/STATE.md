@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-22 | Added test suite for install.sh (pure Bash, zero dependencies) | TBD |
 | 2026-02-22 | Added internal `/crafter:release` command for GitHub Releases with AI-generated notes | 312b391 |
 | 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | 68e54ad |
 | 2026-02-21 | Added MIT licence | 976706f |
@@ -42,6 +43,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [x] **P3** Detect new Crafter releases and notify the user — VERSION file, `rules/update-check.md`, 24h-cached GitHub Releases API check in all commands
 - [x] Remote install without cloning — curl one-liner with auto-detection, --version flag, tarball download from GitHub
 - [x] Internal `/crafter:release` command for preparing GitHub Releases with AI-generated release notes (not distributed)
+- [x] Test suite for install.sh — pure Bash, no external dependencies
 
 ## Planned
 
@@ -52,8 +54,6 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - `/crafter:add-planned` — quick command for adding planned items to STATE.md
 
 ## Known Issues
-
-- No test suite for install.sh
 
 ## Notes
 

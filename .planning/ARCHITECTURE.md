@@ -32,6 +32,8 @@ crafter/
 │   ├── STATE.md                 # Template for target project's STATE.md
 │   ├── TASK.md                  # Template for task files (.planning/tasks/)
 │   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
+├── tests/                       # Test suite
+│   └── test_install.sh          # Pure-Bash tests for install.sh (zero external dependencies)
 ├── install.sh                   # Installer (local or remote via curl | bash)
 ├── VERSION                      # Current version identifier
 ├── README.md                    # Project overview
