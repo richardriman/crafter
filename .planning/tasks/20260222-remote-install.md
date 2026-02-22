@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-22
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -18,4 +18,4 @@ Lepsi install, kterym budou moci uzivatele nainstalovat crafter, aniz by museli 
 <!-- Key decisions made during the workflow, in chronological order -->
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+Commit 68e54ad. install.sh rewritten with remote auto-detection, --version flag, tarball download, trap cleanup. README and update-check.md updated. No deviations from plan.

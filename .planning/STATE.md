@@ -8,7 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
-| 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | pending |
+| 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | 68e54ad |
 | 2026-02-21 | Added MIT licence | 976706f |
 | 2026-02-21 | Added automatic update check with version detection (VERSION file, 24h-cached GitHub Releases API, all commands) | 850e59a |
 | 2026-02-20 | Added model configuration for subagent delegation (opus/sonnet/haiku per role) | f3de9d0 |
