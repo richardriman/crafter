@@ -36,7 +36,7 @@ Runs after the first user-interaction gate (scope detection in `/crafter:do`, sy
 Runs at each gate, silently — no user interaction needed.
 
 - **After plan approval:** Write the approved plan to the Plan section. Use checkboxes (`- [ ]`) for each plan step if multi-step.
-- **After each step is executed:** Check off the corresponding step (`- [x]`).
+- **After each step's full cycle (Execute → Verify → Review):** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
 - **After fix approval (debug workflow):** Write the proposed fix to the Plan section.
 - **After notable review findings:** Append to the Decisions section.
 

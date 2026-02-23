@@ -26,7 +26,9 @@ Write the plan in plain, conversational language — not XML, not machine-readab
 - Do **not** guess about intent — if something is unclear, flag it under "Unknowns / flags".
 - Do **not** expand scope beyond what was requested.
 - Keep the plan focused and readable. Avoid filler text.
+- If the plan has **more than 5 steps**, break it into **self-contained stages** of at most 5 steps each. Each stage should leave the codebase in a working state when complete. Name each stage clearly (e.g., "Stage 1 — Backend API", "Stage 2 — Frontend integration"). Write all stages' steps as checkboxes in the plan — group them under stage headings so the orchestrator can distinguish stages. The first stage's steps are written in full detail; subsequent stages have a brief description (2–3 sentences) followed by their step checkboxes. The orchestrator handles session breaks between individual steps (not between stages) — stages are a planning structure, not a session boundary.
 
 ## Output format
 
 Return the plan as structured markdown with the five sections above. End with a clear summary sentence stating what will change and why it is the right approach.
+If the plan is staged, present Stage 1 steps in full detail. For subsequent stages, provide a brief description (2–3 sentences) and list the step checkboxes. This way all steps are visible in the task file for resume detection, while keeping the plan concise.

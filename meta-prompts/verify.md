@@ -28,15 +28,19 @@ Also look for:
 
 ## Output format
 
-Return a verification report:
+Return a compact verification report.
 
-**Verification criteria results:**
-| Criterion | Result | Notes |
-|---|---|---|
-| ... | PASS / FAIL | ... |
+**Summary line** (always first):
+`<passed>/<total> PASS` — or `<passed>/<total> PASS, <failed> FAIL` if any criteria failed.
 
-**Regressions found:** (list, or "None found")
+**Failed criteria** (only if any):
+For each failed criterion, list:
+- **Criterion:** <name> — **FAIL** — <brief explanation>
 
-**Edge cases flagged:** (list, or "None flagged")
+**Regressions found:** (only include this section if regressions were found)
 
-**Overall:** PASS (all criteria met, no regressions) or FAIL (list what failed).
+**Edge cases flagged:** (only include this section if edge cases were flagged)
+
+**Consistency issues:** (only include this section if consistency issues were found)
+
+If everything passes and there are no regressions, edge cases, or consistency issues, the entire report is just the summary line.

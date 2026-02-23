@@ -66,6 +66,8 @@ If the user requests changes, send the revised request back to the Planner and r
 
 After plan approval, update the task file with the approved plan per `~/.claude/crafter/rules/task-lifecycle.md`.
 
+If the approved plan contains **stages** (groups of steps under stage headings), execute them as a single continuous sequence — stages are a planning structure for readability, not session boundaries. The step-by-step execution in Step 4 and session breaks in Step 6a operate on individual steps regardless of stage grouping.
+
 ## Step 4 — EXECUTE
 
 Delegate implementation to the **Implementer** subagent:
@@ -97,11 +99,11 @@ b. Provide it with: the approved plan, the changed files, and `.planning/ARCHITE
 c. Receive the review report.
 d. Present the full report to the user.
 e. Categorize findings by severity. Minor and Suggestion-level findings are informational only and do not trigger the fix loop.
-   - If there are **no Critical or Major issues**: wait for the user's acknowledgment, then proceed to Steps 7–9.
+   - If there are **no Critical or Major issues**: wait for the user's acknowledgment, then proceed to Step 6a.
    - If there are **Critical or Major issues**: continue to sub-step (f).
 f. Present the Critical and Major issues to the user and ask:
    - **"Fix and re-review"** (recommended) — continue to sub-step (g).
-   - **"Proceed anyway"** — skip to Steps 7–9.
+   - **"Proceed anyway"** — proceed to Step 6a.
 g. If the user chooses to fix:
    1. Check the iteration count. If this would exceed the **3rd review-fix iteration**, do not proceed — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (g.2).
    2. Spawn the **Implementer** subagent. Provide it with: the list of Critical/Major issues from the review (severity, file, line, description), the original approved plan for context, and the relevant source files.
@@ -110,6 +112,18 @@ g. If the user chooses to fix:
    5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
 
 After review completes, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+
+## Step 6a — Session Break (Medium/Large scope only)
+
+**Skip this step for Small scope** — proceed directly to Steps 7–9.
+
+After a step's Execute → Verify → Review cycle completes with no outstanding Critical/Major issues (or the user chooses "proceed anyway"):
+
+1. Update the task file — check off the completed step.
+2. If this was the **last step** in the plan, proceed directly to Steps 7–9.
+3. Otherwise, suggest the user run `/clear` and then re-invoke `/crafter:do` to continue with the next step in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next plan step.
+
+The resume detection in Step 0 will pick up the active task file and continue from the next unchecked step. This keeps each step's Execute → Verify → Review cycle in a clean context window.
 
 ## Steps 7–9 — Post-Change
 

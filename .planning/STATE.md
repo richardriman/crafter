@@ -55,6 +55,17 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Known Issues
 
+- Small scope skips task file creation (`do.md` Step 1 "skip directly to Step 3" bypasses line 42) — post-change task completion may fail
+- "Step" granularity undefined for Medium scope — `do.md` Step 4 says "one step at a time" but planner has no granularity guidance for Medium
+- Small scope flow through Steps 4–6 unclear — `do.md` Step 4 Medium/Large qualifier may confuse orchestrator about whether Small runs Verify+Review
+- Review-fix iteration cap off-by-one — "would exceed the 3rd" is ambiguous (do-workflow.md says "cap at 3")
+- Resume detection doesn't distinguish mid-Execute break from post-E→V→R session break
+- Analyzer meta-prompt is for project mapping, not research — Step 2 (Large scope) delegates research to it
+- ARCHITECTURE.md handling inconsistent — `do.md` line 19 says pass to Planner, but Planner doesn't use it; post-change reads it despite orchestrator ban
+- "Show diffs" in do-workflow.md not reflected in Reviewer meta-prompt or Step 6
+- do-workflow.md REVIEW section partially duplicates do.md Step 6 (divergence risk)
+- delegation.md mentions `claude --print` without guidance on when to use it vs Task tool
+
 ## Notes
 
 - Commands reference `~/.claude/crafter/...` (global) with fallback to `.claude/crafter/...` (local)
