@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-23 | Moved update check to SessionStart hook (replaced inline rule with hooks/crafter-check-update.js) | 20acf60 |
 | 2026-02-22 | Added test suite for install.sh (pure Bash, zero dependencies) | TBD |
 | 2026-02-22 | Added internal `/crafter:release` command for GitHub Releases with AI-generated notes | 312b391 |
 | 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | 68e54ad |

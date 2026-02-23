@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-23
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -25,4 +25,4 @@ Decisions:
 <!-- Key decisions made during the workflow, in chronological order -->
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+Commit `20acf60`. All 5 steps completed as planned. Review-fix loop triggered once on Step 3 (install.sh) — fixed nested `node -e` quoting via `process.env`, added `node` pre-check and `Array.isArray` guard. ARCHITECTURE.md tree ordering fixed as minor post-review cleanup.
