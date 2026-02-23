@@ -9,38 +9,6 @@
 - **Runtime platform:** Claude Code CLI (custom slash commands)
 - **Framework:** None — pure conventions-and-prompts, no runtime dependencies
 
-## Key Dependencies
-
-None. This project has no package manifests and no external dependencies. It relies solely on:
-- A Bash shell (for `install.sh`)
-- Claude Code CLI (for slash command execution)
-
-## Environment Variables
-
-None.
-
-## How to Run
-
-```bash
-# Install globally (available in all projects)
-curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash
-
-# Install locally in a specific project
-curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --local
-
-# Install a specific version
-curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --version 0.1.0
-
-# Alternative: from cloned repo
-./install.sh --global
-./install.sh --local
-
-# Then in Claude Code, initialize project context:
-/crafter:map-project
-```
-
-There is no build step, no test suite, and no development server.
-
 ## Conventions
 
 - **Naming:** kebab-case for filenames, UPPER-CASE for planning template files

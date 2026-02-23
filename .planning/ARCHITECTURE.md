@@ -43,28 +43,6 @@ crafter/
         └── release.md           # /crafter:release — internal release preparation (not distributed)
 ```
 
-## Navigation — Where to Find What
-
-| What | Where |
-|---|---|
-| Slash command definitions | `commands/*.md` |
-| Universal rules (language, principles) | `rules/core.md` |
-| Standard Change workflow rules | `rules/do-workflow.md` |
-| Debug workflow rules | `rules/debug-workflow.md` |
-| Subagent delegation rules | `rules/delegation.md` |
-| Shared post-change steps | `rules/post-change.md` |
-| Task file lifecycle rules | `rules/task-lifecycle.md` |
-| Update check (SessionStart hook) | `hooks/crafter-check-update.js` |
-| Subagent system prompts | `meta-prompts/*.md` |
-| Planning file templates | `templates/*.md` |
-| Task file template | `templates/TASK.md` |
-| CLAUDE.md injection snippet | `templates/claude-md.snippet` |
-| Version identifier | `VERSION` |
-| Installer | `install.sh` |
-| Design philosophy | `docs/philosophy.md` |
-| BMAD integration guide | `docs/bmad-integration.md` |
-| Internal release command | `.claude/commands/release.md` |
-
 ## Key Patterns & Decisions
 
 ### Orchestrator / Subagent Model
@@ -77,25 +55,9 @@ Each subagent receives its role definition from `meta-prompts/` and a dynamicall
 
 Each subagent role has an assigned model tier (opus / sonnet / haiku) based on task complexity. Configuration lives in `rules/delegation.md` alongside other delegation rules. The Analyzer role is adaptive — it uses sonnet by default but upgrades to opus for Large scope tasks.
 
-### Subagent Context Budget
+### Subagent Roles and Context
 
-| Subagent | Receives |
-|---|---|
-| Planner | User request + relevant `.planning/` excerpts + relevant source files |
-| Implementer | Approved plan + relevant `.planning/` excerpts + relevant source files |
-| Verifier | Verification criteria + changed files + relevant test files |
-| Reviewer | Approved plan + changed files + `.planning/ARCHITECTURE.md` (if available) |
-| Analyzer | Codebase structure files + package manifests + existing docs + `.planning/` files |
-
-### Role Reference
-
-| Role | Meta-prompt | When used |
-|---|---|---|
-| **Planner** | `meta-prompts/planner.md` | PLAN step in `/crafter:do` |
-| **Implementer** | `meta-prompts/implement.md` | EXECUTE step in `/crafter:do`, review-fix loop in `/crafter:do`, and fix step in `/crafter:debug` |
-| **Verifier** | `meta-prompts/verify.md` | VERIFY step in `/crafter:do` and `/crafter:debug` |
-| **Reviewer** | `meta-prompts/review.md` | REVIEW step in `/crafter:do` |
-| **Analyzer** | `meta-prompts/analyze.md` | `/crafter:map-project`, research phase in Large scope tasks, hypothesis analysis in `/crafter:debug` |
+Subagent role definitions, model tiers, and context budgets are specified in `rules/delegation.md` and `meta-prompts/*.md`.
 
 ### Human-in-the-Loop Gates
 
@@ -107,15 +69,15 @@ Every significant action requires explicit user approval: plan approval before e
 
 ### Task Lifecycle
 
-Task files in `.planning/tasks/` are created and managed by the orchestrator during workflows. Each task file serves dual purposes: active resume state while work is in progress (allowing sessions to resume after interruption) and a permanent decision record once completed (preserving the plan, outcome, and rationale for future reference).
+Task files in `.planning/tasks/` serve dual purposes: active resume state while work is in progress and a permanent decision record once completed.
 
 ### Template-Driven .planning/ Initialization
 
-`/crafter:map-project` uses the Analyzer subagent to scan the target codebase, then proposes `.planning/` file contents based on templates. The `claude-md.snippet` uses HTML comment markers for idempotent CLAUDE.md updates.
+`/crafter:map-project` uses the Analyzer to scan the target codebase and propose `.planning/` file contents based on templates; `claude-md.snippet` uses HTML comment markers for idempotent CLAUDE.md updates.
 
 ### Dual Installation Model
 
-`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`). Both use a shared `install_to()` function. The script also supports remote execution via `curl | bash`: when run without a local repo present it auto-detects this mode, downloads the specified (or latest) release tarball from GitHub, and installs from it. An optional `--version` flag selects a specific release.
+`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection.
 
 ## Conventions
 

@@ -9,42 +9,10 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 | Date | Change | Commit |
 |---|---|---|
 | 2026-02-23 | Moved update check to SessionStart hook (replaced inline rule with hooks/crafter-check-update.js) | 20acf60 |
-| 2026-02-22 | Added test suite for install.sh (pure Bash, zero dependencies) | TBD |
+| 2026-02-22 | Added test suite for install.sh (pure Bash, zero dependencies) | 8c302d3 |
 | 2026-02-22 | Added internal `/crafter:release` command for GitHub Releases with AI-generated notes | 312b391 |
 | 2026-02-22 | Added remote install via curl one-liner (auto-detection, --version flag, tarball download) | 68e54ad |
 | 2026-02-21 | Added MIT licence | 976706f |
-| 2026-02-21 | Added automatic update check with version detection (VERSION file, 24h-cached GitHub Releases API, all commands) | 850e59a |
-| 2026-02-20 | Added model configuration for subagent delegation (opus/sonnet/haiku per role) | f3de9d0 |
-| 2026-02-20 | Added session workflow guidance (P2a) and task state persistence with decision records (P2b) | fdc881c |
-| 2026-02-20 | Added review-fix loop to do-workflow (Step 6 with severity-based fix delegation, 3-iteration cap) | 4ba6c1d |
-| 2026-02-20 | Split rules.md into per-concern fragments, optimized context window loading | 143ec46 |
-| 2026-02-20 | Added Ideas section to STATE.md and template | ab13162 |
-| 2026-02-20 | Enforced STATE.md and documentation update rules in all commands | ed48a88 |
-| 2026-02-19 | Extracted install_to() to eliminate duplication in install.sh | 8e9fad5 |
-| 2026-02-19 | Refactored install.sh to support --global and --local modes | c7bc499 |
-| 2026-02-19 | Added meta-prompts and converted commands to orchestrator pattern | bdc4440 |
-| 2026-02-19 | Swapped VERIFY and REVIEW order (verify before review) | a12c110 |
-| 2026-02-19 | Created initial Crafter repository structure | c84a06d |
-
-## Done
-
-- [x] Initial repository structure (commands, rules, templates, README)
-- [x] Orchestrator/subagent architecture with five meta-prompts
-- [x] Installer script with global and local modes
-- [x] Refactored install.sh to use shared install_to() function
-- [x] Design philosophy documentation
-- [x] BMAD integration documentation
-- [x] Context window optimization (rule fragment split, selective .planning/ loading)
-- [x] Update STATE.md after completing and approving each step
-- [x] Update documentation before committing
-- [x] **P1** Add review-fix loop to do-workflow (review findings → Implementer fix → Verify → Review → repeat or proceed)
-- [x] **P2** Session-level workflow guidance (post-completion `/clear` + `/crafter:do` reminder, soft nudge when working outside crafter)
-- [x] **P2** Task state persistence with decision records — `.planning/tasks/YYYYMMDD-<topic>.md` tracked in git; active task state (resume) during work, permanent decision record after completion
-- [x] **P3** Model configuration for subagent delegation — assign model tiers (opus/sonnet/haiku) per role in `rules/delegation.md`
-- [x] **P3** Detect new Crafter releases and notify the user — VERSION file, `rules/update-check.md`, 24h-cached GitHub Releases API check in all commands
-- [x] Remote install without cloning — curl one-liner with auto-detection, --version flag, tarball download from GitHub
-- [x] Internal `/crafter:release` command for preparing GitHub Releases with AI-generated release notes (not distributed)
-- [x] Test suite for install.sh — pure Bash, no external dependencies
 
 ## Planned
 
@@ -56,18 +24,14 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Known Issues
 
-- Small scope skips task file creation (`do.md` Step 1 "skip directly to Step 3" bypasses line 42) — post-change task completion may fail
-- "Step" granularity undefined for Medium scope — `do.md` Step 4 says "one step at a time" but planner has no granularity guidance for Medium
-- Small scope flow through Steps 4–6 unclear — `do.md` Step 4 Medium/Large qualifier may confuse orchestrator about whether Small runs Verify+Review
-- Review-fix iteration cap off-by-one — "would exceed the 3rd" is ambiguous (do-workflow.md says "cap at 3")
+- Small scope bypasses task file creation — post-change completion may fail
+- Medium scope "one step at a time" lacks granularity guidance for the Planner
+- Small scope flow through Steps 4–6 unclear — orchestrator may skip Verify+Review
+- Review-fix iteration cap ambiguous — "would exceed the 3rd" vs "cap at 3"
 - Resume detection doesn't distinguish mid-Execute break from post-E→V→R session break
-- Analyzer meta-prompt is for project mapping, not research — Step 2 (Large scope) delegates research to it
-- ARCHITECTURE.md handling inconsistent — `do.md` line 19 says pass to Planner, but Planner doesn't use it; post-change reads it despite orchestrator ban
+- Analyzer meta-prompt is for project mapping, not research — Large scope Step 2 delegates research to it
+- ARCHITECTURE.md handling inconsistent — `do.md` passes it to Planner but Planner doesn't use it; post-change reads it despite orchestrator ban
 - "Show diffs" in do-workflow.md not reflected in Reviewer meta-prompt or Step 6
 - do-workflow.md REVIEW section partially duplicates do.md Step 6 (divergence risk)
 - delegation.md mentions `claude --print` without guidance on when to use it vs Task tool
-- map-project.md uses local-install fallback annotations on rule paths but do.md, debug.md, status.md do not — pre-existing inconsistency
-
-## Notes
-
-- Commands reference `~/.claude/crafter/...` (global) with fallback to `.claude/crafter/...` (local)
+- map-project.md uses local-install fallback annotations on rule paths but do.md, debug.md, status.md do not
