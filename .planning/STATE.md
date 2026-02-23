@@ -65,6 +65,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - "Show diffs" in do-workflow.md not reflected in Reviewer meta-prompt or Step 6
 - do-workflow.md REVIEW section partially duplicates do.md Step 6 (divergence risk)
 - delegation.md mentions `claude --print` without guidance on when to use it vs Task tool
+- map-project.md uses local-install fallback annotations on rule paths but do.md, debug.md, status.md do not — pre-existing inconsistency
 
 ## Notes
 

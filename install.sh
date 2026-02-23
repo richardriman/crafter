@@ -174,7 +174,6 @@ install_to() {
   cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
   cp "$SCRIPT_DIR/rules/task-lifecycle.md" "$rules_dest/task-lifecycle.md"
-  cp "$SCRIPT_DIR/rules/update-check.md"   "$rules_dest/update-check.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
@@ -191,8 +190,52 @@ install_to() {
   cp "$SCRIPT_DIR/meta-prompts/analyze.md"   "$meta_prompts_dest/analyze.md"
 }
 
+install_hook() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local settings_file="$HOME/.claude/settings.json"
+  local hook_dest="$hooks_dir/crafter-check-update.js"
+
+  mkdir -p "$hooks_dir"
+  cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
+
+  if ! command -v node &>/dev/null; then
+    echo "Warning: node not found, skipping hook registration"
+    return 0
+  fi
+
+  SETTINGS_FILE="$settings_file" HOOK_CMD="node \"$hook_dest\"" node -e '
+    const fs = require("fs");
+    const settingsFile = process.env.SETTINGS_FILE;
+    const hookCommand = process.env.HOOK_CMD;
+
+    let settings = {};
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+    } catch (e) {}
+
+    if (!settings.hooks) settings.hooks = {};
+    if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
+
+    // Check if already registered
+    const alreadyRegistered = settings.hooks.SessionStart.some(function(entry) {
+      return entry.hooks && entry.hooks.some(function(h) {
+        return h.command === hookCommand;
+      });
+    });
+
+    if (!alreadyRegistered) {
+      settings.hooks.SessionStart.push({
+        hooks: [{ type: "command", command: hookCommand }]
+      });
+    }
+
+    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
+  '
+}
+
 install_global() {
   install_to "$HOME/.claude" "globally"
+  install_hook
   echo ""
   echo "Crafter installed globally."
   echo ""
@@ -202,6 +245,7 @@ install_global() {
 
 install_local() {
   install_to "$(pwd)/.claude" "locally in $(pwd)"
+  install_hook
   echo ""
   echo "Crafter installed locally in this project."
   echo ""

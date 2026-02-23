@@ -12,6 +12,8 @@ crafter/
 ├── docs/                        # Supplementary documentation
 │   ├── bmad-integration.md      # BMAD party mode integration guide
 │   └── philosophy.md            # Design philosophy and principles
+├── hooks/                       # Claude Code lifecycle hooks
+│   └── crafter-check-update.js  # SessionStart hook — automatic update check (24h-cached GitHub Releases API)
 ├── meta-prompts/                # Subagent role definitions (system prompts)
 │   ├── analyze.md               # Analyzer role
 │   ├── implement.md             # Implementer role
@@ -24,8 +26,7 @@ crafter/
 │   ├── debug-workflow.md        # Debug workflow rules
 │   ├── delegation.md            # Subagent spawning instruction
 │   ├── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
-│   ├── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
-│   └── update-check.md          # Automatic update checking (24h-cached GitHub Releases API)
+│   └── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
 ├── templates/                   # Templates for .planning/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md
@@ -53,7 +54,7 @@ crafter/
 | Subagent delegation rules | `rules/delegation.md` |
 | Shared post-change steps | `rules/post-change.md` |
 | Task file lifecycle rules | `rules/task-lifecycle.md` |
-| Update check rules | `rules/update-check.md` |
+| Update check (SessionStart hook) | `hooks/crafter-check-update.js` |
 | Subagent system prompts | `meta-prompts/*.md` |
 | Planning file templates | `templates/*.md` |
 | Task file template | `templates/TASK.md` |

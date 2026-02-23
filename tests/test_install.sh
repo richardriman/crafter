@@ -146,6 +146,11 @@ _run_installer() {
   local _ri_home="$1" _ri_pwd="$2" _ri_out_var="$3" _ri_ec_var="$4"
   shift 4
   local _ri_output="" _ri_ec=0
+  # Seed the fake home with ~/.tool-versions if present, so that version
+  # manager shims (e.g. asdf) can resolve tools like node in the subprocess.
+  if [[ -f "$HOME/.tool-versions" && ! -f "$_ri_home/.tool-versions" ]]; then
+    cp "$HOME/.tool-versions" "$_ri_home/.tool-versions"
+  fi
   # Use _ri_pwd as working directory when provided; fall back to REPO_DIR.
   local _ri_cwd="${_ri_pwd:-$REPO_DIR}"
   _ri_output="$(cd "$_ri_cwd" && HOME="$_ri_home" bash "$INSTALL_SH" "$@" 2>&1)" \
@@ -214,7 +219,7 @@ _run_installer_no_cmd() {
 # ---------------------------------------------------------------------------
 # Shared file list used by global-install tests (issue #9: avoid duplication)
 # ---------------------------------------------------------------------------
-# 22 files installed by install_global / install_to
+# 21 files installed by install_global / install_to
 _EXPECTED_FILES_REL=(
   "commands/crafter/do.md"
   "commands/crafter/debug.md"
@@ -227,7 +232,6 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/delegation.md"
   "crafter/rules/post-change.md"
   "crafter/rules/task-lifecycle.md"
-  "crafter/rules/update-check.md"
   "crafter/templates/PROJECT.md"
   "crafter/templates/ARCHITECTURE.md"
   "crafter/templates/STATE.md"
@@ -464,7 +468,80 @@ test_local_idempotency() {
 }
 
 # ---------------------------------------------------------------------------
-# E. _detect_script_dir
+# E. Hook installation
+# ---------------------------------------------------------------------------
+
+test_hook_source_file_exists_in_repo() {
+  assert_file_exists "$REPO_DIR/hooks/crafter-check-update.js"
+}
+
+test_global_installs_hook_file() {
+  local tmp home_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  assert_file_exists "$home_dir/.claude/hooks/crafter-check-update.js"
+}
+
+test_local_installs_hook_file() {
+  local tmp home_dir proj_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+  assert_file_exists "$home_dir/.claude/hooks/crafter-check-update.js"
+}
+
+test_global_registers_hook_in_settings() {
+  local tmp home_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "crafter-check-update.js"
+  assert_contains "$settings" "SessionStart"
+}
+
+test_local_registers_hook_in_settings() {
+  local tmp home_dir proj_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "crafter-check-update.js"
+  assert_contains "$settings" "SessionStart"
+}
+
+test_hook_registration_is_idempotent() {
+  local tmp home_dir output ec settings count
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  # Second run must not duplicate the hook entry
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  count="$(echo "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "hook_registration_is_idempotent: expected 1 occurrence of crafter-check-update.js in settings.json, got $count"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# F. _detect_script_dir
 # ---------------------------------------------------------------------------
 # Extract the real _detect_script_dir function from install.sh and wrap it
 # so that tests can supply the source path as a parameter instead of relying
