@@ -5,7 +5,7 @@
 Review whether the changes affect any `.planning/` context files beyond STATE.md:
 
 - **PROJECT.md** — update if the stack, dependencies, or conventions changed.
-- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed.
+- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed. Delegate this to the **Implementer** subagent.
 
 If updates are needed, show the proposed changes to the user and wait for approval before applying.
 
@@ -24,7 +24,6 @@ One logical change = one commit.
 After a successful commit, update `.planning/STATE.md`:
 - Add an entry to **Recent Changes**
 - Update **Current Focus** if it has shifted
-- Check off any items in **Done**
 - Remove or update any relevant **Known Issues** entries
 
 Show the user what was updated.

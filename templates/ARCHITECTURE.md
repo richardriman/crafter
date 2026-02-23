@@ -1,5 +1,7 @@
 # Architecture
 
+<!-- Use either the directory tree OR the navigation table below — not both. Pick whichever fits your project better. -->
+
 ## Structure
 
 ```
