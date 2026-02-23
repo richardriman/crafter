@@ -5,7 +5,7 @@
 - **Date:** 2026-02-23
 - **Branch:** main
 - **Scope:** Medium
-- **Status:** active
+- **Status:** completed
 
 ## Request
 
@@ -25,3 +25,4 @@ Optimize context window usage in the orchestrator for multi-step tasks. The orch
 
 ## Outcome
 
+Commit 85b642c. Four changes: compact Verifier output, session breaks between steps (Step 6a), targeted Edit for task file checkboxes, Planner staging for plans >5 steps. Five audit fixes applied (loop-back, flow routing, stage semantics, orchestrator staging instructions, check-off timing). Ten pre-existing workflow inconsistencies logged as Known Issues in STATE.md.
