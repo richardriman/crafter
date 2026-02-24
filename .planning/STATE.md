@@ -8,6 +8,8 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-24 | Released v0.4.0 | [v0.4.0](https://github.com/richardriman/crafter/releases/tag/v0.4.0) |
+| 2026-02-24 | Migrated meta-prompts to native agents, fixed all 11 known workflow issues, updated install + tests + docs | aec78c6 |
 | 2026-02-23 | Moved update check to SessionStart hook (replaced inline rule with hooks/crafter-check-update.js) | 20acf60 |
 | 2026-02-22 | Added test suite for install.sh (pure Bash, zero dependencies) | 8c302d3 |
 | 2026-02-22 | Added internal `/crafter:release` command for GitHub Releases with AI-generated notes | 312b391 |
@@ -24,11 +26,4 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Known Issues
 
-- Small scope bypasses task file creation — post-change completion may fail
-- Medium scope "one step at a time" lacks granularity guidance for the Planner
-- Small scope flow through Steps 4–6 unclear — orchestrator may skip Verify+Review
-- Review-fix iteration cap ambiguous — "would exceed the 3rd" vs "cap at 3"
-- Resume detection doesn't distinguish mid-Execute break from post-E→V→R session break
-- ARCHITECTURE.md handling inconsistent — `do.md` passes it to Planner but Planner doesn't use it; post-change reads it despite orchestrator ban
-- do-workflow.md REVIEW section partially duplicates do.md Step 6 (divergence risk)
-- map-project.md uses local-install fallback annotations on rule paths but do.md, debug.md, status.md do not
+None currently tracked.
