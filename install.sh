@@ -154,7 +154,7 @@ install_to() {
   local crafter_dest="$base/crafter"
   local rules_dest="$base/crafter/rules"
   local templates_dest="$base/crafter/templates"
-  local meta_prompts_dest="$base/crafter/meta-prompts"
+  local agents_dest="$base/agents"
 
   echo "Installing Crafter $label..."
 
@@ -182,12 +182,12 @@ install_to() {
   cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
   cp "$SCRIPT_DIR/templates/TASK.md"             "$templates_dest/TASK.md"
 
-  mkdir -p "$meta_prompts_dest"
-  cp "$SCRIPT_DIR/meta-prompts/planner.md"   "$meta_prompts_dest/planner.md"
-  cp "$SCRIPT_DIR/meta-prompts/implement.md" "$meta_prompts_dest/implement.md"
-  cp "$SCRIPT_DIR/meta-prompts/verify.md"    "$meta_prompts_dest/verify.md"
-  cp "$SCRIPT_DIR/meta-prompts/review.md"    "$meta_prompts_dest/review.md"
-  cp "$SCRIPT_DIR/meta-prompts/analyze.md"   "$meta_prompts_dest/analyze.md"
+  mkdir -p "$agents_dest"
+  cp "$SCRIPT_DIR/agents/crafter-planner.md"     "$agents_dest/crafter-planner.md"
+  cp "$SCRIPT_DIR/agents/crafter-implementer.md" "$agents_dest/crafter-implementer.md"
+  cp "$SCRIPT_DIR/agents/crafter-verifier.md"    "$agents_dest/crafter-verifier.md"
+  cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
+  cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
 }
 
 install_hook() {

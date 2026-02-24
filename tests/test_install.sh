@@ -237,11 +237,11 @@ _EXPECTED_FILES_REL=(
   "crafter/templates/STATE.md"
   "crafter/templates/claude-md.snippet"
   "crafter/templates/TASK.md"
-  "crafter/meta-prompts/planner.md"
-  "crafter/meta-prompts/implement.md"
-  "crafter/meta-prompts/verify.md"
-  "crafter/meta-prompts/review.md"
-  "crafter/meta-prompts/analyze.md"
+  "agents/crafter-planner.md"
+  "agents/crafter-implementer.md"
+  "agents/crafter-verifier.md"
+  "agents/crafter-reviewer.md"
+  "agents/crafter-analyzer.md"
 )
 
 # ---------------------------------------------------------------------------
@@ -349,7 +349,7 @@ test_global_creates_expected_directories() {
   assert_dir_exists "$home_dir/.claude/crafter"
   assert_dir_exists "$home_dir/.claude/crafter/rules"
   assert_dir_exists "$home_dir/.claude/crafter/templates"
-  assert_dir_exists "$home_dir/.claude/crafter/meta-prompts"
+  assert_dir_exists "$home_dir/.claude/agents"
 }
 
 test_global_copies_all_expected_files() {
@@ -407,7 +407,7 @@ test_local_creates_expected_directories() {
   assert_dir_exists "$proj_dir/.claude/crafter"
   assert_dir_exists "$proj_dir/.claude/crafter/rules"
   assert_dir_exists "$proj_dir/.claude/crafter/templates"
-  assert_dir_exists "$proj_dir/.claude/crafter/meta-prompts"
+  assert_dir_exists "$proj_dir/.claude/agents"
 }
 
 test_local_copies_all_expected_files() {

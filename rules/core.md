@@ -10,7 +10,7 @@
 ## Context File Maintenance
 
 - **PROJECT.md:** Update when the stack, dependencies, or conventions change.
-- **ARCHITECTURE.md:** Update when the structure, patterns, or key decisions change. Orchestrators must delegate ARCHITECTURE.md reads and writes to subagents.
+- **ARCHITECTURE.md:** Update when the structure, patterns, or key decisions change. Orchestrators must delegate ARCHITECTURE.md reads and writes to agents.
 - **STATE.md:** Updated via post-change steps after each commit.
 - Never update context files without showing the user what changed.
 

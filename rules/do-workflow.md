@@ -23,13 +23,11 @@
 - Report clearly what passed and what (if anything) did not.
 
 ### REVIEW
-- Show diffs after execution.
-- Highlight any deviations from the approved plan, even minor ones.
-- After receiving the review report, categorize issues by severity.
-- If Critical or Major issues exist, present them to the user with two options: fix automatically or proceed anyway.
-- If the user chooses to fix: delegate only the Critical/Major issues to the Implementer, then re-Verify and re-Review.
-- Cap the review-fix loop at 3 iterations. After the 3rd review, present remaining issues and recommend the user decide manually.
-- Minor issues and Suggestions are informational — they do not trigger the fix loop.
+- The `crafter-reviewer` agent produces a diff summary and issue report as part of its review output.
+- Issues are categorized by severity (Critical, Major, Minor, Suggestion).
+- Only Critical and Major issues trigger the fix loop.
+- The review-fix loop runs a maximum of 3 iterations — a 4th iteration never starts.
+- Minor issues and Suggestions are informational only.
 - Always wait for the user's assessment before moving on.
 
 ## Scope Detection

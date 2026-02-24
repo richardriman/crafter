@@ -55,13 +55,13 @@ Crafter maintains three living documents in `.planning/`:
 
 These files are read at the start of every Claude Code session (via a small snippet in `CLAUDE.md`) so Claude always has fresh context about your project.
 
-## Orchestrator / Subagent Architecture
+## Orchestrator / Agent Architecture
 
-Crafter commands run as **orchestrators**: the main context window manages the workflow and communicates with you, while specialized subagents do the actual work in fresh context windows.
+Crafter commands run as **orchestrators**: the main context window manages the workflow and communicates with you, while specialized agents do the actual work in fresh context windows.
 
-This matters because running planning, implementation, verification, and review all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each subagent starts clean with only the context it needs.
+This matters because running planning, implementation, verification, and review all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
 
-| Subagent | Role | Used in |
+| Agent | Role | Used in |
 |---|---|---|
 | **Planner** | Tech lead — proposes the plan | `/crafter:do` PLAN step |
 | **Implementer** | Senior developer — implements the approved plan | `/crafter:do` EXECUTE step, `/crafter:debug` fix step |
@@ -69,7 +69,7 @@ This matters because running planning, implementation, verification, and review 
 | **Reviewer** | Code reviewer — looks for bugs, security issues, deviations | `/crafter:do` REVIEW step |
 | **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter:map-project`, Large scope research, `/crafter:debug` hypothesis |
 
-Meta-prompts for each role live in `~/.claude/crafter/meta-prompts/`. The orchestrator fills in the `$CONTEXT` placeholder dynamically with only the files each role needs.
+Agents for each role are defined as native Claude Code agents in `~/.claude/agents/`. The orchestrator spawns agents by name and provides each one with only the context it needs.
 
 ### Automatic Parallelization
 

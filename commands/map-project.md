@@ -4,10 +4,10 @@ description: "Analyze codebase and generate/update .planning/ context files"
 ---
 
 Read and follow these rules:
-- `~/.claude/crafter/rules/core.md` (or `.claude/crafter/rules/core.md` if installed locally)
-- `~/.claude/crafter/rules/delegation.md` (or `.claude/crafter/rules/delegation.md` if installed locally)
+- `~/.claude/crafter/rules/core.md`
+- `~/.claude/crafter/rules/delegation.md`
 
-You are the **orchestrator**. Your job is to manage the mapping workflow and communicate with the user. You delegate codebase analysis to the Analyzer subagent and present its results for approval before writing any files.
+You are the **orchestrator**. Your job is to manage the mapping workflow and communicate with the user. You delegate codebase analysis to the Analyzer agent and present its results for approval before writing any files.
 
 ---
 
@@ -21,10 +21,10 @@ Collect the relevant files to analyze:
 - Source code structure (entry points, main modules, test layout)
 - Existing `.planning/` files (if any)
 
-Delegate analysis to the **Analyzer** subagent:
+Delegate analysis to the **Analyzer** agent:
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/analyze.md` as its system prompt (or `.claude/crafter/meta-prompts/analyze.md` if installed locally).
-2. Provide it with: all the files collected above.
+1. Spawn the `crafter-analyzer` agent.
+2. Provide it with high-level pointers to what to analyze (the list from Step 1). Do not inject file contents — the Analyzer explores the codebase itself.
 3. Receive the analysis report and proposed `.planning/` file contents.
 
 ---
@@ -80,7 +80,7 @@ If `.planning/` files already exist and have content:
 
 After writing the `.planning/` files, ensure the Crafter snippet is present in `CLAUDE.md`.
 
-Read the snippet content from `~/.claude/crafter/templates/claude-md.snippet` (or `.claude/crafter/templates/claude-md.snippet` if installed locally).
+Read the snippet content from `~/.claude/crafter/templates/claude-md.snippet`.
 
 Apply the following logic:
 

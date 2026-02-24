@@ -9,13 +9,13 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/delegation.md`
 - `~/.claude/crafter/rules/task-lifecycle.md`
 
-You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, and verification to subagents with fresh context.
+You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, and verification to agents with fresh context.
 
 Read the project context files (if they exist):
 - `.planning/STATE.md` (full file — your primary source of current status)
 - `.planning/PROJECT.md` — only the **Stack** and **How to Run** sections
 
-Do NOT read `.planning/ARCHITECTURE.md` yourself — pass it to subagents that need it (Analyzer, Reviewer).
+Do NOT read `.planning/ARCHITECTURE.md` yourself — pass it to agents that need it (Analyzer, Reviewer).
 
 The problem to debug: $ARGUMENTS
 
@@ -44,9 +44,9 @@ After collecting symptoms, create the task file per `~/.claude/crafter/rules/tas
 
 ## Step 2 — Formulate a Hypothesis
 
-Delegate analysis to the **Analyzer** subagent:
+Delegate analysis to the **Analyzer** agent:
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/analyze.md` as its system prompt.
+1. Spawn the `crafter-analyzer` agent.
 2. Provide it with: the symptom description, relevant source files, and any logs or error messages the user shared.
 3. Receive the Analyzer's findings — hypotheses ranked by likelihood, evidence from the code.
 4. Present the hypothesis to the user in plain language:
@@ -57,7 +57,7 @@ Delegate analysis to the **Analyzer** subagent:
 
 ## Step 3 — Gather Evidence
 
-Ask the Analyzer to dig deeper into the most likely hypothesis if needed. Only observe and analyze — no changes yet.
+Ask the Analyzer agent to dig deeper into the most likely hypothesis if needed. Only observe and analyze — no changes yet.
 
 Report what was found and whether it confirms or refutes the hypothesis. If the hypothesis was wrong, re-delegate with the new information and repeat.
 
@@ -75,17 +75,17 @@ After fix approval, update the task file per `~/.claude/crafter/rules/task-lifec
 
 ## Step 5 — Apply Fix
 
-Delegate the fix to the **Implementer** subagent:
+Delegate the fix to the **Implementer** agent:
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/implement.md` as its system prompt.
+1. Spawn the `crafter-implementer` agent.
 2. Provide it with: the approved fix description, the relevant source files.
 3. Receive the implementation summary. If the Implementer reports a blocker, discuss it with the user before continuing.
 
 ## Step 6 — Verify
 
-Delegate verification to the **Verifier** subagent:
+Delegate verification to the **Verifier** agent:
 
-1. Spawn a subagent using `~/.claude/crafter/meta-prompts/verify.md` as its system prompt.
+1. Spawn the `crafter-verifier` agent.
 2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, and any relevant test files.
 3. Receive and present the verification report.
 

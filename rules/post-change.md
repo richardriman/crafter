@@ -5,7 +5,7 @@
 Review whether the changes affect any `.planning/` context files beyond STATE.md:
 
 - **PROJECT.md** — update if the stack, dependencies, or conventions changed.
-- **ARCHITECTURE.md** — update if the structure, patterns, or key decisions changed. Delegate this to the **Implementer** subagent.
+- **ARCHITECTURE.md** — delegate this check to the **Implementer** agent. The Implementer reads ARCHITECTURE.md, compares it with what changed, and proposes updates if needed. The orchestrator does not read ARCHITECTURE.md directly.
 
 If updates are needed, show the proposed changes to the user and wait for approval before applying.
 

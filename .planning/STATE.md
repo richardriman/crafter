@@ -29,9 +29,6 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - Small scope flow through Steps 4–6 unclear — orchestrator may skip Verify+Review
 - Review-fix iteration cap ambiguous — "would exceed the 3rd" vs "cap at 3"
 - Resume detection doesn't distinguish mid-Execute break from post-E→V→R session break
-- Analyzer meta-prompt is for project mapping, not research — Large scope Step 2 delegates research to it
 - ARCHITECTURE.md handling inconsistent — `do.md` passes it to Planner but Planner doesn't use it; post-change reads it despite orchestrator ban
-- "Show diffs" in do-workflow.md not reflected in Reviewer meta-prompt or Step 6
 - do-workflow.md REVIEW section partially duplicates do.md Step 6 (divergence risk)
-- delegation.md mentions `claude --print` without guidance on when to use it vs Task tool
 - map-project.md uses local-install fallback annotations on rule paths but do.md, debug.md, status.md do not
