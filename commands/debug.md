@@ -87,7 +87,8 @@ Delegate verification to the **Verifier** agent:
 
 1. Spawn the `crafter-verifier` agent.
 2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, and any relevant test files.
-3. Receive and present the verification report.
+3. Remind the Verifier in the task prompt: "Write your verification report as plain text in your response. Do not create any files."
+4. Receive and present the verification report.
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
 

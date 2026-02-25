@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-24
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Large
 
 ## Request
@@ -40,4 +40,5 @@ Fix the known issues in do.md workflow (all 11 items from STATE.md Known Issues)
 - **Decision:** Switch delegation model from push (orchestrator pre-reads code, injects $CONTEXT) to pull (agents explore codebase themselves via Read/Grep/Glob). **Reason:** Orchestrator was doing research work that belongs to Planner/Implementer. Planner (Opus) does deep code exploration, produces implementation-ready plans; Implementer (Sonnet) executes mechanically.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+Commit `aec78c6`. All 14 steps completed across 2 sessions. Created 5 native agents in `agents/`, fixed all 11 known workflow issues, updated install.sh + tests (32/32 pass), updated all commands/rules/docs, deleted `meta-prompts/`. No deviations from plan.

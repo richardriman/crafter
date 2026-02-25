@@ -84,8 +84,9 @@ Delegate verification to the **`crafter-verifier`** agent:
 
 1. Spawn the `crafter-verifier` agent.
 2. Provide it with: the plan's verification criteria and the list of changed files. The Verifier reads and explores files itself.
-3. Receive the verification report.
-4. Present the report to the user clearly.
+3. Remind the Verifier in the task prompt: "Write your verification report as plain text in your response. Do not create any files."
+4. Receive the verification report.
+5. Present the report to the user clearly.
 
 If the Verifier reports failures, discuss them with the user and decide whether to re-delegate to the Implementer or adjust the plan.
 

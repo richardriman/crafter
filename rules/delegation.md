@@ -28,7 +28,7 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 |---|---|---|
 | `crafter-planner` | `opus` | Deep reasoning for plan quality |
 | `crafter-implementer` | `sonnet` | Good balance of code quality and speed |
-| `crafter-verifier` | `haiku` | Lightweight read-and-check task |
+| `crafter-verifier` | `sonnet` | Needs reliable instruction-following for output constraints |
 | `crafter-reviewer` | `opus` | Thorough code analysis |
 | `crafter-analyzer` | `sonnet` | Adaptive — use `opus` for large scope tasks that require deeper research |
 
