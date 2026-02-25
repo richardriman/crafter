@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-02-26 | Released v0.4.1 — agents prefer native tools over Bash, reducing permission prompts | [v0.4.1](https://github.com/richardriman/crafter/releases/tag/v0.4.1) |
 | 2026-02-24 | Released v0.4.0 | [v0.4.0](https://github.com/richardriman/crafter/releases/tag/v0.4.0) |
 | 2026-02-24 | Migrated meta-prompts to native agents, fixed all 11 known workflow issues, updated install + tests + docs | aec78c6 |
 | 2026-02-23 | Moved update check to SessionStart hook (replaced inline rule with hooks/crafter-check-update.js) | 20acf60 |
