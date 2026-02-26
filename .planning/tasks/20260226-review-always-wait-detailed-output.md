@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-26
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -15,12 +15,12 @@ Two changes to the review step in the Crafter workflow:
 
 ## Plan
 
-- [ ] Step 1: Restructure Step 6 (REVIEW) in `commands/do.md` — auto-proceed only on zero findings, wait for user on any finding, then branch by severity
-- [ ] Step 2: Strengthen REVIEW rules in `rules/do-workflow.md` — always wait when findings exist, auto-proceed only on clean review
-- [ ] Step 3: Update reviewer output format in `agents/crafter-reviewer.md` — table (#, What, Where, Severity), recommendations below, every finding listed individually
+- [x] Step 1: Restructure Step 6 (REVIEW) in `commands/do.md` — auto-proceed only on zero findings, wait for user on any finding, then branch by severity
+- [x] Step 2: Strengthen REVIEW rules in `rules/do-workflow.md` — always wait when findings exist, auto-proceed only on clean review
+- [x] Step 3: Update reviewer output format in `agents/crafter-reviewer.md` — table (#, What, Where, Severity), recommendations below, every finding listed individually
 
 ## Decisions
 <!-- Key decisions made during the workflow -->
 
 ## Outcome
-<!-- To be filled after completion -->
+Commits: f00d746, affe324. Released as v0.5.0.
