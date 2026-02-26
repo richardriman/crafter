@@ -11,14 +11,18 @@ Prepare a GitHub Release for this project.
 
 ## Step 1 — Gather Context
 
-1. Read the `VERSION` file to get the current version (referred to as `<VERSION>` below).
-2. Check whether the release `v<VERSION>` already exists — verify **both** locally and on GitHub:
+1. Sync remote tags so local state matches GitHub:
+   ```
+   git fetch --tags
+   ```
+2. Read the `VERSION` file to get the current version (referred to as `<VERSION>` below).
+3. Check whether the release `v<VERSION>` already exists — verify **both** locally and on GitHub:
    ```
    git tag --list "v<VERSION>"
    gh release view "v<VERSION>" --json tagName 2>/dev/null
    ```
    If either check finds an existing tag/release, warn the user and stop. The release has already been published, or the VERSION file has not been updated.
-3. Run the following to find the most recent release tag:
+4. Run the following to find the most recent release tag:
    ```
    git tag --list 'v*' --sort=-version:refname
    ```
@@ -28,7 +32,7 @@ Prepare a GitHub Release for this project.
      git rev-list --max-parents=0 HEAD
      ```
      and use that commit hash as the base.
-4. Run the following to collect all commits since the last release:
+5. Run the following to collect all commits since the last release:
    ```
    git log <last-tag>..HEAD --oneline
    ```
