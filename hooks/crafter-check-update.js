@@ -24,11 +24,21 @@ try {
   }
 } catch (e) {}
 
+// Read current installed version
+let installedVersion = null;
+try {
+  if (fs.existsSync(globalVersionFile)) {
+    installedVersion = fs.readFileSync(globalVersionFile, 'utf8').trim();
+  } else if (fs.existsSync(projectVersionFile)) {
+    installedVersion = fs.readFileSync(projectVersionFile, 'utf8').trim();
+  }
+} catch (e) {}
+
 // Synchronous part: read cache and print notice if update is available
 try {
   const raw = fs.readFileSync(cacheFile, 'utf8');
   const cache = JSON.parse(raw);
-  if (cache && cache.update_available === true) {
+  if (cache && cache.update_available === true && installedVersion === cache.installed) {
     process.stdout.write(
       `Note: Crafter update available (installed: ${cache.installed}, latest: ${cache.latest}). Run: curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash\n`
     );
@@ -56,11 +66,12 @@ const bgScript = `
     }
 
     // Check cache freshness — skip GitHub call if checked within 24 hours
+    // Also invalidate cache if installed version changed (e.g. after upgrade)
     const now = Math.floor(Date.now() / 1000);
     try {
       const raw = fs.readFileSync(cacheFile, 'utf8');
       const cache = JSON.parse(raw);
-      if (cache && cache.checked && (now - cache.checked) < 86400) {
+      if (cache && cache.checked && (now - cache.checked) < 14400 && cache.installed === installed) {
         process.exit(0);
       }
     } catch (e) {
