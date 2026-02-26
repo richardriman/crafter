@@ -56,12 +56,17 @@ For each changed file, run `git diff` on the changed files (use appropriate flag
 | src/foo.ts | Added `validateInput` helper; updated `processRequest` to call it. |
 
 **Issues found:**
-| # | Severity | File | Description |
+
+List every finding as its own row. Do not group multiple occurrences into a single entry or summarize them (e.g., never write "same issue in 5 other files" or "and N more"). Each occurrence must have its own row with the specific file:line.
+
+| # | What | Where | Severity |
 |---|---|---|---|
-| 1 | Critical / Major / Minor / Suggestion | file.ts:42 | ... |
+| 1 | Description of the finding | file.ts:42 | Critical / Major / Minor / Suggestion |
 
 If no issues are found, write "No issues found."
 
 **Plan deviations:** (list, or "None found")
 
-**Summary:** one paragraph summarizing the overall quality of the change.
+**Recommendations:**
+- **Must fix (Critical/Major):** list each Critical and Major finding by number, or "None" if there are no Critical or Major findings.
+- **Optional (Minor/Suggestion):** list each Minor and Suggestion finding by number, or "None" if there are no Minor or Suggestion findings.

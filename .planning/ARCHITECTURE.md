@@ -53,7 +53,7 @@ Agents are defined as native Claude Code agents in `agents/` and are invoked by 
 
 ### Model Selection
 
-Each agent role has an assigned model tier (opus / sonnet / haiku) based on task complexity. Configuration lives in `rules/delegation.md` alongside other delegation rules. The Analyzer role is adaptive — it uses sonnet by default but upgrades to opus for Large scope tasks.
+Each agent role has an assigned model tier (opus / sonnet) based on task complexity. Configuration lives in `rules/delegation.md` alongside other delegation rules. The Analyzer role is adaptive — it uses sonnet by default but upgrades to opus for Large scope tasks.
 
 ### Agent Roles and Context
 

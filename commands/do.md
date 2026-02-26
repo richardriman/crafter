@@ -97,15 +97,16 @@ Delegate code review to the `crafter-reviewer` agent and handle findings. The re
 a. Spawn the `crafter-reviewer` agent.
 b. Provide it with: the approved plan, the list of changed files, and a mention of `.planning/ARCHITECTURE.md` if available. The Reviewer reads files itself.
 c. Receive the review report.
-d. Present the full report to the user.
-e. Categorize findings by severity. Minor and Suggestion-level findings are informational only and do not trigger the fix loop.
-   - If there are **no Critical or Major issues**: wait for the user's acknowledgment, then proceed to Step 6a.
-   - If there are **Critical or Major issues**: continue to sub-step (f).
-f. Present the Critical and Major issues to the user and ask:
-   - **"Fix and re-review"** (recommended) — continue to sub-step (g).
-   - **"Proceed anyway"** — proceed to Step 6a.
-g. If the user chooses to fix:
-   1. Check the iteration count. If 3 iterations have already been completed, do not start a 4th — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (g.2).
+d. Present the full report to the user. Categorize findings by severity. Minor and Suggestion-level findings are informational only and do not trigger the fix loop.
+   - If there are **no findings at all**: proceed automatically to Step 6a.
+   - If there are **any findings** (regardless of severity): wait for the user's response before proceeding.
+e. After the user responds:
+   - If there are **Critical or Major issues**: present them and ask:
+     - **"Fix and re-review"** (recommended) — continue to sub-step (f).
+     - **"Proceed anyway"** — proceed to Step 6a.
+   - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6a.
+f. If the user chooses to fix:
+   1. Check the iteration count. If 3 iterations have already been completed, do not start a 4th — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (f.2).
    2. Spawn the `crafter-implementer` agent. Provide it with: the list of Critical/Major issues from the review (severity, file, line, description) and the original approved plan for context. The Implementer reads files itself.
    3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
    4. Re-run **Step 5 (VERIFY)** on the newly changed files.
