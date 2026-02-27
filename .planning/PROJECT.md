@@ -15,6 +15,7 @@
 - **Structure:** top-level directories by function (commands, agents, rules, templates, docs)
 - **Commits:** conventional commits format (feat/fix/refactor/docs/chore/test)
 - **Language:** all persistent files in English; conversational output matches user's language
+- **Source vs install:** When working on Crafter itself, always modify source files in the repository (`agents/`, `commands/`, `rules/`, `templates/`), never the installed copies in `~/.claude/crafter/`.
 
 ## Key Decisions
 

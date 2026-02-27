@@ -18,9 +18,10 @@ Runs at workflow start, before scope detection.
 4. If on main/master: show all active task files and let the user choose.
 5. If a match is found: read the task file, present its contents to the user, and ask whether to resume or start fresh.
    - If resuming, determine the appropriate workflow step from the task file:
-     - Request filled but no Plan → go to scope detection / planning.
-     - Plan filled → go to Execute.
-     - Execution partially done → go to the next unchecked step.
+     - Request filled but Plan section still contains `_(pending)_` → go to scope detection / planning.
+     - Plan filled with `**Plan status:** draft` → go to plan approval (present plan summary to user and wait for approval).
+     - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next).
+     - Otherwise (unrecognized Plan content) → present to user and ask how to proceed.
    - If starting fresh: proceed normally (the old file stays as-is; a new one will be created after scope detection).
 6. If no match is found: proceed normally. Task file creation happens after scope detection.
 
@@ -35,7 +36,7 @@ Runs after the first user-interaction gate (scope detection in `/crafter:do`, sy
 
 Runs at each gate, silently — no user interaction needed.
 
-- **After plan approval:** Write the approved plan to the Plan section. Use checkboxes (`- [ ]`) for each plan step if multi-step.
+- **After planning:** The Planner agent writes the full plan directly to the Plan section (with checkboxes for each step) and sets `**Plan status:** draft`. After the user approves the plan, the orchestrator changes the status to `**Plan status:** approved` (administrative edit via Edit tool). These are the only two valid states for the plan status field.
 - **After each step's full cycle (Execute → Verify → Review):** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
 - **After fix approval (debug workflow):** Write the proposed fix to the Plan section.
 - **After notable review findings:** Append to the Decisions section.

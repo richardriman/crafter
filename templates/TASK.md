@@ -10,7 +10,8 @@
 <!-- The original user request, quoted verbatim -->
 
 ## Plan
-<!-- The approved plan; use checkboxes (- [ ] / - [x]) for multi-step plans -->
+_(pending)_
+<!-- The Planner agent writes the plan here; use checkboxes (- [ ] / - [x]) for multi-step plans -->
 
 ## Decisions
 <!-- Key decisions made during the workflow, in chronological order -->

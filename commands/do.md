@@ -25,7 +25,12 @@ The user's request is: $ARGUMENTS
 
 Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
 
-If resuming an active task, the task file's checkboxes are the source of truth. The first unchecked step (`- [ ]`) is the next step to execute — go to Step 4 to execute that plan step.
+If resuming an active task, first check the plan status in the task file:
+- If the `## Plan` section still contains `_(pending)_` (no actual steps written yet) — go to Step 1 (scope detection).
+- If `**Plan status:** draft` — go to Step 3 to present the plan summary and wait for user approval.
+- If `**Plan status:** approved` — the task file's checkboxes are the source of truth. The first unchecked step (`- [ ]`) is the next step to execute — go to Step 4 to execute that plan step.
+- Otherwise (Plan section contains unrecognized content) — present the task file to the user and ask how to proceed.
+
 If not resuming, continue to Step 1.
 
 ## Step 1 — Auto-detect scope
@@ -56,14 +61,19 @@ Do not proceed to planning until you have enough information.
 Delegate planning to the **`crafter-planner`** agent:
 
 1. Spawn the `crafter-planner` agent.
-2. Provide it with: the user's request, high-level pointers to relevant modules or areas of code, and a mention of `.planning/ARCHITECTURE.md` if it exists (the Planner will read it itself). Do not inject file contents — the Planner uses its own Read/Grep/Glob tools to explore the codebase.
-3. Receive the plan from the agent.
-4. Present the plan to the user clearly.
+2. Provide it with: the user's request, the task file path, high-level pointers to relevant modules or areas of code, and a mention of `.planning/ARCHITECTURE.md` if it exists (the Planner will read it itself). Do not inject file contents — the Planner uses its own Read/Grep/Glob tools to explore the codebase.
+3. The Planner writes the full plan directly to the task file and returns a structured summary.
+4. Present the Planner's summary to the user. The summary must include:
+   - **Approach** — the overall strategy in 1–2 sentences
+   - **Steps** — every step, with a brief description of what changes and which files are affected
+   - **Verification criteria** — how correctness will be confirmed
+   - **Unknowns** — any flags or open questions from the Planner
+   - A note that the full detailed plan is in the task file (mention the path)
 5. **Wait for explicit user approval before proceeding.**
 
-If the user requests changes, send the revised request back to the Planner and repeat until approved.
+If the user requests changes, send the revised request back to the Planner (with the same task file path) and repeat until approved.
 
-After plan approval, update the task file with the approved plan per `~/.claude/crafter/rules/task-lifecycle.md`.
+Once the user approves, use the Edit tool directly to change `**Plan status:** draft` to `**Plan status:** approved` in the task file's `## Plan` section (this is an administrative update, like checking off completed steps).
 
 If the approved plan contains **stages** (groups of steps under stage headings), execute them as a single continuous sequence — stages are a planning structure for readability, not session boundaries. The step-by-step execution in Step 4 and session breaks in Step 6a operate on individual steps regardless of stage grouping.
 
@@ -97,9 +107,9 @@ Delegate code review to the `crafter-reviewer` agent and handle findings. The re
 a. Spawn the `crafter-reviewer` agent.
 b. Provide it with: the approved plan, the list of changed files, and a mention of `.planning/ARCHITECTURE.md` if available. The Reviewer reads files itself.
 c. Receive the review report.
-d. Present the full report to the user. Categorize findings by severity. Minor and Suggestion-level findings are informational only and do not trigger the fix loop.
-   - If there are **no findings at all**: proceed automatically to Step 6a.
-   - If there are **any findings** (regardless of severity): wait for the user's response before proceeding.
+d. Present the review results to the user using the Reviewer's table format — reproduce the **Diff summary** and **Issues found** tables directly. Do not convert tables to prose or bullet lists. After the tables, state the recommendation (must-fix vs. optional).
+   - **MANDATORY GATE — If there are ANY findings** (including Minor and Suggestion): **STOP and wait for the user's response**. Do not proceed to Step 6a or any other step. Do not skip this wait for any reason. Minor and Suggestion findings are informational only (they do not trigger the fix loop), but the user must still see and acknowledge them.
+   - **Only if there are zero findings**: proceed automatically to Step 6a.
 e. After the user responds:
    - If there are **Critical or Major issues**: present them and ask:
      - **"Fix and re-review"** (recommended) — continue to sub-step (f).
