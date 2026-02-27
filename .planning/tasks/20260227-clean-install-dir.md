@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-02-27
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Small
 
 ## Request
@@ -174,3 +174,4 @@ The fix: Add `rm -rf` calls for the three managed directories (`crafter/`, `comm
 ## Decisions
 
 ## Outcome
+Commit 5c1d41a — install script now cleans `crafter/`, `commands/crafter/` (rm -rf) and `agents/crafter-*.md` (rm -f) before copying new files. Three new tests verify stale file removal and preservation of non-Crafter agents.

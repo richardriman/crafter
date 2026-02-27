@@ -1,7 +1,7 @@
 # Task: Improve Plan Summary Detail
 
 ## Metadata
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 - **Created:** 2026-02-27
 
@@ -92,4 +92,4 @@ _(none yet)_
 
 ## Outcome
 
-_(pending)_
+Commit 7722b9f — Planner writes full plan to task file with draft/approved lifecycle, orchestrator presents structured summary, review gate enforced as MANDATORY with table format, resume detection handles all plan states.
