@@ -156,6 +156,10 @@ install_to() {
   local templates_dest="$base/crafter/templates"
   local agents_dest="$base/agents"
 
+  # Clean previously installed files to prevent stale leftovers on upgrade
+  rm -rf "$commands_dest" "$crafter_dest"
+  rm -f "$agents_dest"/crafter-*.md
+
   echo "Installing Crafter $label..."
 
   mkdir -p "$commands_dest"

@@ -104,6 +104,16 @@ assert_file_nonempty() {
   fi
 }
 
+assert_file_not_exists() {
+  local path="$1"
+  if [[ ! -e "$path" ]]; then
+    return 0
+  else
+    _fail "assert_file_not_exists: '$path' exists but should have been removed"
+    return 1
+  fi
+}
+
 # Internal: record a failure and increment counter (does NOT abort the test)
 _fail() {
   printf "  ${_RED}FAIL${_RESET} [%s]: %s\n" "$_CURRENT_TEST" "$1" >&2
@@ -465,6 +475,94 @@ test_local_idempotency() {
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
   assert_contains "$output" "installed locally"
+}
+
+# ---------------------------------------------------------------------------
+# D2. Upgrade cleans stale files
+# ---------------------------------------------------------------------------
+
+test_global_upgrade_removes_stale_files() {
+  local tmp home_dir output ec base
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  # First install
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+
+  base="$home_dir/.claude"
+  # Simulate stale files from a previous version
+  echo "stale" > "$base/crafter/rules/old-rule.md"
+  echo "stale" > "$base/crafter/templates/old-template.md"
+  echo "stale" > "$base/commands/crafter/old-command.md"
+  echo "stale" > "$base/agents/crafter-old-agent.md"
+
+  # Second install (upgrade)
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+
+  # Stale files must be gone
+  assert_file_not_exists "$base/crafter/rules/old-rule.md"
+  assert_file_not_exists "$base/crafter/templates/old-template.md"
+  assert_file_not_exists "$base/commands/crafter/old-command.md"
+  assert_file_not_exists "$base/agents/crafter-old-agent.md"
+
+  # Current files must still be present
+  for rel in "${_EXPECTED_FILES_REL[@]}"; do
+    assert_file_exists "$base/$rel"
+  done
+}
+
+test_local_upgrade_removes_stale_files() {
+  local tmp home_dir proj_dir output ec base
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  # First install
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+
+  base="$proj_dir/.claude"
+  # Simulate stale files
+  echo "stale" > "$base/crafter/rules/old-rule.md"
+  echo "stale" > "$base/commands/crafter/old-command.md"
+  echo "stale" > "$base/agents/crafter-old-agent.md"
+
+  # Second install (upgrade)
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+
+  # Stale files must be gone
+  assert_file_not_exists "$base/crafter/rules/old-rule.md"
+  assert_file_not_exists "$base/commands/crafter/old-command.md"
+  assert_file_not_exists "$base/agents/crafter-old-agent.md"
+
+  # Current files must still be present
+  for rel in "${_EXPECTED_FILES_REL[@]}"; do
+    assert_file_exists "$base/$rel"
+  done
+}
+
+test_upgrade_preserves_non_crafter_agents() {
+  local tmp home_dir output ec base
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  # First install
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+
+  base="$home_dir/.claude"
+  # Place a non-Crafter agent file
+  echo "other tool agent" > "$base/agents/other-tool-agent.md"
+
+  # Second install (upgrade)
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+
+  # Non-Crafter agent must survive
+  assert_file_exists "$base/agents/other-tool-agent.md"
 }
 
 # ---------------------------------------------------------------------------
