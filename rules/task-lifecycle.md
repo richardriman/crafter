@@ -4,15 +4,16 @@
 
 - Location: `{PROJECT_PATH}/.planning/tasks/<filename>.md` — where `PROJECT_PATH` is determined by the orchestrator's project resolution step (see `commands/do.md`).
 - Format: `YYYYMMDD-<topic>.md`
-- Topic derivation from branch: take the full git branch name and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
+- Topic derivation from branch: get the git branch name from the project directory (e.g., `git -C {PROJECT_PATH} branch --show-current`) and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
 - On main/master: derive the topic from the user's request (first few meaningful words, slug-ified using the same sanitization rules).
 - Examples: branch `feat/add-health-check` → `20260220-feat-add-health-check.md`; branch `RR-do-cool-thing` → `20260220-rr-do-cool-thing.md`
+- **Language:** All task file content — topic slug, request description, plan, decisions, outcome — must always be written in English, regardless of the user's conversation language. This reinforces the core rule: "Persistent files (.planning/*, saved plans): always English."
 
 ## Resume Detection
 
 Runs at workflow start, before scope detection.
 
-1. Get the current git branch name.
+1. Get the current git branch name from the project directory: `git -C {PROJECT_PATH} branch --show-current`.
 2. **Use Grep to search efficiently.** Run a Grep for `**Status:** active` across all files in `{PROJECT_PATH}/.planning/tasks/`. This returns only files with active tasks — do not read every file individually. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching.
 3. If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: "continue", "resume", "pokracuj", "dál", "further", "next step", "carry on" — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection.
 4. If on a feature branch: match files whose topic part corresponds to the sanitized branch name.
@@ -41,12 +42,14 @@ Runs at each gate, silently — no user interaction needed.
 - **After each step's full cycle (Execute → Verify → Review):** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
 - **After fix approval (debug workflow):** Write the proposed fix to the Plan section.
 - **After notable review findings:** Append to the Decisions section.
+- **After scope expansion:** If the scope expands or the request is refined during discussion (e.g., additional steps are added to the plan), update the Request section to reflect the final agreed-upon scope before proceeding to execution. The Request should serve as an accurate record of what was actually done, not just the initial input.
 
 ## Task File Completion
 
 Runs during post-change, after commit.
 
 - Fill in the Outcome section with the commit SHA and a brief summary.
+- Check off any remaining plan steps (`- [ ]` → `- [x]`).
 - Set Status to `completed`.
 
 ## Edge Cases
