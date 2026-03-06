@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-03-06 | Workflow hardening — `git -C {PROJECT_PATH}` branch detection, English-only task files, mandatory post-change checklist, scope expansion rule | 5d46339 |
 | 2026-03-06 | Smarter /crafter:do entry logic — multi-project workspace support (`--project` flag + auto-discovery), Grep-based resume detection with resume-intent words, guardrails against ignoring clear user input, `{PROJECT_PATH}` across all rule files | 47745a3 |
 | 2026-03-06 | Review STOP gate — unmissable formatting for review findings | eb10a08 |
 | 2026-02-27 | Install script cleans target directory before copying — removes stale files from previous versions on upgrade | 5c1d41a |
