@@ -8,6 +8,8 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-03-06 | Smarter /crafter:do entry logic — monorepo support (`--project` flag + auto-discovery), Grep-based resume detection with resume-intent words, guardrails against ignoring clear user input, `{PROJECT_PATH}` across all rule files | 47745a3 |
+| 2026-03-06 | Review STOP gate — unmissable formatting for review findings | eb10a08 |
 | 2026-02-27 | Install script cleans target directory before copying — removes stale files from previous versions on upgrade | 5c1d41a |
 | 2026-02-27 | Planner writes full plan to task file (draft/approved lifecycle), richer summary, stricter review gate, resume handles all plan states | 7722b9f |
 | 2026-02-26 | Released v0.5.0 — review workflow always waits for user, detailed table output, update check and release fixes | [v0.5.0](https://github.com/richardriman/crafter/releases/tag/v0.5.0) |

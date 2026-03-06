@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-03-06
 - **Branch:** main
-- **Status:** active
+- **Status:** completed
 - **Scope:** Large
 
 ## Request
@@ -23,7 +23,7 @@ This task improves three aspects of the `/crafter:do` entry logic: monorepo/work
 
 The core idea: add a "Step -1" to `commands/do.md` that resolves the project root before anything else. This resolution determines the base path for all `.planning/` references throughout the workflow. The task lifecycle rules also need updating so `.planning/tasks/` paths are relative to the resolved project root.
 
-- [ ] **Step 1: Add project resolution logic to `commands/do.md`** (file: `commands/do.md`, lines 14–20)
+- [x] **Step 1: Add project resolution logic to `commands/do.md`** (file: `commands/do.md`, lines 14–20)
 
   Insert a new section **before** Step 0 (between the "Read the project context files" block and the `$ARGUMENTS` line). This section:
 
@@ -38,7 +38,7 @@ The core idea: add a "Step -1" to `commands/do.md` that resolves the project roo
 
   Also update the `$ARGUMENTS` line (line 20) to reflect that arguments may have been modified by `--project` extraction (the remaining arguments after stripping `--project <path>`).
 
-- [ ] **Step 2: Update task lifecycle rules for project-relative paths** (file: `rules/task-lifecycle.md`, lines 1–8 and 12–26)
+- [x] **Step 2: Update task lifecycle rules for project-relative paths** (file: `rules/task-lifecycle.md`, lines 1–8 and 12–26)
 
   Update the Task Lifecycle rules so all `.planning/tasks/` references are described as relative to the project root (which the orchestrator determines). Specifically:
 
@@ -52,7 +52,7 @@ The core idea: add a "Step -1" to `commands/do.md` that resolves the project roo
 
 The current resume detection instructions are too terse — the orchestrator sometimes skips them or fails to actually read task files. This stage makes the instructions more explicit and adds resume-intent word detection.
 
-- [ ] **Step 3: Strengthen resume detection in `rules/task-lifecycle.md`** (file: `rules/task-lifecycle.md`, lines 12–26)
+- [x] **Step 3: Strengthen resume detection in `rules/task-lifecycle.md`** (file: `rules/task-lifecycle.md`, lines 12–26)
 
   Rewrite the "Resume Detection" section to be more explicit and procedural:
 
@@ -62,7 +62,7 @@ The current resume detection instructions are too terse — the orchestrator som
   4. Add a new step between current 4 and 5: "If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: 'continue', 'resume', 'pokracuj', 'dál', 'further', 'next step', 'carry on' — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection."
   5. Keep steps 5-6 (match found / no match behavior).
 
-- [ ] **Step 4: Add resume-intent awareness to `commands/do.md` Step 0** (file: `commands/do.md`, lines 24–34)
+- [x] **Step 4: Add resume-intent awareness to `commands/do.md` Step 0** (file: `commands/do.md`, lines 24–34)
 
   Add a note to Step 0 in `commands/do.md` that reinforces the resume-intent logic:
 
@@ -72,7 +72,7 @@ The current resume detection instructions are too terse — the orchestrator som
 
 ### Stage 3 — Respect clear user input
 
-- [ ] **Step 5: Prevent orchestrator from ignoring clear input** (file: `commands/do.md`, lines 36–47, and `rules/do-workflow.md`, lines 52–59)
+- [x] **Step 5: Prevent orchestrator from ignoring clear input** (file: `commands/do.md`, lines 36–47, and `rules/do-workflow.md`, lines 52–59)
 
   Two changes:
 
@@ -110,3 +110,4 @@ The current resume detection instructions are too terse — the orchestrator som
 ## Decisions
 
 ## Outcome
+Commit `47745a3`. All 5 steps implemented: project resolution with `--project` flag and auto-discovery, Grep-based resume detection with resume-intent words, guardrails against ignoring clear user input, `{PROJECT_PATH}` applied across all rule files.
