@@ -107,13 +107,17 @@ Delegate code review to the `crafter-reviewer` agent and handle findings. The re
 a. Spawn the `crafter-reviewer` agent.
 b. Provide it with: the approved plan, the list of changed files, and a mention of `.planning/ARCHITECTURE.md` if available. The Reviewer reads files itself.
 c. Receive the review report.
-d. Present the review results to the user using the Reviewer's table format — reproduce the **Diff summary** and **Issues found** tables directly. Do not convert tables to prose or bullet lists. After the tables, state the recommendation (must-fix vs. optional).
-   - **MANDATORY GATE — If there are ANY findings** (including Minor and Suggestion): **STOP and wait for the user's response**. Do not proceed to Step 6a or any other step. Do not skip this wait for any reason. Minor and Suggestion findings are informational only (they do not trigger the fix loop), but the user must still see and acknowledge them.
-   - **Only if there are zero findings**: proceed automatically to Step 6a.
+d. Present the review results to the user. **Output format is mandatory:**
+   - Reproduce the Reviewer's **Diff summary** and **Issues found** tables directly — copy the markdown tables as-is.
+   - **Never** convert tables to prose, bullet lists, or any other format.
+   - After the tables, state the recommendation (must-fix vs. optional).
+
+   **STOP — ALWAYS wait for the user's response before proceeding, regardless of severity. Never auto-proceed when findings exist.**
+
+   Only if there are zero findings at all: proceed automatically to Step 6a.
+
 e. After the user responds:
-   - If there are **Critical or Major issues**: present them and ask:
-     - **"Fix and re-review"** (recommended) — continue to sub-step (f).
-     - **"Proceed anyway"** — proceed to Step 6a.
+   - If there are **Critical or Major issues**: ask **"Fix and re-review"** (recommended) or **"Proceed anyway"**.
    - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6a.
 f. If the user chooses to fix:
    1. Check the iteration count. If 3 iterations have already been completed, do not start a 4th — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (f.2).

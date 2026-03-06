@@ -23,8 +23,25 @@
 - Report clearly what passed and what (if anything) did not.
 
 ### REVIEW
-- **MANDATORY: Always wait for the user's response when findings exist** — if the review contains any findings (Critical, Major, Minor, or Suggestion), the orchestrator MUST present them and STOP to wait for the user before proceeding. Do not proceed automatically. Do not skip this wait. The ONLY case where automatic proceed is allowed is when there are literally zero findings. After the user responds, only Critical and Major issues trigger the fix-or-proceed prompt; Minor and Suggestion findings are informational.
-- **Always use table format for review output** — reproduce the Reviewer's Diff summary and Issues found tables directly. Do not convert them to prose or bullet lists.
+- **Output format is mandatory** — reproduce the Reviewer's **Diff summary** and **Issues found** tables directly. Copy the markdown tables as-is. **Never** convert tables to prose, bullet lists, or any other format. Expected structure:
+
+  ```
+  ### Diff summary
+  | File | Changes |
+  |------|---------|
+  | ...  | ...     |
+
+  ### Issues found
+  | # | Severity | File | Line | Description |
+  |---|----------|------|------|-------------|
+  | ...                                        |
+  ```
+
+  After the tables, state the recommendation (must-fix vs. optional).
+
+- **STOP — ALWAYS wait for the user's response before proceeding, regardless of severity. Never auto-proceed when findings exist.** Only if there are literally zero findings: proceed automatically to the next workflow step.
+
+- **After the user responds:** Critical or Major issues trigger the "Fix and re-review" (recommended) or "Proceed anyway" prompt. Only Minor/Suggestion findings → proceed.
 - The `crafter-reviewer` agent produces a diff summary and issue report as part of its review output.
 - Issues are categorized by severity (Critical, Major, Minor, Suggestion).
 - Only Critical and Major issues trigger the fix loop.

@@ -51,7 +51,7 @@ Return a review report with the following sections in order:
 **Diff summary:**
 For each changed file, run `git diff` on the changed files (use appropriate flags depending on whether changes are staged or unstaged — e.g., `git diff HEAD -- <file>` for unstaged, `git diff --cached -- <file>` for staged; read the file directly if it is untracked) and describe the nature of the change in one line. Example:
 
-| File | Change |
+| File | Changes |
 |---|---|
 | src/foo.ts | Added `validateInput` helper; updated `processRequest` to call it. |
 
@@ -59,9 +59,9 @@ For each changed file, run `git diff` on the changed files (use appropriate flag
 
 List every finding as its own row. Do not group multiple occurrences into a single entry or summarize them (e.g., never write "same issue in 5 other files" or "and N more"). Each occurrence must have its own row with the specific file:line.
 
-| # | What | Where | Severity |
-|---|---|---|---|
-| 1 | Description of the finding | file.ts:42 | Critical / Major / Minor / Suggestion |
+| # | Severity | File | Line | Description |
+|---|---|---|---|---|
+| 1 | Critical / Major / Minor / Suggestion | file.ts | 42 | Description of the finding |
 
 If no issues are found, write "No issues found."
 
