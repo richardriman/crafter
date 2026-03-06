@@ -56,4 +56,4 @@
 | **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and verify and review (with fix loop) per step |
 | **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → verify per step → review (with fix loop) per step |
 
-When scope is ambiguous, ask the user rather than guessing.
+When scope is ambiguous, ask the user rather than guessing. However, if the user has already provided a clear, detailed request, do not ask them to repeat or clarify what they have already stated. Scope ambiguity means you cannot determine whether the change is Small/Medium/Large — it does not mean you need more information about the user's intent.
