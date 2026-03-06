@@ -1,4 +1,4 @@
-# Task: Smarter /crafter:do entry logic — resume detection, monorepo support, input handling
+# Task: Smarter /crafter:do entry logic — resume detection, multi-project workspace support, input handling
 
 ## Metadata
 - **Date:** 2026-03-06
@@ -10,16 +10,16 @@
 The initial decision logic in /crafter:do has several issues:
 1. When the user provides clear instructions with the request, the orchestrator sometimes ignores them and asks what to do anyway.
 2. Resume detection fails to find active tasks — claims no active task exists even when there's an in-progress task with unchecked steps.
-3. In a monorepo/workspace setup (e.g. /workspace/rust, /workspace/elixir — each with their own .planning/), there's no reliable way to tell Crafter which subproject to work on. Saying "v rust" in natural language is unreliable — the orchestrator doesn't understand it refers to a subdirectory.
+3. In a multi-project workspace setup (e.g. /workspace/rust, /workspace/elixir — each with their own .planning/), there's no reliable way to tell Crafter which subproject to work on. Saying "v rust" in natural language is unreliable — the orchestrator doesn't understand it refers to a subdirectory.
 
 User works primarily on main branch. Workspace structure: subdirectories like rust/, elixir/ each with their own .planning/.
 
 ## Plan
 **Plan status:** approved
 
-This task improves three aspects of the `/crafter:do` entry logic: monorepo/workspace support, more reliable resume detection, and not ignoring clear user input. The changes touch three files: `commands/do.md`, `rules/task-lifecycle.md`, and `rules/do-workflow.md`. All changes are additive — single-project setups see no behavioral difference.
+This task improves three aspects of the `/crafter:do` entry logic: multi-project workspace support, more reliable resume detection, and not ignoring clear user input. The changes touch three files: `commands/do.md`, `rules/task-lifecycle.md`, and `rules/do-workflow.md`. All changes are additive — single-project setups see no behavioral difference.
 
-### Stage 1 — Monorepo support and project resolution
+### Stage 1 — Multi-project workspace support and project resolution
 
 The core idea: add a "Step -1" to `commands/do.md` that resolves the project root before anything else. This resolution determines the base path for all `.planning/` references throughout the workflow. The task lifecycle rules also need updating so `.planning/tasks/` paths are relative to the resolved project root.
 
@@ -89,7 +89,7 @@ The current resume detection instructions are too terse — the orchestrator som
 ### Alternatives considered
 
 - **Prefix parsing (`rust: fix X`, `in rust/: continue`)** — rejected as a "hidden feature" that users would never discover. The explicit `--project` flag is standard CLI convention and is self-documenting. The interactive fallback naturally teaches users about `--project` via the tip in the prompt.
-- **Separate `/crafter:do-in` command for monorepo** — rejected because it fragments the entry point. A single command with an optional `--project` flag is more ergonomic and discoverable.
+- **Separate `/crafter:do-in` command for multi-project workspaces** — rejected because it fragments the entry point. A single command with an optional `--project` flag is more ergonomic and discoverable.
 - **Automatic CWD change to subproject** — rejected because changing CWD has side effects on git operations and relative paths throughout the session. Using a `PROJECT_PATH` prefix is safer.
 - **Storing project path in a config file** — rejected as overengineering for an instruction-based system. The orchestrator just needs to resolve it at the start of each session.
 
