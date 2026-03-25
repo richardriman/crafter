@@ -33,3 +33,15 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 | `crafter-analyzer` | `sonnet` | Adaptive — use `opus` for large scope tasks that require deeper research |
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
+
+## Skillbook — Learned Guidelines
+
+Before spawning any agent via the Task tool, check if the `crafter` CLI binary is available at `~/.claude/crafter/bin/crafter` (or `.claude/crafter/bin/crafter` for local installs). If available:
+
+1. Run via Bash: `~/.claude/crafter/bin/crafter skillbook get --agent <agent-short-name> --file {PROJECT_PATH}/.planning/skillbook.json`
+2. Agent name mapping: strip the `crafter-` prefix (e.g., `crafter-implementer` -> `implementer`, `crafter-planner` -> `planner`).
+3. If the command produces output (non-empty stdout), append it verbatim to the agent's task prompt. The output is already formatted as a "Learned Guidelines" markdown section.
+4. If the command produces no output, the agent has no learned guidelines — proceed normally without mentioning it.
+5. If the command fails (non-zero exit), log a warning but proceed with agent spawning — skillbook is optional.
+
+If the CLI binary does not exist, skip skillbook injection silently.

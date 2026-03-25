@@ -177,6 +177,7 @@ Follow the post-change steps in `~/.claude/crafter/rules/post-change.md`. The ch
 2. **Commit** — only commit when the user explicitly says to. Do not silently skip this step. Use conventional commits format.
 3. **Update STATE.md** — after a successful commit, update `{PROJECT_PATH}/.planning/STATE.md` (Recent Changes, Current Focus, Known Issues). Show the user what changed.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps. The task file is in `{PROJECT_PATH}/.planning/tasks/`.
-5. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter:do` or `/crafter:debug` to keep context clean.
+5. **Update skillbook** — extract observations from the completed task per the "Update Skillbook" section in `~/.claude/crafter/rules/post-change.md`. Only for non-trivial tasks with genuine learnings. Skip if the `crafter` CLI is not available.
+6. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter:do` or `/crafter:debug` to keep context clean.
 
-**Do not end the conversation until all 5 items above are addressed.**
+**Do not end the conversation until all 6 items above are addressed.**

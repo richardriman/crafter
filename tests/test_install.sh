@@ -362,6 +362,79 @@ test_global_creates_expected_directories() {
   assert_dir_exists "$home_dir/.claude/agents"
 }
 
+test_global_creates_bin_directory() {
+  local tmp home_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  assert_dir_exists "$home_dir/.claude/crafter/bin"
+}
+
+test_global_copies_local_cli_binary() {
+  # When cli/bin/crafter exists in the repo clone, a global install must
+  # copy it to ~/.claude/crafter/bin/crafter.
+  local tmp home_dir fake_bin output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+
+  # Create a fake cli/bin/crafter inside a temporary clone of the repo so
+  # that _run_installer (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
+  fake_bin="$REPO_DIR/cli/bin/crafter"
+  local fake_bin_created=0
+  if [[ ! -f "$fake_bin" ]]; then
+    mkdir -p "$(dirname "$fake_bin")"
+    printf '#!/usr/bin/env bash\necho fake-crafter\n' > "$fake_bin"
+    chmod +x "$fake_bin"
+    fake_bin_created=1
+  fi
+
+  _run_installer "$home_dir" "$tmp" output ec --global
+  local result_ec=$ec
+
+  # Clean up the fake binary if we created it
+  if [[ $fake_bin_created -eq 1 ]]; then
+    rm -f "$fake_bin"
+  fi
+
+  assert_exit_code 0 "$result_ec"
+  assert_file_exists "$home_dir/.claude/crafter/bin/crafter"
+}
+
+test_local_copies_local_cli_binary() {
+  # When cli/bin/crafter exists in the repo clone, a local install must
+  # copy it to <proj>/.claude/crafter/bin/crafter.
+  local tmp home_dir proj_dir fake_bin output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+
+  # Create a fake cli/bin/crafter inside the repo so that _run_installer
+  # (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
+  fake_bin="$REPO_DIR/cli/bin/crafter"
+  local fake_bin_created=0
+  if [[ ! -f "$fake_bin" ]]; then
+    mkdir -p "$(dirname "$fake_bin")"
+    printf '#!/usr/bin/env bash\necho fake-crafter\n' > "$fake_bin"
+    chmod +x "$fake_bin"
+    fake_bin_created=1
+  fi
+
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  local result_ec=$ec
+
+  # Clean up the fake binary if we created it
+  if [[ $fake_bin_created -eq 1 ]]; then
+    rm -f "$fake_bin"
+  fi
+
+  assert_exit_code 0 "$result_ec"
+  assert_file_exists "$proj_dir/.claude/crafter/bin/crafter"
+}
+
 test_global_copies_all_expected_files() {
   local tmp home_dir output ec base rel
   tmp="$(_make_tmp)"
@@ -444,6 +517,17 @@ test_local_output_contains_installed_locally() {
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
   assert_contains "$output" "installed locally"
+}
+
+test_local_creates_bin_directory() {
+  local tmp home_dir proj_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+  assert_dir_exists "$proj_dir/.claude/crafter/bin"
 }
 
 # ---------------------------------------------------------------------------

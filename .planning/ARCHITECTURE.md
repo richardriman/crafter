@@ -14,6 +14,13 @@ crafter/
 │   └── philosophy.md            # Design philosophy and principles
 ├── hooks/                       # Claude Code lifecycle hooks
 │   └── crafter-check-update.js  # SessionStart hook — automatic update check (24h-cached GitHub Releases API)
+├── cli/                         # Go CLI binary source (crafter utility tool)
+│   ├── main.go                  # Entry point
+│   ├── cmd/                     # Cobra command definitions
+│   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
+│   ├── Makefile                 # Cross-compilation targets
+│   ├── go.mod                   # Go module definition
+│   └── go.sum                   # Dependency checksums
 ├── agents/                      # Native Claude Code agent definitions
 │   ├── crafter-analyzer.md      # Analyzer agent
 │   ├── crafter-implementer.md   # Implementer agent
@@ -78,6 +85,25 @@ Task files in `.planning/tasks/` serve dual purposes: active resume state while 
 ### Dual Installation Model
 
 `install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection.
+
+### Crafter CLI — Utility Binary
+
+A Go CLI binary (`crafter`) provides deterministic utilities that LLMs handle poorly. The binary is a utility tool, NOT orchestration — orchestration stays in markdown prompts. The CLI is invoked via Bash by the orchestrator.
+
+Current subcommands:
+- `crafter skillbook get` — read skillbook, filter/sort skills, format as markdown, increment appliedCount
+- `crafter skillbook add` — add observation with Jaccard dedup and confidence promotion
+- `crafter skillbook init` — create empty skillbook
+
+Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-arm64. Binaries attached to GitHub releases. `install.sh` downloads the correct binary to `~/.claude/crafter/bin/crafter`.
+
+### Skillbook — Project-Level Learning
+
+The skillbook system lets agents learn from experience across sessions. After each task, the orchestrator reflects on what happened and captures observations via `crafter skillbook add`. Before spawning an agent, the orchestrator calls `crafter skillbook get` and appends the output to the agent's task prompt.
+
+Key mechanics: Jaccard keyword-overlap deduplication (threshold 0.6), three confidence tiers (low/medium/high) with promotion on repeated observations, top-10 skill selection sorted by confidence then usage count, atomic file writes.
+
+The skillbook file (`.planning/skillbook.json`) is project-level — agents learn project-specific patterns, not general knowledge.
 
 ## Conventions
 

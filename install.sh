@@ -144,6 +144,62 @@ _download_release() {
 }
 
 # ---------------------------------------------------------------------------
+# Download CLI binary for the current platform/arch (release mode only)
+# ---------------------------------------------------------------------------
+_download_cli_binary() {
+  local dest_dir="$1"
+
+  # Only attempt download when a version tag is set (binaries are only on releases)
+  if [[ -z "$VERSION" ]]; then
+    return 0
+  fi
+
+  if ! command -v curl &>/dev/null; then
+    echo "Warning: curl not found; skipping CLI binary download." >&2
+    return 0
+  fi
+
+  # os/arch are lowercased to match GitHub release asset naming convention,
+  # e.g. crafter-darwin-arm64, crafter-linux-amd64.
+  local os arch
+  os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  arch="$(uname -m)"
+  case "$arch" in
+    x86_64)       arch="amd64" ;;
+    arm64|aarch64) arch="arm64" ;;
+    *)
+      echo "Warning: Unsupported architecture '$arch'; skipping CLI binary download." >&2
+      return 0
+      ;;
+  esac
+
+  local binary_name="crafter-${os}-${arch}"
+  local binary_url="https://github.com/${REPO}/releases/download/${VERSION}/${binary_name}"
+  local dest_bin="$dest_dir/crafter/bin/crafter"
+
+  # Ensure the bin/ directory exists regardless of whether install_to has
+  # already created it (makes this function self-contained).
+  mkdir -p "$(dirname "$dest_bin")"
+
+  echo "Downloading CLI binary ${binary_name}..."
+
+  # http_code captures the HTTP status code written to stdout by curl's
+  # -w "%{http_code}" option; it may be empty if curl itself fails before
+  # receiving a response (e.g. DNS error).
+  local http_code
+  http_code="$(curl -fsSL -w "%{http_code}" -o "$dest_bin" "$binary_url" 2>/dev/null || true)"
+
+  if [[ ! -s "$dest_bin" || "$http_code" == "404" ]]; then
+    echo "Warning: CLI binary not available for this platform/version (${binary_name}); skipping." >&2
+    rm -f "$dest_bin"
+    return 0
+  fi
+
+  chmod +x "$dest_bin"
+  echo "CLI binary installed to $dest_bin"
+}
+
+# ---------------------------------------------------------------------------
 # Core install logic (unchanged from original)
 # ---------------------------------------------------------------------------
 install_to() {
@@ -192,6 +248,14 @@ install_to() {
   cp "$SCRIPT_DIR/agents/crafter-verifier.md"    "$agents_dest/crafter-verifier.md"
   cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
+
+  mkdir -p "$crafter_dest/bin"
+
+  # Local clone install: copy pre-built binary if it exists
+  if [[ -f "$SCRIPT_DIR/cli/bin/crafter" ]]; then
+    cp "$SCRIPT_DIR/cli/bin/crafter" "$crafter_dest/bin/crafter"
+    chmod +x "$crafter_dest/bin/crafter"
+  fi
 }
 
 install_hook() {
@@ -239,6 +303,7 @@ install_hook() {
 
 install_global() {
   install_to "$HOME/.claude" "globally"
+  _download_cli_binary "$HOME/.claude"
   install_hook
   echo ""
   echo "Crafter installed globally."
@@ -249,6 +314,7 @@ install_global() {
 
 install_local() {
   install_to "$(pwd)/.claude" "locally in $(pwd)"
+  _download_cli_binary "$(pwd)/.claude"
   install_hook
   echo ""
   echo "Crafter installed locally in this project."
