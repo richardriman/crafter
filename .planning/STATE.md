@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-03-25 | Skillbook system — Go CLI binary (`crafter skillbook`) with get/add/init subcommands, prompt integration (delegation.md + post-change.md), install script binary download, documentation | 1600677 |
 | 2026-03-06 | Workflow hardening — `git -C {PROJECT_PATH}` branch detection, English-only task files, mandatory post-change checklist, scope expansion rule | 5d46339 |
 | 2026-03-06 | Smarter /crafter:do entry logic — multi-project workspace support (`--project` flag + auto-discovery), Grep-based resume detection with resume-intent words, guardrails against ignoring clear user input, `{PROJECT_PATH}` across all rule files | 47745a3 |
 | 2026-03-06 | Review STOP gate — unmissable formatting for review findings | eb10a08 |
@@ -26,10 +27,15 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 ## Planned
 
 - [ ] Optional project-level review rules — reviewer loads `.planning/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
+- [ ] Model profiles — matice agent × profil (quality/balanced/budget) → model tier. Prompt-only, orchestrátor čte config a předává `--model` agentům. Inspirace: Nightshift `model-profiles.ts`
+- [x] ~~Skillbook — self-learning agents~~ (implemented in 1600677 as Go CLI binary)
+- [ ] Holdout validation — nezávislý agent ověří implementaci proti kritériím, která implementer neviděl. Informační bariéra čistě v prompt designu. Inspirace: Nightshift holdout pattern
 
 ## Ideas
 
 - `/crafter:add-planned` — quick command for adding planned items to STATE.md
+- Wonder/Reflect pattern (inspirace OctopusGarden) — dvou-fázová diagnostika při zaseknutí: Wonder (divergentní brainstorming neobvyklých příčin) → Reflect (chirurgický konzervativní fix). Temperature control přes `claude -p` není dostupný, ale dá se nahradit prompt engineeringem. Mohlo by obohatit `crafter:debug`.
+- Holdout validation — verifier testuje proti kritériím, která implementer neviděl. Satisfaction scoring (0–100) místo binary pass/fail.
 
 ## Known Issues
 
