@@ -1,11 +1,11 @@
 ---
-name: "crafter:release"
+name: "crafter-release"
 description: "Prepare and publish a GitHub Release with AI-generated release notes"
 ---
 
 Prepare a GitHub Release for this project.
 
-**Requirements:** `gh` CLI must be installed and authenticated. This command does NOT bump the VERSION file and does NOT commit anything.
+**Requirements:** `gh` CLI must be installed and authenticated. This skill does NOT bump the VERSION file and does NOT commit anything.
 
 ---
 
@@ -45,11 +45,11 @@ Prepare a GitHub Release for this project.
 From the commit list gathered in Step 1, generate structured release notes.
 
 Group commits by conventional commit type:
-- `feat` → **Features**
-- `fix` → **Fixes**
-- Everything else (`refactor`, `docs`, `chore`, `test`, `perf`, etc.) → **Other Changes**
+- `feat` -> **Features**
+- `fix` -> **Fixes**
+- Everything else (`refactor`, `docs`, `chore`, `test`, `perf`, etc.) -> **Other Changes**
 
-Write descriptions in human-readable form — do not copy raw commit messages verbatim. Summarize the intent and impact of each change in plain language. Omit empty sections (e.g., if there are no fix commits, skip the Fixes section entirely).
+Write descriptions in human-readable form — do not copy raw commit messages verbatim. Summarize the intent and impact of each change in plain language. Omit empty sections.
 
 Use this structure:
 
@@ -72,13 +72,13 @@ Use this structure:
 
 ## Step 3 — Review and Approve
 
-Present the following to the user:
+Present the following:
 - The proposed tag name: `v<VERSION>`
 - The full generated release notes
 
 **Wait for explicit user approval before proceeding.**
 
-If the user requests changes to the release notes, revise them and present again. Repeat until the user explicitly approves.
+If changes are requested, revise the release notes and present them again until approved.
 
 ---
 
@@ -88,11 +88,11 @@ If the user requests changes to the release notes, revise them and present again
    ```
    gh auth status
    ```
-   If this fails, inform the user and stop. They need to install `gh` and run `gh auth login` before continuing.
+   If this fails, stop and ask the user to run `gh auth login`.
 
 2. Create the GitHub Release using the approved notes. Write the approved release notes to a temporary file (e.g. `/tmp/release-notes.md`), then run:
    ```
    gh release create v<VERSION> --title "v<VERSION>" --notes-file /tmp/release-notes.md
    ```
 
-3. Report success to the user and include the URL of the newly created release.
+3. Report success and include the URL of the newly created release.

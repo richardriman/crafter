@@ -53,8 +53,9 @@ crafter/
 ├── VERSION                      # Current version identifier
 ├── README.md                    # Project overview
 └── .claude/                     # Project-local Claude Code config (internal)
-    └── commands/
-        └── release.md           # /crafter:release — internal release preparation (not distributed)
+    └── skills/
+        └── crafter-release/
+            └── SKILL.md         # /crafter-release — internal release preparation (not distributed)
 ```
 
 ## Key Patterns & Decisions
