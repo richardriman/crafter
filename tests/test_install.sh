@@ -325,6 +325,7 @@ test_help_flag_exits_zero() {
   _run_installer "$home_dir" "$tmp" output ec --help
   assert_exit_code 0 "$ec"
   assert_contains "$output" "Usage:"
+  assert_contains "$output" "'/crafter-map-project' skill"
 }
 
 test_help_short_flag_exits_zero() {
@@ -475,6 +476,7 @@ test_global_output_contains_installed_globally() {
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
   assert_contains "$output" "installed globally"
+  assert_contains "$output" "run the '/crafter-map-project' skill"
 }
 
 # ---------------------------------------------------------------------------
@@ -522,6 +524,7 @@ test_local_output_contains_installed_locally() {
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
   assert_contains "$output" "installed locally"
+  assert_contains "$output" "run the '/crafter-map-project' skill"
 }
 
 test_local_creates_bin_directory() {

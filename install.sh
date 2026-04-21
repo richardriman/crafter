@@ -62,8 +62,8 @@ Usage: ./install.sh [--global | --local] [--version VERSION]
 When run via curl | bash, the installer automatically downloads the required
 files from GitHub — no git dependency needed.
 
-After installing, open Claude Code and run /crafter:map-project to set up
-project context.
+After installing, open Claude Code and run the '/crafter-map-project' skill to
+set up project context.
 EOF
 }
 
@@ -322,7 +322,7 @@ install_global() {
   echo "Crafter installed globally."
   echo ""
   echo "Next steps:"
-  echo "  Open Claude Code in your project and run:  /crafter:map-project"
+  echo "  Open Claude Code in your project and run the '/crafter-map-project' skill."
 }
 
 install_local() {
@@ -333,7 +333,7 @@ install_local() {
   echo "Crafter installed locally in this project."
   echo ""
   echo "Next steps:"
-  echo "  Open Claude Code and run:  /crafter:map-project"
+  echo "  Open Claude Code and run the '/crafter-map-project' skill."
 }
 
 # ---------------------------------------------------------------------------
