@@ -27,7 +27,7 @@ _detect_script_dir() {
   if [[ -n "$src" && "$src" != "bash" && "$src" != "-" ]]; then
     local candidate
     candidate="$(cd "$(dirname "$src")" 2>/dev/null && pwd)" || true
-    if [[ -n "$candidate" && -f "$candidate/VERSION" && -d "$candidate/commands" ]]; then
+    if [[ -n "$candidate" && -f "$candidate/VERSION" && ( -d "$candidate/skills" || -d "$candidate/commands" ) ]]; then
       echo "$candidate"
       return
     fi
@@ -144,13 +144,14 @@ _download_release() {
 }
 
 # ---------------------------------------------------------------------------
-# Core install logic (unchanged from original)
+# Core install logic
 # ---------------------------------------------------------------------------
 install_to() {
   local base="$1"
   local label="$2"
 
   local commands_dest="$base/commands/crafter"
+  local skills_dest="$base/skills"
   local crafter_dest="$base/crafter"
   local rules_dest="$base/crafter/rules"
   local templates_dest="$base/crafter/templates"
@@ -159,6 +160,13 @@ install_to() {
   # Clean previously installed files to prevent stale leftovers on upgrade
   rm -rf "$commands_dest" "$crafter_dest"
   rm -f "$agents_dest"/crafter-*.md
+  if [[ -d "$skills_dest" ]]; then
+    local stale_skill
+    for stale_skill in "$skills_dest"/crafter-*; do
+      [[ -d "$stale_skill" ]] || continue
+      rm -rf "$stale_skill"
+    done
+  fi
 
   echo "Installing Crafter $label..."
 
@@ -167,6 +175,12 @@ install_to() {
   cp "$SCRIPT_DIR/commands/debug.md"       "$commands_dest/debug.md"
   cp "$SCRIPT_DIR/commands/status.md"      "$commands_dest/status.md"
   cp "$SCRIPT_DIR/commands/map-project.md" "$commands_dest/map-project.md"
+
+  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project"
+  cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"          "$skills_dest/crafter-do/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-debug/SKILL.md"       "$skills_dest/crafter-debug/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-status/SKILL.md"      "$skills_dest/crafter-status/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-map-project/SKILL.md" "$skills_dest/crafter-map-project/SKILL.md"
 
   mkdir -p "$crafter_dest"
   cp "$SCRIPT_DIR/VERSION"                 "$crafter_dest/VERSION"
@@ -183,7 +197,6 @@ install_to() {
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
   cp "$SCRIPT_DIR/templates/ARCHITECTURE.md"     "$templates_dest/ARCHITECTURE.md"
   cp "$SCRIPT_DIR/templates/STATE.md"            "$templates_dest/STATE.md"
-  cp "$SCRIPT_DIR/templates/claude-md.snippet"   "$templates_dest/claude-md.snippet"
   cp "$SCRIPT_DIR/templates/TASK.md"             "$templates_dest/TASK.md"
 
   mkdir -p "$agents_dest"

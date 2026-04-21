@@ -25,7 +25,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Planned
 
-- [ ] Optional project-level review rules — reviewer loads `.planning/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
+- [ ] Optional project-level review rules — reviewer loads `.crafter/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
 
 ## Ideas
 

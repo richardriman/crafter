@@ -4,13 +4,21 @@
 
 ```
 crafter/
-├── commands/                    # Claude Code slash command definitions
-│   ├── debug.md                 # /crafter:debug — debugging orchestrator
-│   ├── do.md                    # /crafter:do — adaptive change workflow orchestrator
-│   ├── map-project.md           # /crafter:map-project — project context initialization
-│   └── status.md                # /crafter:status — display current state
+├── skills/                      # Canonical Crafter workflow definitions (skills-first source)
+│   ├── crafter-debug/
+│   │   └── SKILL.md             # crafter-debug — debugging orchestrator
+│   ├── crafter-do/
+│   │   └── SKILL.md             # crafter-do — adaptive change workflow orchestrator
+│   ├── crafter-map-project/
+│   │   └── SKILL.md             # crafter-map-project — project context initialization
+│   └── crafter-status/
+│       └── SKILL.md             # crafter-status — display current state
+├── commands/                    # Compatibility slash-command wrappers
+│   ├── debug.md                 # /crafter:debug -> routes to crafter-debug skill
+│   ├── do.md                    # /crafter:do -> routes to crafter-do skill
+│   ├── map-project.md           # /crafter:map-project -> routes to crafter-map-project skill
+│   └── status.md                # /crafter:status -> routes to crafter-status skill
 ├── docs/                        # Supplementary documentation
-│   ├── bmad-integration.md      # BMAD party mode integration guide
 │   └── philosophy.md            # Design philosophy and principles
 ├── hooks/                       # Claude Code lifecycle hooks
 │   └── crafter-check-update.js  # SessionStart hook — automatic update check (24h-cached GitHub Releases API)
@@ -27,12 +35,11 @@ crafter/
 │   ├── delegation.md            # Agent spawning instruction
 │   ├── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
 │   └── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
-├── templates/                   # Templates for .planning/ file initialization
+├── templates/                   # Templates for .crafter/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md
 │   ├── STATE.md                 # Template for target project's STATE.md
-│   ├── TASK.md                  # Template for task files (.planning/tasks/)
-│   └── claude-md.snippet        # Snippet injected into target project's CLAUDE.md
+│   └── TASK.md                  # Template for task files (.crafter/tasks/)
 ├── tests/                       # Test suite
 │   └── test_install.sh          # Pure-Bash tests for install.sh (zero external dependencies)
 ├── install.sh                   # Installer (local or remote via curl | bash)
@@ -50,6 +57,10 @@ crafter/
 Commands act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to five specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer), each spawned in a fresh context window with only the information it needs.
 
 Agents are defined as native Claude Code agents in `agents/` and are invoked by name (e.g., `crafter-planner`).
+
+### Skills-first with Command Wrappers
+
+Crafter's canonical workflow logic lives in `skills/crafter-*/SKILL.md`. The `commands/` directory is kept as a compatibility layer for slash-command entry points and routes into skills.
 
 ### Model Selection
 
@@ -69,19 +80,19 @@ Every significant action requires explicit user approval: plan approval before e
 
 ### Task Lifecycle
 
-Task files in `.planning/tasks/` serve dual purposes: active resume state while work is in progress and a permanent decision record once completed.
+Task files in `.crafter/tasks/` serve dual purposes: active resume state while work is in progress and a permanent decision record once completed.
 
-### Template-Driven .planning/ Initialization
+### Template-Driven .crafter/ Initialization
 
-`/crafter:map-project` uses the Analyzer to scan the target codebase and propose `.planning/` file contents based on templates; `claude-md.snippet` uses HTML comment markers for idempotent CLAUDE.md updates.
+`/crafter:map-project` uses the Analyzer to scan the target codebase and propose `.crafter/` file contents based on templates.
 
 ### Dual Installation Model
 
-`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection.
+`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection. Installer deploys both `skills/crafter-*/SKILL.md` and compatibility `commands/crafter/*.md`.
 
 ## Conventions
 
-- Command files are Markdown with YAML frontmatter
+- Skill files are Markdown with YAML frontmatter (`skills/*/SKILL.md`); command files are wrappers for compatibility
 - Agent files define the role, constraints, and output format for each agent. The orchestrator spawns agents via the Task tool with a task description; agents explore the codebase themselves using their Read/Grep/Glob tools.
 - `install.sh` uses `set -euo pipefail` for strict error handling
 - Rules are split into per-concern fragments; each command loads only the fragments it needs

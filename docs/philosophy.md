@@ -4,7 +4,7 @@
 
 Crafter was born from frustration.
 
-Existing AI development frameworks are either too heavy or too hands-off. GSD has the right instincts — context engineering, task planning, verification criteria — but wraps them in an unwieldy monolith with auto-commits and machine-readable XML plans that feel more like configuring a build system than working with a collaborator. BMAD brings powerful multi-agent collaboration to the table, but also brings enterprise ceremony: 21+ agents, 50+ workflows, and a learning curve that can overshadow the actual work.
+Existing AI development frameworks are either too heavy or too hands-off. GSD has the right instincts — context engineering, task planning, verification criteria — but wraps them in an unwieldy monolith with auto-commits and machine-readable XML plans that feel more like configuring a build system than working with a collaborator.
 
 Crafter takes the best ideas from both and strips away the overhead. It's a lightweight set of conventions, context files, and Claude Code slash commands designed for a single experienced developer who knows what they want.
 
@@ -25,7 +25,7 @@ Plans are written in plain language, for a human reader. Not XML. Not structured
 One command (`/crafter:do`) adapts to the size of the task. A one-line fix and a cross-cutting refactor both go through the same command — the workflow adjusts to match the scope automatically.
 
 ### Persistent context
-Three living documents in `.planning/` give Claude fresh context at the start of every session without bloating `CLAUDE.md`. They grow as the project evolves and are updated after every significant change.
+Three living documents in `.crafter/` give Crafter workflows persistent project context without relying on global session preloads. They grow as the project evolves and are updated after every significant change.
 
 ---
 
@@ -41,19 +41,6 @@ Three living documents in `.planning/` give Claude fresh context at the start of
 - XML task plans
 - Rigid, multi-phase pipeline with no escape hatches
 - Excessive ceremony for small tasks
-
----
-
-## What We Took from BMAD
-
-- **Multi-perspective thinking** — via the BMAD party mode recommendation for big decisions
-- **Agent specialization** — the idea that different lenses (PM, Architect, Developer, QA) produce better decisions
-
-## What We Left Behind from BMAD
-
-- 21+ agents
-- 50+ workflows
-- The assumption that every project needs enterprise-grade orchestration
 
 ---
 

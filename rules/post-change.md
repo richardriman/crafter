@@ -2,7 +2,7 @@
 
 ## Check Documentation
 
-Review whether the changes affect any `{PROJECT_PATH}/.planning/` context files beyond STATE.md:
+Review whether the changes affect any `{PROJECT_PATH}/{CRAFTER_DIR}/` context files beyond STATE.md:
 
 - **PROJECT.md** — update if the stack, dependencies, or conventions changed.
 - **ARCHITECTURE.md** — delegate this check to the **Implementer** agent. The Implementer reads ARCHITECTURE.md, compares it with what changed, and proposes updates if needed. The orchestrator does not read ARCHITECTURE.md directly.
@@ -21,7 +21,7 @@ One logical change = one commit.
 
 ## Update STATE.md
 
-After a successful commit, update `{PROJECT_PATH}/.planning/STATE.md`:
+After a successful commit, update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md`:
 - Add an entry to **Recent Changes**
 - Update **Current Focus** if it has shifted
 - Remove or update any relevant **Known Issues** entries
@@ -30,7 +30,7 @@ Show the user what was updated.
 
 ## Complete Task File
 
-If a task file exists for the current workflow (in `{PROJECT_PATH}/.planning/tasks/`), complete it per `~/.claude/crafter/rules/task-lifecycle.md`.
+If a task file exists for the current workflow (in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`), complete it per `~/.claude/crafter/rules/task-lifecycle.md`.
 
 ## Session Wrap-Up
 

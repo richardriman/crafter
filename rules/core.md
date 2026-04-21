@@ -4,7 +4,7 @@
 
 - **Internal instructions, templates, and commands:** always English
 - **Conversation with the user:** match the user's language — auto-detect from their input and respond in kind
-- **Persistent files** (`.planning/*`, saved plans): always English
+- **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
 
 ## Context File Maintenance
@@ -20,4 +20,3 @@
 - Plans are written for humans: conversational, clear, and reasoned.
 - Show your reasoning — explain why, not just what.
 - Respect the existing code style and conventions of the project.
-- For architectural decisions with significant tradeoffs, consider a BMAD party mode session (see `docs/bmad-integration.md`).
