@@ -65,6 +65,8 @@ If resuming an active task, first check the plan status in the task file:
 
 If not resuming, continue to Step 1.
 
+**Branch sanity guard (mandatory):** When starting fresh on a non-main/master branch and no active task match was found, do not assume the current branch is correct just because it is not main/master. Apply the branch/request relevance check from `task-lifecycle.md`. If there is reasonable suspicion that the request does not belong to the current branch, ask the user how to proceed and wait for their instruction before scope detection.
+
 ## Step 1 — Auto-detect scope
 
 **If the effective request contains a clear, actionable request** (not just resume-intent words), proceed directly to scope detection. Do NOT ask the user "What do you want to do?" or similar — the user already told you. Only ask clarifying questions if the request is empty or genuinely vague/ambiguous.
