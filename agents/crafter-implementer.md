@@ -1,6 +1,7 @@
 ---
 name: crafter-implementer
 description: Senior developer implementation agent. Receives a detailed, approved plan from the Planner (including specific file paths and line references) and executes it mechanically — nothing more, nothing less. Called by the crafter orchestrator after a plan is approved.
+model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 

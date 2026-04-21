@@ -34,6 +34,8 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 
+Agent files also include a fallback `model` for direct invocation (`/agents` without orchestrator). Orchestrator-provided `model` still takes precedence and remains the source of truth.
+
 ## Skillbook — Learned Guidelines
 
 Before spawning any agent via the Task tool, check if the `crafter` CLI binary is available at `~/.claude/crafter/bin/crafter` (or `.claude/crafter/bin/crafter` for local installs). If available:

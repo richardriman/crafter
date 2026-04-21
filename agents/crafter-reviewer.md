@@ -1,6 +1,7 @@
 ---
 name: crafter-reviewer
 description: Code review agent. Receives the approved plan and a list of changed files from the orchestrator, reads those files, and produces a structured review report covering bugs, security issues, code smell, style violations, and plan deviations. Called by the crafter orchestrator after implementation is complete.
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

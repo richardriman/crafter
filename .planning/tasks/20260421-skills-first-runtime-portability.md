@@ -2,11 +2,18 @@
 
 ## Problem
 
-Crafter currently treats `commands/` as the primary source, which makes runtime behavior inconsistent as runtimes evolve toward skill discovery. We need a skills-first model so the same workflow works reliably across VS Code, Copilot CLI, and OpenCode.
+This task is still open, but its original assumptions are now outdated.
+
+Crafter has already moved to a skills-first baseline. Compatibility command wrappers were removed, so portability work now needs to focus on runtime adapters, discovery contracts, and model-selection behavior across VS Code, Copilot CLI, and OpenCode.
 
 ## Proposed Approach
 
-Adopt a single canonical skill source and generate runtime-specific artifacts during install/build. Keep compatibility wrappers during migration to avoid breaking existing users.
+Keep one canonical skill source (`skills/`) and generate/runtime-install target-specific artifacts from it. Do not reintroduce wrappers as source-of-truth or permanent compatibility layer.
+
+Add explicit runtime contracts for:
+- skill discovery/invocation naming
+- agent model fallback behavior vs orchestrator override behavior
+- install output layout per runtime target
 
 ## Scope
 
@@ -17,23 +24,30 @@ Adopt a single canonical skill source and generate runtime-specific artifacts du
   - VS Code / Copilot CLI
   - OpenCode
 - Update installer to produce runtime-specific outputs from canonical skills.
-- Preserve backward compatibility for existing command entry points during transition.
 - Add install and smoke coverage for all supported runtime targets.
+- Add migration notes for users coming from removed compatibility wrappers.
 
 ### Out of scope
 
 - Redesigning Crafter workflows (`do/debug/map-project/status`) behavior.
 - Major agent role changes unrelated to runtime packaging.
 
+## Current Baseline (already completed)
+
+- [x] Skills-first canonical source is active in repo (`skills/`).
+- [x] Compatibility wrappers were removed from source and installer deployment.
+- [x] Installer still cleans stale legacy command paths during upgrades.
+
 ## Migration Plan
 
 - [ ] **Step 1: Runtime compatibility contract**
   - Document expected invocation, discovery path, and file layout for each target runtime.
-  - Freeze command/skill naming policy (`crafter-*`) and alias policy.
+  - Freeze naming policy (`crafter-*`) and define whether aliases are supported per runtime.
+  - Document model behavior contract: orchestrator `model` override vs agent fallback model.
 
-- [ ] **Step 2: Canonical source layout**
-  - Introduce canonical skill source directory in repo (skills-first source of truth).
-  - Keep current `commands/` files untouched initially.
+- [ ] **Step 2: Runtime adapter profiles**
+  - Define deterministic per-runtime adapter config (frontmatter transforms, paths, naming).
+  - Keep adapter logic isolated so runtime drift is localized.
 
 - [ ] **Step 3: Build/transform pipeline**
   - Implement deterministic transform from canonical skills to each runtime output format.
@@ -43,25 +57,24 @@ Adopt a single canonical skill source and generate runtime-specific artifacts du
   - Update installer to install generated runtime artifacts by selected runtime.
   - Add stale-artifact cleanup logic to avoid mixed old/new layouts.
 
-- [ ] **Step 5: Backward compatibility layer**
-  - Keep legacy command entry points as wrappers/aliases during migration window.
-  - Ensure old invocation forms still route to the same behavior.
-
-- [ ] **Step 6: Test matrix**
+- [ ] **Step 5: Test matrix**
   - Extend tests to verify:
     - install output structure per runtime
     - command/skill discoverability
     - at least one end-to-end smoke path per runtime
+    - model selection behavior for direct agent invocation vs orchestrated invocation
 
-- [ ] **Step 7: Documentation rollout**
+- [ ] **Step 6: Documentation rollout**
   - Update README and architecture docs to explain skills-first source + runtime adapters.
-  - Add migration notes for existing users (global/local installs).
+  - Add migration notes for existing users (global/local installs), including removed wrapper forms.
 
 ## Acceptance Criteria
 
 - A single canonical skills source produces runtime-specific artifacts for all target runtimes.
 - Fresh install works in VS Code, Copilot CLI, and OpenCode without manual edits.
-- Existing users keep working invocation patterns during migration.
+- Runtime model behavior is documented and predictable:
+  - orchestrator-passed `model` wins
+  - direct invocation uses agent fallback model
 - Test suite covers packaging + discoverability for all target runtimes.
 
 ## Risks and Mitigations
@@ -69,9 +82,8 @@ Adopt a single canonical skill source and generate runtime-specific artifacts du
 - **Risk:** Runtime-specific discovery rules drift over time.  
   **Mitigation:** Keep adapter logic isolated per runtime and covered by explicit tests.
 
-- **Risk:** Breaking existing users during transition.  
-  **Mitigation:** Keep compatibility wrappers and phased deprecation.
+- **Risk:** Breaking existing users after wrapper removal.  
+  **Mitigation:** Provide explicit migration notes and optional runtime aliases where needed.
 
 - **Risk:** Duplicate sources diverge.  
   **Mitigation:** Enforce one canonical source and generated outputs only.
-
