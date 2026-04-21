@@ -25,5 +25,4 @@
 | 2026-02-19 | Orchestrator/agent architecture | Prevents context rot in long conversations — each agent starts with fresh context |
 | 2026-02-19 | Two installation modes (global/local) | Global is convenient for solo developers; local is committable and team-shareable |
 | 2026-02-19 | Adaptive scope detection in /crafter:do | One command handles everything from one-line fixes to cross-cutting refactors |
-| 2026-02-19 | BMAD integration is optional, not required | Keeps Crafter lightweight while allowing multi-perspective analysis when needed |
 | 2026-03-24 | Go CLI binary for deterministic utilities | LLMs do JSON CRUD, Jaccard similarity, and atomic writes poorly — a static binary with zero runtime deps handles these reliably |
