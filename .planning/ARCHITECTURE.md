@@ -114,7 +114,7 @@ The skillbook system lets agents learn from experience across sessions. After ea
 
 Key mechanics: Jaccard keyword-overlap deduplication (threshold 0.6), three confidence tiers (low/medium/high) with promotion on repeated observations, top-10 skill selection sorted by confidence then usage count, atomic file writes.
 
-The skillbook file (`.planning/skillbook.json`) is project-level — agents learn project-specific patterns, not general knowledge.
+The skillbook file (`{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json`, with `.crafter` preferred and `.planning` as legacy fallback) is project-level — agents learn project-specific patterns, not general knowledge.
 
 ## Conventions
 

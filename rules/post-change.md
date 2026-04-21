@@ -43,12 +43,14 @@ After completing the task file, reflect on the task and extract observations for
    - **rationale**: what happened that led to this observation
 3. For each observation, run via Bash:
    ```
+   # Resolve SKILLBOOK_FILE with .crafter preferred and .planning as legacy fallback
+   # (or use {PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json when CRAFTER_DIR is available)
    ~/.claude/crafter/bin/crafter skillbook add \
      --agent "<agent>" \
      --rule "<rule text>" \
      --rationale "<rationale text>" \
      --task "<task-filename>" \
-     --file {PROJECT_PATH}/.planning/skillbook.json
+     --file <SKILLBOOK_FILE>
    ```
 4. The CLI handles deduplication and confidence promotion automatically. If a similar skill already exists, it will be merged and promoted.
 5. Briefly tell the user what was learned (e.g., "Added 2 observations to the project skillbook: ...").
