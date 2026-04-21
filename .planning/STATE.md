@@ -26,7 +26,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 ## Planned
 
-- [ ] Optional project-level review rules — reviewer loads `.planning/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
+- [ ] Optional project-level review rules — reviewer loads `.crafter/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
 - [ ] Model profiles — matice agent × profil (quality/balanced/budget) → model tier. Prompt-only, orchestrátor čte config a předává `--model` agentům. Inspirace: Nightshift `model-profiles.ts`
 - [x] ~~Skillbook — self-learning agents~~ (implemented in 1600677 as Go CLI binary)
 - [ ] Holdout validation — nezávislý agent ověří implementaci proti kritériím, která implementer neviděl. Informační bariéra čistě v prompt designu. Inspirace: Nightshift holdout pattern

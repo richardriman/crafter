@@ -229,12 +229,16 @@ _run_installer_no_cmd() {
 # ---------------------------------------------------------------------------
 # Shared file list used by global-install tests (issue #9: avoid duplication)
 # ---------------------------------------------------------------------------
-# 21 files installed by install_global / install_to
+# 24 files installed by install_global / install_to
 _EXPECTED_FILES_REL=(
   "commands/crafter/do.md"
   "commands/crafter/debug.md"
   "commands/crafter/status.md"
   "commands/crafter/map-project.md"
+  "skills/crafter-do/SKILL.md"
+  "skills/crafter-debug/SKILL.md"
+  "skills/crafter-status/SKILL.md"
+  "skills/crafter-map-project/SKILL.md"
   "crafter/VERSION"
   "crafter/rules/core.md"
   "crafter/rules/do-workflow.md"
@@ -245,7 +249,6 @@ _EXPECTED_FILES_REL=(
   "crafter/templates/PROJECT.md"
   "crafter/templates/ARCHITECTURE.md"
   "crafter/templates/STATE.md"
-  "crafter/templates/claude-md.snippet"
   "crafter/templates/TASK.md"
   "agents/crafter-planner.md"
   "agents/crafter-implementer.md"
@@ -356,6 +359,7 @@ test_global_creates_expected_directories() {
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
   assert_dir_exists "$home_dir/.claude/commands/crafter"
+  assert_dir_exists "$home_dir/.claude/skills"
   assert_dir_exists "$home_dir/.claude/crafter"
   assert_dir_exists "$home_dir/.claude/crafter/rules"
   assert_dir_exists "$home_dir/.claude/crafter/templates"
@@ -487,6 +491,7 @@ test_local_creates_expected_directories() {
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
   assert_dir_exists "$proj_dir/.claude/commands/crafter"
+  assert_dir_exists "$proj_dir/.claude/skills"
   assert_dir_exists "$proj_dir/.claude/crafter"
   assert_dir_exists "$proj_dir/.claude/crafter/rules"
   assert_dir_exists "$proj_dir/.claude/crafter/templates"
@@ -580,6 +585,8 @@ test_global_upgrade_removes_stale_files() {
   echo "stale" > "$base/crafter/templates/old-template.md"
   echo "stale" > "$base/commands/crafter/old-command.md"
   echo "stale" > "$base/agents/crafter-old-agent.md"
+  mkdir -p "$base/skills/crafter-old-skill"
+  echo "stale" > "$base/skills/crafter-old-skill/SKILL.md"
 
   # Second install (upgrade)
   _run_installer "$home_dir" "$tmp" output ec --global
@@ -590,6 +597,7 @@ test_global_upgrade_removes_stale_files() {
   assert_file_not_exists "$base/crafter/templates/old-template.md"
   assert_file_not_exists "$base/commands/crafter/old-command.md"
   assert_file_not_exists "$base/agents/crafter-old-agent.md"
+  assert_file_not_exists "$base/skills/crafter-old-skill/SKILL.md"
 
   # Current files must still be present
   for rel in "${_EXPECTED_FILES_REL[@]}"; do
@@ -612,6 +620,8 @@ test_local_upgrade_removes_stale_files() {
   echo "stale" > "$base/crafter/rules/old-rule.md"
   echo "stale" > "$base/commands/crafter/old-command.md"
   echo "stale" > "$base/agents/crafter-old-agent.md"
+  mkdir -p "$base/skills/crafter-old-skill"
+  echo "stale" > "$base/skills/crafter-old-skill/SKILL.md"
 
   # Second install (upgrade)
   _run_installer "$home_dir" "$proj_dir" output ec --local
@@ -621,6 +631,7 @@ test_local_upgrade_removes_stale_files() {
   assert_file_not_exists "$base/crafter/rules/old-rule.md"
   assert_file_not_exists "$base/commands/crafter/old-command.md"
   assert_file_not_exists "$base/agents/crafter-old-agent.md"
+  assert_file_not_exists "$base/skills/crafter-old-skill/SKILL.md"
 
   # Current files must still be present
   for rel in "${_EXPECTED_FILES_REL[@]}"; do
@@ -628,7 +639,7 @@ test_local_upgrade_removes_stale_files() {
   done
 }
 
-test_upgrade_preserves_non_crafter_agents() {
+test_upgrade_preserves_non_crafter_agents_and_skills() {
   local tmp home_dir output ec base
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -640,6 +651,8 @@ test_upgrade_preserves_non_crafter_agents() {
   base="$home_dir/.claude"
   # Place a non-Crafter agent file
   echo "other tool agent" > "$base/agents/other-tool-agent.md"
+  mkdir -p "$base/skills/other-tool-skill"
+  echo "other tool skill" > "$base/skills/other-tool-skill/SKILL.md"
 
   # Second install (upgrade)
   _run_installer "$home_dir" "$tmp" output ec --global
@@ -647,6 +660,7 @@ test_upgrade_preserves_non_crafter_agents() {
 
   # Non-Crafter agent must survive
   assert_file_exists "$base/agents/other-tool-agent.md"
+  assert_file_exists "$base/skills/other-tool-skill/SKILL.md"
 }
 
 # ---------------------------------------------------------------------------
@@ -862,11 +876,11 @@ test_detect_script_dir_empty_when_no_version_file() {
   fi
 }
 
-test_detect_script_dir_empty_when_no_commands_dir() {
+test_detect_script_dir_empty_when_no_commands_or_skills_dir() {
   local tmp result
   tmp="$(_make_tmp)"
   echo "0.0.0" > "$tmp/VERSION"
-  # No commands/ directory — place a fake script inside tmp
+  # No commands/ or skills/ directory — place a fake script inside tmp
   touch "$tmp/fake_install.sh"
 
   result="$(
@@ -877,6 +891,24 @@ test_detect_script_dir_empty_when_no_commands_dir() {
     return 0
   else
     _fail "Expected empty string, got '$result'"
+  fi
+}
+
+test_detect_script_dir_returns_repo_when_skills_dir_exists() {
+  local tmp result
+  tmp="$(_make_tmp)"
+  echo "0.0.0" > "$tmp/VERSION"
+  mkdir -p "$tmp/skills"
+  touch "$tmp/fake_install.sh"
+
+  result="$(
+    _define_detect_wrapper
+    _detect_script_dir_with_src "$tmp/fake_install.sh"
+  )"
+  if [[ "$result" == "$tmp" ]]; then
+    return 0
+  else
+    _fail "Expected '$tmp', got '$result'"
   fi
 }
 

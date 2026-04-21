@@ -13,10 +13,10 @@
 ## Conventions
 
 - **Naming:** kebab-case for filenames, UPPER-CASE for planning template files
-- **Structure:** top-level directories by function (commands, agents, rules, templates, docs)
+- **Structure:** top-level directories by function (skills, commands, agents, rules, templates, docs)
 - **Commits:** conventional commits format (feat/fix/refactor/docs/chore/test)
 - **Language:** all persistent files in English; conversational output matches user's language
-- **Source vs install:** When working on Crafter itself, always modify source files in the repository (`agents/`, `commands/`, `rules/`, `templates/`), never the installed copies in `~/.claude/crafter/`.
+- **Source vs install:** When working on Crafter itself, always modify source files in the repository (`skills/`, `agents/`, `rules/`, `templates/`). `commands/` are compatibility wrappers. Never modify installed copies in `~/.claude/crafter/`.
 
 ## Key Decisions
 
