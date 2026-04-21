@@ -297,6 +297,15 @@ test_version_flag_sets_version() {
   assert_exit_code 0 "$ec"
 }
 
+test_version_flag_accepts_v_prefix() {
+  local tmp home_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --version v0.1.0
+  assert_exit_code 0 "$ec"
+}
+
 test_version_without_value_exits_error() {
   local tmp home_dir output ec
   tmp="$(_make_tmp)"

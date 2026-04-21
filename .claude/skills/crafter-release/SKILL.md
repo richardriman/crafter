@@ -1,9 +1,9 @@
 ---
 name: "crafter-release"
-description: "Prepare and publish a GitHub Release with AI-generated release notes"
+description: "Prepare and publish a GitHub Release with notes and CLI binary assets"
 ---
 
-Prepare a GitHub Release for this project.
+Prepare a GitHub Release for this project, including CLI binary assets.
 
 **Requirements:** `gh` CLI must be installed and authenticated, and you must have push access to `origin`.
 
@@ -124,7 +124,7 @@ If changes are requested, revise the release notes and present them again until 
 
 ---
 
-## Step 5 — Create the Release
+## Step 5 — Create the Release and Upload CLI Binaries
 
 1. Verify that `gh` is installed and authenticated:
    ```
@@ -137,4 +137,34 @@ If changes are requested, revise the release notes and present them again until 
    gh release create v<target-version> --title "v<target-version>" --notes-file /tmp/release-notes.md
    ```
 
-3. Report success and include the URL of the newly created release.
+3. Build release binaries:
+   ```
+   cd cli
+   make release
+   ```
+   This must produce:
+   - `cli/bin/crafter-darwin-arm64`
+   - `cli/bin/crafter-darwin-amd64`
+   - `cli/bin/crafter-linux-amd64`
+   - `cli/bin/crafter-linux-arm64`
+   If build fails or any expected file is missing, stop and report the error.
+
+4. Upload binaries to the release:
+   ```
+   gh release upload v<target-version> \
+     cli/bin/crafter-darwin-arm64 \
+     cli/bin/crafter-darwin-amd64 \
+     cli/bin/crafter-linux-amd64 \
+     cli/bin/crafter-linux-arm64 \
+     --clobber
+   ```
+
+5. Verify release assets after upload:
+   ```
+   gh release view v<target-version> --json url,assets
+   ```
+   Confirm all 4 expected binaries are present.
+
+6. Report success and include:
+   - release URL
+   - uploaded asset names

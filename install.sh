@@ -16,6 +16,7 @@ set -euo pipefail
 REPO="richardriman/crafter"
 VERSION=""         # empty = use main branch
 TEMP_DIR=""
+REMOTE_MODE=0      # set to 1 when running from downloaded source (curl|bash path)
 
 # ---------------------------------------------------------------------------
 # Detect whether we are running locally (from a cloned repo) or remotely
@@ -71,6 +72,8 @@ EOF
 # Remote mode: download tarball from GitHub and set SCRIPT_DIR
 # ---------------------------------------------------------------------------
 _download_release() {
+  REMOTE_MODE=1
+
   # Require curl
   if ! command -v curl &>/dev/null; then
     echo "Error: curl is required for remote installation but was not found." >&2
@@ -90,9 +93,9 @@ _download_release() {
     tarball_url="https://github.com/${REPO}/archive/refs/heads/main.tar.gz"
     extract_subdir="crafter-main"
   else
-    # Try tag without 'v' prefix first (e.g. 0.1.0), then with 'v' prefix
-    tarball_url="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
-    extract_subdir="crafter-${VERSION}"
+    # Prefer v-prefixed tag (common in this repo), then fall back to raw version.
+    tarball_url="https://github.com/${REPO}/archive/refs/tags/v${VERSION}.tar.gz"
+    extract_subdir="crafter-v${VERSION}"
   fi
 
   echo "Downloading Crafter from GitHub..."
@@ -100,12 +103,12 @@ _download_release() {
   local http_code
   http_code="$(curl -fsSL -w "%{http_code}" -o "$TEMP_DIR/crafter.tar.gz" "$tarball_url" 2>/dev/null || true)"
 
-  # If the versionless tag returned 404, try with 'v' prefix
-  if [[ -n "$VERSION" && "$http_code" == "404" || -n "$VERSION" && ! -s "$TEMP_DIR/crafter.tar.gz" ]]; then
-    local alt_url="https://github.com/${REPO}/archive/refs/tags/v${VERSION}.tar.gz"
-    echo "Tag ${VERSION} not found, trying v${VERSION}..."
+  # If the v-prefixed tag failed, try the raw version tag.
+  if [[ -n "$VERSION" && ( "$http_code" == "404" || ! -s "$TEMP_DIR/crafter.tar.gz" ) ]]; then
+    local alt_url="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
+    echo "Tag v${VERSION} not found, trying ${VERSION}..."
     http_code="$(curl -fsSL -w "%{http_code}" -o "$TEMP_DIR/crafter.tar.gz" "$alt_url" 2>/dev/null || true)"
-    extract_subdir="crafter-v${VERSION}"
+    extract_subdir="crafter-${VERSION}"
   fi
 
   if [[ ! -s "$TEMP_DIR/crafter.tar.gz" ]]; then
@@ -148,19 +151,16 @@ _download_release() {
 # ---------------------------------------------------------------------------
 _download_cli_binary() {
   local dest_dir="$1"
+  local dest_bin="$dest_dir/crafter/bin/crafter"
 
-  # Only attempt download when a version tag is set (binaries are only on releases)
-  if [[ -z "$VERSION" ]]; then
+  # install_to may have already copied a local pre-built binary from
+  # SCRIPT_DIR/cli/bin/crafter. If so, avoid network/build work.
+  if [[ -x "$dest_bin" ]]; then
     return 0
   fi
 
-  if ! command -v curl &>/dev/null; then
-    echo "Warning: curl not found; skipping CLI binary download." >&2
-    return 0
-  fi
-
-  # os/arch are lowercased to match GitHub release asset naming convention,
-  # e.g. crafter-darwin-arm64, crafter-linux-amd64.
+  # os/arch are lowercased to match GitHub release asset naming convention
+  # (e.g. crafter-darwin-arm64, crafter-linux-amd64).
   local os arch
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
   arch="$(uname -m)"
@@ -174,29 +174,74 @@ _download_cli_binary() {
   esac
 
   local binary_name="crafter-${os}-${arch}"
-  local binary_url="https://github.com/${REPO}/releases/download/${VERSION}/${binary_name}"
-  local dest_bin="$dest_dir/crafter/bin/crafter"
 
   # Ensure the bin/ directory exists regardless of whether install_to has
   # already created it (makes this function self-contained).
   mkdir -p "$(dirname "$dest_bin")"
 
-  echo "Downloading CLI binary ${binary_name}..."
-
-  # http_code captures the HTTP status code written to stdout by curl's
-  # -w "%{http_code}" option; it may be empty if curl itself fails before
-  # receiving a response (e.g. DNS error).
-  local http_code
-  http_code="$(curl -fsSL -w "%{http_code}" -o "$dest_bin" "$binary_url" 2>/dev/null || true)"
-
-  if [[ ! -s "$dest_bin" || "$http_code" == "404" ]]; then
-    echo "Warning: CLI binary not available for this platform/version (${binary_name}); skipping." >&2
-    rm -f "$dest_bin"
-    return 0
+  # In remote mode, VERSION may be empty when installing from main. In that
+  # case, try the downloaded source VERSION for release-asset lookup.
+  local release_version="$VERSION"
+  if [[ -z "$release_version" && "$REMOTE_MODE" -eq 1 && -f "$SCRIPT_DIR/VERSION" ]]; then
+    release_version="$(tr -d '[:space:]' < "$SCRIPT_DIR/VERSION")"
+    release_version="${release_version#v}"
   fi
 
-  chmod +x "$dest_bin"
-  echo "CLI binary installed to $dest_bin"
+  if [[ -n "$release_version" && "$REMOTE_MODE" -eq 1 ]]; then
+    if ! command -v curl &>/dev/null; then
+      echo "Warning: curl not found; skipping CLI binary download." >&2
+    else
+      local release_tag http_code binary_url
+      for release_tag in "v${release_version}" "${release_version}"; do
+        binary_url="https://github.com/${REPO}/releases/download/${release_tag}/${binary_name}"
+        echo "Downloading CLI binary ${binary_name} (${release_tag})..."
+        http_code="$(curl -fsSL -w "%{http_code}" -o "$dest_bin" "$binary_url" 2>/dev/null || true)"
+        if [[ -s "$dest_bin" && "$http_code" != "404" ]]; then
+          chmod +x "$dest_bin"
+          echo "CLI binary installed to $dest_bin"
+          return 0
+        fi
+        rm -f "$dest_bin"
+      done
+      echo "Warning: CLI binary not available for this platform/version (${binary_name}); trying source build." >&2
+    fi
+  fi
+
+  if [[ "$REMOTE_MODE" -eq 1 && -f "$SCRIPT_DIR/cli/go.mod" ]]; then
+    if ! command -v go &>/dev/null; then
+      echo "Warning: go not found; skipping CLI source build fallback." >&2
+      return 0
+    fi
+    local temp_tool_versions_created=0
+    if [[ -f "$HOME/.tool-versions" && ! -f "$SCRIPT_DIR/cli/.tool-versions" ]]; then
+      cp "$HOME/.tool-versions" "$SCRIPT_DIR/cli/.tool-versions"
+      temp_tool_versions_created=1
+    fi
+    local go_version=""
+    go_version="$(awk '/^go[[:space:]]+/ { print $2; exit }' "$SCRIPT_DIR/cli/go.mod" 2>/dev/null || true)"
+    if [[ -n "$go_version" ]] && command -v asdf &>/dev/null; then
+      local asdf_go_version=""
+      asdf_go_version="$(
+        asdf list golang 2>/dev/null \
+          | tr -d ' *' \
+          | awk -v pfx="$go_version" '$0 ~ "^" pfx "(\\.|$)" { print; exit }'
+      )"
+      if [[ -n "$asdf_go_version" ]]; then
+        go_version="$asdf_go_version"
+      fi
+    fi
+    echo "Building CLI binary from source..."
+    if (cd "$SCRIPT_DIR/cli" && ASDF_GOLANG_VERSION="$go_version" go build -o "$dest_bin" .); then
+      chmod +x "$dest_bin"
+      echo "CLI binary installed to $dest_bin"
+    else
+      rm -f "$dest_bin"
+      echo "Warning: failed to build CLI binary from source; skipping." >&2
+    fi
+    if [[ "$temp_tool_versions_created" -eq 1 ]]; then
+      rm -f "$SCRIPT_DIR/cli/.tool-versions"
+    fi
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -361,6 +406,7 @@ while [[ $# -gt 0 ]]; do
         echo "Error: Invalid version format: '$VERSION'" >&2
         exit 1
       fi
+      VERSION="${VERSION#v}"
       shift 2
       ;;
     --help|-h)
