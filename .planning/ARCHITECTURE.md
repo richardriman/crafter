@@ -106,8 +106,9 @@ Current subcommands:
 - `crafter skillbook get` — read skillbook, filter/sort skills, format as markdown, increment appliedCount
 - `crafter skillbook add` — add observation with Jaccard dedup and confidence promotion
 - `crafter skillbook init` — create empty skillbook
+- `crafter update` — fetch and run the official installer to update global or local Crafter installations
 
-Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-arm64. Binaries attached to GitHub releases. `install.sh` downloads the correct binary to `~/.claude/crafter/bin/crafter`.
+Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-arm64. Binaries attached to GitHub releases. `install.sh` downloads the correct binary to `~/.claude/crafter/bin/crafter` and links global installs to `~/.local/bin/crafter` for shell usage.
 
 ### Skillbook — Project-Level Learning
 

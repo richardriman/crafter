@@ -38,6 +38,33 @@ cd crafter
 ./install.sh
 ```
 
+## CLI Binary
+
+Global install now links the CLI command to:
+
+```bash
+~/.local/bin/crafter
+```
+
+If `crafter` is not found in your shell, add `~/.local/bin` to `PATH`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Update commands:
+
+```bash
+# Update global install to latest
+crafter update
+
+# Update global install to a specific release
+crafter update --version 0.8.1
+
+# Update local project install
+crafter update --local
+```
+
 ## Commands
 
 | Command | Description |

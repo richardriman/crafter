@@ -245,6 +245,32 @@ _download_cli_binary() {
 }
 
 # ---------------------------------------------------------------------------
+# Make global CLI available in PATH via ~/.local/bin/crafter symlink
+# ---------------------------------------------------------------------------
+_link_cli_into_path() {
+  local base_dir="$1"
+  local installed_bin="$base_dir/crafter/bin/crafter"
+  local link_dir="$HOME/.local/bin"
+  local link_path="$link_dir/crafter"
+
+  if [[ ! -x "$installed_bin" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$link_dir"
+  ln -sf "$installed_bin" "$link_path"
+  echo "CLI command linked at $link_path"
+
+  case ":$PATH:" in
+    *":$link_dir:"*) ;;
+    *)
+      echo "Warning: $link_dir is not in PATH." >&2
+      echo "  Add this to your shell profile: export PATH=\"$link_dir:\$PATH\"" >&2
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
 # Core install logic
 # ---------------------------------------------------------------------------
 install_to() {
@@ -362,6 +388,7 @@ install_hook() {
 install_global() {
   install_to "$HOME/.claude" "globally"
   _download_cli_binary "$HOME/.claude"
+  _link_cli_into_path "$HOME/.claude"
   install_hook
   echo ""
   echo "Crafter installed globally."
