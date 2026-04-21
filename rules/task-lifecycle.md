@@ -25,7 +25,9 @@ Runs at workflow start, before scope detection.
      - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next).
      - Otherwise (unrecognized Plan content) → present to user and ask how to proceed.
    - If starting fresh: proceed normally (the old file stays as-is; a new one will be created after scope detection).
-7. If no match is found: proceed normally. Task file creation happens after scope detection.
+7. If no match is found and you are on a feature branch (not main/master): run a branch/request relevance sanity check before proceeding. Compare the effective request (`$ARGUMENTS`) with the branch topic at a high level. If there is a reasonable suspicion that the request is unrelated to the current branch (for example, stale branch context, clearly different task intent, or low topical overlap), do not proceed silently. Ask the user how to continue and wait for a decision.
+   - Recommended prompt: "You are on branch `<branch>`, but this request may be unrelated. Should I continue on this branch, or switch/start from another branch first?"
+8. If no match is found and either (a) you are on main/master, or (b) the user confirms the current feature branch is correct: proceed normally. Task file creation happens after scope detection.
 
 ## Task File Creation
 
