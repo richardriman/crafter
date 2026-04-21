@@ -244,12 +244,8 @@ _run_installer_no_cmd() {
 # ---------------------------------------------------------------------------
 # Shared file list used by global-install tests (issue #9: avoid duplication)
 # ---------------------------------------------------------------------------
-# 24 files installed by install_global / install_to
+# 20 files installed by install_global / install_to
 _EXPECTED_FILES_REL=(
-  "commands/crafter/do.md"
-  "commands/crafter/debug.md"
-  "commands/crafter/status.md"
-  "commands/crafter/map-project.md"
   "skills/crafter-do/SKILL.md"
   "skills/crafter-debug/SKILL.md"
   "skills/crafter-status/SKILL.md"
@@ -383,7 +379,6 @@ test_global_creates_expected_directories() {
   mkdir -p "$home_dir"
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
-  assert_dir_exists "$home_dir/.claude/commands/crafter"
   assert_dir_exists "$home_dir/.claude/skills"
   assert_dir_exists "$home_dir/.claude/crafter"
   assert_dir_exists "$home_dir/.claude/crafter/rules"
@@ -570,7 +565,6 @@ test_local_creates_expected_directories() {
   # Pass proj_dir as the working directory so .claude/ is created there.
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
-  assert_dir_exists "$proj_dir/.claude/commands/crafter"
   assert_dir_exists "$proj_dir/.claude/skills"
   assert_dir_exists "$proj_dir/.claude/crafter"
   assert_dir_exists "$proj_dir/.claude/crafter/rules"
@@ -664,6 +658,7 @@ test_global_upgrade_removes_stale_files() {
   # Simulate stale files from a previous version
   echo "stale" > "$base/crafter/rules/old-rule.md"
   echo "stale" > "$base/crafter/templates/old-template.md"
+  mkdir -p "$base/commands/crafter"
   echo "stale" > "$base/commands/crafter/old-command.md"
   echo "stale" > "$base/agents/crafter-old-agent.md"
   mkdir -p "$base/skills/crafter-old-skill"
@@ -699,6 +694,7 @@ test_local_upgrade_removes_stale_files() {
   base="$proj_dir/.claude"
   # Simulate stale files
   echo "stale" > "$base/crafter/rules/old-rule.md"
+  mkdir -p "$base/commands/crafter"
   echo "stale" > "$base/commands/crafter/old-command.md"
   echo "stale" > "$base/agents/crafter-old-agent.md"
   mkdir -p "$base/skills/crafter-old-skill"

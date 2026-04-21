@@ -1,22 +1,22 @@
 # Project
 
-> Crafter is a lightweight, human-in-the-loop AI development methodology for Claude Code — a set of conventions, context files, and slash commands that keep the developer in control at every step.
+> Crafter is a lightweight, human-in-the-loop AI development methodology for Claude Code — a set of conventions, context files, and skills that keep the developer in control at every step.
 
 ## Stack
 
-- **Language:** Markdown (all commands, rules, agents, templates, documentation)
+- **Language:** Markdown (skills, rules, agents, templates, documentation)
 - **Language:** Go (CLI utility binary — `cli/` directory)
 - **Scripting:** Bash (install.sh only)
-- **Runtime platform:** Claude Code CLI (custom slash commands)
+- **Runtime platform:** Claude Code CLI (custom skills)
 - **Framework:** cobra (Go CLI only — core project remains pure conventions-and-prompts)
 
 ## Conventions
 
 - **Naming:** kebab-case for filenames, UPPER-CASE for planning template files
-- **Structure:** top-level directories by function (skills, commands, agents, rules, templates, docs)
+- **Structure:** top-level directories by function (skills, agents, rules, templates, docs, cli)
 - **Commits:** conventional commits format (feat/fix/refactor/docs/chore/test)
 - **Language:** all persistent files in English; conversational output matches user's language
-- **Source vs install:** When working on Crafter itself, always modify source files in the repository (`skills/`, `agents/`, `rules/`, `templates/`). `commands/` are compatibility wrappers. Never modify installed copies in `~/.claude/crafter/`.
+- **Source vs install:** When working on Crafter itself, always modify source files in the repository (`skills/`, `agents/`, `rules/`, `templates/`, `cli/`). Never modify installed copies in `~/.claude/crafter/`.
 
 ## Key Decisions
 

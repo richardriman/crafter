@@ -35,7 +35,7 @@ If existing `.crafter/` files (or legacy `.planning/` files) were provided or ar
 
 ### (B) Research / Investigation
 
-Used when the orchestrator asks you to investigate a specific question about the codebase — e.g., to understand the scope of a change, locate the root cause of a bug, or gather evidence before planning begins. This mode is used by `/crafter:do` (Large scope, Step 2) and `/crafter:debug` (Step 2).
+Used when the orchestrator asks you to investigate a specific question about the codebase — e.g., to understand the scope of a change, locate the root cause of a bug, or gather evidence before planning begins. This mode is used by `/crafter-do` (Large scope, Step 2) and `/crafter-debug` (Step 2).
 
 Approach the investigation systematically:
 

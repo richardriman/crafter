@@ -31,7 +31,7 @@ Runs at workflow start, before scope detection.
 
 ## Task File Creation
 
-Runs after the first user-interaction gate (scope detection in `/crafter:do`, symptom collection in `/crafter:debug`).
+Runs after the first user-interaction gate (scope detection in `/crafter-do`, symptom collection in `/crafter-debug`).
 
 1. Create the `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` directory if it does not exist.
 2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active`.

@@ -28,7 +28,7 @@ _detect_script_dir() {
   if [[ -n "$src" && "$src" != "bash" && "$src" != "-" ]]; then
     local candidate
     candidate="$(cd "$(dirname "$src")" 2>/dev/null && pwd)" || true
-    if [[ -n "$candidate" && -f "$candidate/VERSION" && ( -d "$candidate/skills" || -d "$candidate/commands" ) ]]; then
+    if [[ -n "$candidate" && -f "$candidate/VERSION" && -d "$candidate/skills" ]]; then
       echo "$candidate"
       return
     fi
@@ -277,7 +277,7 @@ install_to() {
   local base="$1"
   local label="$2"
 
-  local commands_dest="$base/commands/crafter"
+  local commands_dest="$base/commands/crafter"   # legacy compatibility wrappers (cleanup only)
   local skills_dest="$base/skills"
   local crafter_dest="$base/crafter"
   local rules_dest="$base/crafter/rules"
@@ -296,12 +296,6 @@ install_to() {
   fi
 
   echo "Installing Crafter $label..."
-
-  mkdir -p "$commands_dest"
-  cp "$SCRIPT_DIR/commands/do.md"          "$commands_dest/do.md"
-  cp "$SCRIPT_DIR/commands/debug.md"       "$commands_dest/debug.md"
-  cp "$SCRIPT_DIR/commands/status.md"      "$commands_dest/status.md"
-  cp "$SCRIPT_DIR/commands/map-project.md" "$commands_dest/map-project.md"
 
   mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project"
   cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"          "$skills_dest/crafter-do/SKILL.md"

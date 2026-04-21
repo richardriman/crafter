@@ -22,7 +22,7 @@ No auto-commits. No silent refactors. No guessing when the request is ambiguous.
 Plans are written in plain language, for a human reader. Not XML. Not structured task objects. Not pipe-delimited fields. If you can't explain the plan clearly in a few paragraphs, the plan isn't ready yet.
 
 ### Adaptive
-One command (`/crafter:do`) adapts to the size of the task. A one-line fix and a cross-cutting refactor both go through the same command — the workflow adjusts to match the scope automatically.
+One command (`/crafter-do`) adapts to the size of the task. A one-line fix and a cross-cutting refactor both go through the same command — the workflow adjusts to match the scope automatically.
 
 ### Persistent context
 Three living documents in `.crafter/` give Crafter workflows persistent project context without relying on global session preloads. They grow as the project evolves and are updated after every significant change.

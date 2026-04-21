@@ -25,10 +25,10 @@ curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.s
 Then open Claude Code in your project and run:
 
 ```
-/crafter:map-project
+/crafter-map-project
 ```
 
-Crafter is now **skills-first** in source (`skills/crafter-*/SKILL.md`). Installer deploys both skills (`.claude/skills/crafter-*/SKILL.md`) and compatibility command wrappers (`.claude/commands/crafter/`).
+Crafter is now **skills-first** in source (`skills/crafter-*/SKILL.md`). Installer deploys skills to `.claude/skills/crafter-*/SKILL.md`.
 
 **Alternative (for contributors working on Crafter itself):**
 
@@ -65,14 +65,14 @@ crafter update --version 0.8.1
 crafter update --local
 ```
 
-## Commands
+## Skills
 
 | Command | Description |
 |---|---|
-| `/crafter:do <task>` | Plan, execute, review, and commit — adaptive to small/medium/large scope |
-| `/crafter:debug <problem>` | Systematic, hypothesis-driven debugging workflow |
-| `/crafter:status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
-| `/crafter:map-project` | Initialize or update `.crafter/` context files from codebase analysis |
+| `/crafter-do <task>` | Plan, execute, review, and commit — adaptive to small/medium/large scope |
+| `/crafter-debug <problem>` | Systematic, hypothesis-driven debugging workflow |
+| `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
+| `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
 
 ## Project Context Files
 
@@ -82,7 +82,7 @@ Crafter maintains three living documents in `.crafter/`:
 - **ARCHITECTURE.md** — directory structure, key patterns, navigation guide
 - **STATE.md** — current focus, recent changes, done items, planned work, known issues
 
-These files are loaded on-demand by Crafter skills (`/crafter:*`) when needed.
+These files are loaded on-demand by Crafter skills (for example `/crafter-do`, `/crafter-debug`, `/crafter-status`, `/crafter-map-project`) when needed.
 
 If an existing project still uses legacy `.planning/`, Crafter can run with fallback and proactively offers migration to `.crafter/` using `git mv`.
 
@@ -94,11 +94,11 @@ This matters because running planning, implementation, verification, and review 
 
 | Agent | Role | Used in |
 |---|---|---|
-| **Planner** | Tech lead — proposes the plan | `/crafter:do` PLAN step |
-| **Implementer** | Senior developer — implements the approved plan | `/crafter:do` EXECUTE step, `/crafter:debug` fix step |
-| **Verifier** | QA engineer — checks criteria, finds regressions | `/crafter:do` VERIFY, `/crafter:debug` verification |
-| **Reviewer** | Code reviewer — looks for bugs, security issues, deviations | `/crafter:do` REVIEW step |
-| **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter:map-project`, Large scope research, `/crafter:debug` hypothesis |
+| **Planner** | Tech lead — proposes the plan | `/crafter-do` PLAN step |
+| **Implementer** | Senior developer — implements the approved plan | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
+| **Verifier** | QA engineer — checks criteria, finds regressions | `/crafter-do` VERIFY, `/crafter-debug` verification |
+| **Reviewer** | Code reviewer — looks for bugs, security issues, deviations | `/crafter-do` REVIEW step |
+| **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter-map-project`, Large scope research, `/crafter-debug` hypothesis |
 
 Agents for each role are defined as native Claude Code agents in `~/.claude/agents/`. The orchestrator spawns agents by name and provides each one with only the context it needs.
 

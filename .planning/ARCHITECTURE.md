@@ -13,11 +13,6 @@ crafter/
 │   │   └── SKILL.md             # crafter-map-project — project context initialization
 │   └── crafter-status/
 │       └── SKILL.md             # crafter-status — display current state
-├── commands/                    # Compatibility slash-command wrappers
-│   ├── debug.md                 # /crafter:debug -> routes to crafter-debug skill
-│   ├── do.md                    # /crafter:do -> routes to crafter-do skill
-│   ├── map-project.md           # /crafter:map-project -> routes to crafter-map-project skill
-│   └── status.md                # /crafter:status -> routes to crafter-status skill
 ├── docs/                        # Supplementary documentation
 │   └── philosophy.md            # Design philosophy and principles
 ├── hooks/                       # Claude Code lifecycle hooks
@@ -62,13 +57,13 @@ crafter/
 
 ### Orchestrator / Agent Model
 
-Commands act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to five specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer), each spawned in a fresh context window with only the information it needs.
+Skills act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to five specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer), each spawned in a fresh context window with only the information it needs.
 
 Agents are defined as native Claude Code agents in `agents/` and are invoked by name (e.g., `crafter-planner`).
 
-### Skills-first with Command Wrappers
+### Skills-first
 
-Crafter's canonical workflow logic lives in `skills/crafter-*/SKILL.md`. The `commands/` directory is kept as a compatibility layer for slash-command entry points and routes into skills.
+Crafter's canonical workflow logic lives in `skills/crafter-*/SKILL.md`.
 
 ### Model Selection
 
@@ -84,7 +79,7 @@ Every significant action requires explicit user approval: plan approval before e
 
 ### Adaptive Scope Detection
 
-`/crafter:do` auto-classifies tasks as Small (1-3 files, direct flow), Medium (multiple files, step-by-step), or Large (research first, then step-by-step).
+`/crafter-do` auto-classifies tasks as Small (1-3 files, direct flow), Medium (multiple files, step-by-step), or Large (research first, then step-by-step).
 
 ### Task Lifecycle
 
@@ -92,11 +87,11 @@ Task files in `.crafter/tasks/` serve dual purposes: active resume state while w
 
 ### Template-Driven .crafter/ Initialization
 
-`/crafter:map-project` uses the Analyzer to scan the target codebase and propose `.crafter/` file contents based on templates.
+`/crafter-map-project` uses the Analyzer to scan the target codebase and propose `.crafter/` file contents based on templates.
 
 ### Dual Installation Model
 
-`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection. Installer deploys both `skills/crafter-*/SKILL.md` and compatibility `commands/crafter/*.md`.
+`install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection. Installer deploys `skills/crafter-*/SKILL.md`.
 
 ### Crafter CLI — Utility Binary
 
@@ -120,7 +115,7 @@ The skillbook file (`{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json`, with `.crafte
 
 ## Conventions
 
-- Skill files are Markdown with YAML frontmatter (`skills/*/SKILL.md`); command files are wrappers for compatibility
+- Skill files are Markdown with YAML frontmatter (`skills/*/SKILL.md`)
 - Agent files define the role, constraints, and output format for each agent. The orchestrator spawns agents via the Task tool with a task description; agents explore the codebase themselves using their Read/Grep/Glob tools.
 - `install.sh` uses `set -euo pipefail` for strict error handling
-- Rules are split into per-concern fragments; each command loads only the fragments it needs
+- Rules are split into per-concern fragments; each skill loads only the fragments it needs

@@ -64,4 +64,4 @@ Focus on project-specific patterns, not general programming knowledge:
 
 After completing the task, suggest that the user can start a fresh session for the next piece of work:
 
-> If there's more to do, you might want to run `/clear` and then start your next task with `/crafter:do` or `/crafter:debug` to keep the context clean.
+> If there's more to do, you might want to run `/clear` and then start your next task with `/crafter-do` or `/crafter-debug` to keep the context clean.

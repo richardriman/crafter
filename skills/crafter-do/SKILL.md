@@ -25,7 +25,7 @@ Determine the project root path (`PROJECT_PATH`) so all Crafter context referenc
    - If yes: set `PROJECT_PATH` to `.` (current directory). Done.
    - If no: scan one level deep for non-hidden directories (skip names starting with `.`) containing `.crafter/` (i.e., check `*/.crafter/`, excluding `.*/.crafter/`).
       - **Exactly one found:** use it as `PROJECT_PATH`. Inform the user, e.g., "Found project in `rust/`, using it. Tip: you can use `--project rust` to skip this detection next time."
-      - **Multiple found:** list them and ask the user which one to use. Mention the `--project` shortcut so users discover it naturally, e.g., "Found projects: `rust/`, `elixir/`. Which one would you like to work on? (Tip: skip this next time with `/crafter:do --project rust ...`)" — then **wait for the user's response** before continuing.
+      - **Multiple found:** list them and ask the user which one to use. Mention the `--project` shortcut so users discover it naturally, e.g., "Found projects: `rust/`, `elixir/`. Which one would you like to work on? (Tip: skip this next time with `/crafter-do --project rust ...`)" — then **wait for the user's response** before continuing.
       - **None found:** repeat this exact scan using legacy `.planning/` paths as fallback (`.planning/`, `*/.planning/`). If still none found, set `PROJECT_PATH` to `.` (the normal single-project path — `.crafter/` may be created later by the workflow).
 
 3. **Resolve context directory name (`CRAFTER_DIR`) inside `PROJECT_PATH`.**
@@ -174,7 +174,7 @@ After a step's Execute → Verify → Review cycle completes with no outstanding
 
 1. Update the task file — check off the completed step.
 2. If this was the **last step** in the plan, proceed directly to Steps 7–9.
-3. Otherwise, suggest the user run `/clear` and then re-invoke `/crafter:do` to continue with the next step in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next plan step.
+3. Otherwise, suggest the user run `/clear` and then re-invoke `/crafter-do` to continue with the next step in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next plan step.
 
 The resume detection in Step 0 will pick up the active task file and continue from the next unchecked step. This keeps each step's Execute → Verify → Review cycle in a clean context window.
 
@@ -188,6 +188,6 @@ Follow the post-change steps in `~/.claude/crafter/rules/post-change.md`. The ch
 2. **Commit** — only commit when the user explicitly says to. Do not silently skip this step. Use conventional commits format.
 3. **Update STATE.md** — after a successful commit, update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues). Show the user what changed.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps. The task file is in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`.
-5. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter:do` or `/crafter:debug` to keep context clean.
+5. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter-do` or `/crafter-debug` to keep context clean.
 
 **Do not end the conversation until all 5 items above are addressed.**
