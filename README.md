@@ -77,6 +77,8 @@ crafter update --local
 | `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
 | `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
 
+`/crafter-do` enforces Karpathy-inspired guardrails across planning, implementation, and review: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**.
+
 ## Project Context Files
 
 Crafter maintains three living documents in `.crafter/`:

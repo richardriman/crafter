@@ -21,6 +21,7 @@ For each file you modify:
 - Make only the changes the plan calls for.
 - Respect the existing code style and conventions visible in the surrounding code.
 - Do not refactor unrelated code, even if you spot issues.
+- Keep the implementation minimal — do not add speculative abstractions, configurability, or side features not required by the plan.
 
 When you finish, summarize what was done: which files were changed and how. If anything was skipped or deferred, say so explicitly.
 

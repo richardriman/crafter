@@ -41,6 +41,7 @@ After completing the task file, reflect on the task and extract observations for
    - **agent**: which agent this applies to (implementer, reviewer, planner, verifier, analyzer)
    - **rule**: the learned guideline, written as an instruction
    - **rationale**: what happened that led to this observation
+   - Prefer mapping observations to one of these buckets: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution.
 3. For each observation, run via Bash:
    ```
    # Resolve SKILLBOOK_FILE with .crafter preferred and .planning as legacy fallback

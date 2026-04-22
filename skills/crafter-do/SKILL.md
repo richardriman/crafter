@@ -104,6 +104,8 @@ Delegate planning to the **`crafter-planner`** agent:
 4. Present the Planner's summary to the user. The summary must include:
    - **Approach** — the overall strategy in 1–2 sentences
    - **Steps** — every step, with a brief description of what changes and which files are affected
+   - **Assumptions** — explicit assumptions or competing interpretations the Planner identified
+   - **Simplicity checkpoint** — why this is the minimum sufficient approach
    - **Verification criteria** — how correctness will be confirmed
    - **Unknowns** — any flags or open questions from the Planner
    - A note that the full detailed plan is in the task file (mention the path)
@@ -147,6 +149,7 @@ b. Provide it with: the approved plan, the list of changed files, and a mention 
 c. Receive the review report.
 d. Present the review results to the user. **Output format is mandatory:**
    - Reproduce the Reviewer's **Diff summary** and **Issues found** tables directly — copy the markdown tables as-is.
+   - Reproduce the Reviewer's **Karpathy scorecard** table directly — copy the markdown table as-is.
    - **Never** convert tables to prose, bullet lists, or any other format.
    - After the tables, state the recommendation (must-fix vs. optional).
 

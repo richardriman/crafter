@@ -6,6 +6,8 @@
 - Explain **why**, not just what.
 - Include verification criteria (how you'll know the change is correct).
 - For non-trivial changes, mention alternatives that were considered.
+- Surface assumptions and ambiguous interpretations explicitly.
+- Include a simplicity checkpoint: explain why the proposed approach is the minimal sufficient one.
 
 ### APPROVE
 - Never proceed without explicit user approval of the plan.
@@ -16,11 +18,13 @@
 - Implement exactly what was approved.
 - Never change architecture without prior discussion.
 - If something unexpected is discovered mid-execution that would materially change the plan, stop and inform the user before continuing.
+- Avoid speculative additions ("while we're here" features, abstractions, configurability) unless explicitly approved.
 
 ### VERIFY
 - Check each verification criterion defined in the plan.
 - Run tests if applicable.
 - Report clearly what passed and what (if anything) did not.
+- Verify goals, not just activity: each criterion must map to observable evidence.
 
 ### REVIEW
 - **Output format is mandatory** — reproduce the Reviewer's **Diff summary** and **Issues found** tables directly. Copy the markdown tables as-is. **Never** convert tables to prose, bullet lists, or any other format. Expected structure:
@@ -35,6 +39,14 @@
   | # | Severity | File | Line | Description |
   |---|----------|------|------|-------------|
   | ...                                        |
+
+  ### Karpathy scorecard
+  | Principle | Status | Evidence |
+  |-----------|--------|----------|
+  | Think Before Coding | PASS/FLAG | ... |
+  | Simplicity First | PASS/FLAG | ... |
+  | Surgical Changes | PASS/FLAG | ... |
+  | Goal-Driven Execution | PASS/FLAG | ... |
   ```
 
   After the tables, state the recommendation (must-fix vs. optional).

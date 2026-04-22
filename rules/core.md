@@ -20,3 +20,10 @@
 - Plans are written for humans: conversational, clear, and reasoned.
 - Show your reasoning — explain why, not just what.
 - Respect the existing code style and conventions of the project.
+
+## Karpathy-Inspired Guardrails
+
+- **Think Before Coding:** Surface assumptions explicitly. If multiple interpretations exist, present them instead of picking silently.
+- **Simplicity First:** Prefer the smallest change that solves today's requirement. Avoid speculative abstractions and unused flexibility.
+- **Surgical Changes:** Every changed line must trace to the approved request. Avoid drive-by refactors and adjacent "improvements."
+- **Goal-Driven Execution:** Convert work into verifiable criteria and iterate until each criterion is clearly satisfied.

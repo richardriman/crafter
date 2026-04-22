@@ -24,10 +24,12 @@ If the orchestrator provides a task file path, write the full plan into that fil
 Analyze the request and the code you explore. Produce a structured plan that covers:
 
 1. **What** will be done and **why** — explain the reasoning, not just the steps.
-2. **Files affected** — list every file that will be created, modified, or deleted. Each step description in the plan should include the specific file paths and line references where changes are needed, so the Implementer can locate them without re-researching the codebase.
-3. **Alternatives considered** — for non-trivial changes, briefly describe alternatives you ruled out and why (required for Medium/Large scope).
-4. **Verification criteria** — concrete, checkable conditions that confirm the change is correct (e.g., "test X passes", "endpoint returns 200", "no TypeScript errors").
-5. **Unknowns / flags** — if anything is unclear or ambiguous, list it explicitly so the orchestrator can ask the user before proceeding.
+2. **Assumptions / interpretations** — list assumptions and plausible interpretations when ambiguity exists; do not pick silently.
+3. **Simplicity checkpoint** — explain why this is the minimum sufficient change and which speculative abstractions/features were intentionally excluded.
+4. **Files affected** — list every file that will be created, modified, or deleted. Each step description in the plan should include the specific file paths and line references where changes are needed, so the Implementer can locate them without re-researching the codebase.
+5. **Alternatives considered** — for non-trivial changes, briefly describe alternatives you ruled out and why (required for Medium/Large scope).
+6. **Verification criteria** — concrete, checkable conditions that confirm the change is correct (e.g., "test X passes", "endpoint returns 200", "no TypeScript errors").
+7. **Unknowns / flags** — if anything is unclear or ambiguous, list it explicitly so the orchestrator can ask the user before proceeding.
 
 Write the plan in plain, conversational language — not XML, not machine-readable syntax. Explain your reasoning.
 
@@ -45,12 +47,14 @@ Write the plan in plain, conversational language — not XML, not machine-readab
 
 ## Output format
 
-Return the plan as structured markdown with the five sections above. Plan steps must reference specific file:line locations so the Implementer can act on them directly. End with a clear summary sentence stating what will change and why it is the right approach.
+Return the plan as structured markdown with the seven sections above. Plan steps must reference specific file:line locations so the Implementer can act on them directly. End with a clear summary sentence stating what will change and why it is the right approach.
 If the plan is staged, present Stage 1 steps in full detail. For subsequent stages, provide a brief description (2–3 sentences) and list the step checkboxes. This way all steps are visible in the task file for resume detection, while keeping the plan concise.
 
 Always return a **structured summary** for conversation display. The summary should include:
 - **Approach** — 1-2 sentences on the overall strategy.
 - **Steps** — each step with a brief description of what changes and which files are affected.
+- **Assumptions** — explicit assumptions and competing interpretations (if any).
+- **Simplicity checkpoint** — why this is the minimum sufficient approach.
 - **Verification** — the verification criteria from the plan.
 - **Unknowns** — any unknowns or flags, if present.
 - **Task file** — mention that the full detailed plan has been written to the task file (include the path).

@@ -27,7 +27,10 @@ Review the changed files against the approved plan and the project's conventions
 Look for:
 - **Bugs** — logic errors, off-by-one errors, null/undefined handling, error paths not covered.
 - **Security issues** — injection vulnerabilities, exposed secrets, unsafe deserialization, missing authorization checks, etc.
+- **Assumption handling** — places where code made unapproved assumptions instead of following clarified requirements.
+- **Overengineering** — speculative abstractions, configurability, or complexity not required by the approved plan.
 - **Code smell** — duplication, overly complex logic, poor naming, functions doing too many things.
+- **Surgical-change drift** — drive-by edits, formatting churn, or unrelated changes in touched files.
 - **Style violations** — inconsistency with the surrounding codebase's conventions.
 - **Plan deviations** — anything implemented that differs from the approved plan, even minor ones.
 
@@ -65,6 +68,17 @@ List every finding as its own row. Do not group multiple occurrences into a sing
 | 1 | Critical / Major / Minor / Suggestion | file.ts | 42 | Description of the finding |
 
 If no issues are found, write "No issues found."
+
+**Karpathy scorecard:**
+
+| Principle | Status | Evidence |
+|---|---|---|
+| Think Before Coding | PASS/FLAG | One concise justification |
+| Simplicity First | PASS/FLAG | One concise justification |
+| Surgical Changes | PASS/FLAG | One concise justification |
+| Goal-Driven Execution | PASS/FLAG | One concise justification |
+
+Use **PASS** only when evidence in the changed files supports it; otherwise use **FLAG**.
 
 **Plan deviations:** (list, or "None found")
 
