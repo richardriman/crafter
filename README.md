@@ -52,6 +52,9 @@ If `crafter` is not found in your shell, add `~/.local/bin` to `PATH`:
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
+When running `./install.sh` from a local clone, installer now falls back to
+building `cli` from source when `cli/bin/crafter` is missing.
+
 Update commands:
 
 ```bash

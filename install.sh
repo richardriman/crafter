@@ -147,7 +147,8 @@ _download_release() {
 }
 
 # ---------------------------------------------------------------------------
-# Download CLI binary for the current platform/arch (release mode only)
+# Install CLI binary for the current platform/arch.
+# Prefers release assets in remote mode and falls back to source build.
 # ---------------------------------------------------------------------------
 _download_cli_binary() {
   local dest_dir="$1"
@@ -207,13 +208,13 @@ _download_cli_binary() {
     fi
   fi
 
-  if [[ "$REMOTE_MODE" -eq 1 && -f "$SCRIPT_DIR/cli/go.mod" ]]; then
+  if [[ -f "$SCRIPT_DIR/cli/go.mod" ]]; then
     if ! command -v go &>/dev/null; then
       echo "Warning: go not found; skipping CLI source build fallback." >&2
       return 0
     fi
     local temp_tool_versions_created=0
-    if [[ -f "$HOME/.tool-versions" && ! -f "$SCRIPT_DIR/cli/.tool-versions" ]]; then
+    if [[ "$REMOTE_MODE" -eq 1 && -f "$HOME/.tool-versions" && ! -f "$SCRIPT_DIR/cli/.tool-versions" ]]; then
       cp "$HOME/.tool-versions" "$SCRIPT_DIR/cli/.tool-versions"
       temp_tool_versions_created=1
     fi
@@ -238,7 +239,7 @@ _download_cli_binary() {
       rm -f "$dest_bin"
       echo "Warning: failed to build CLI binary from source; skipping." >&2
     fi
-    if [[ "$temp_tool_versions_created" -eq 1 ]]; then
+    if [[ "$REMOTE_MODE" -eq 1 && "$temp_tool_versions_created" -eq 1 ]]; then
       rm -f "$SCRIPT_DIR/cli/.tool-versions"
     fi
   fi

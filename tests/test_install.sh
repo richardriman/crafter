@@ -184,6 +184,40 @@ _run_installer() {
   printf -v "$_ri_ec_var"   '%d' "$_ri_ec"
 }
 
+# Create a fake "go" executable that satisfies:
+#   go build -o <dest> .
+# by writing a tiny executable to <dest>. Returns directory path via stdout.
+_make_fake_go_bin_dir() {
+  local shim_dir
+  shim_dir="$(_make_tmp)/fake_go_bin"
+  mkdir -p "$shim_dir"
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'out=""' \
+    'while [[ $# -gt 0 ]]; do' \
+    '  case "$1" in' \
+    '    -o)' \
+    '      out="$2"' \
+    '      shift 2' \
+    '      ;;' \
+    '    *)' \
+    '      shift' \
+    '      ;;' \
+    '  esac' \
+    'done' \
+    'if [[ -z "$out" ]]; then' \
+    '  echo "fake go: missing -o output path" >&2' \
+    '  exit 1' \
+    'fi' \
+    'mkdir -p "$(dirname "$out")"' \
+    'printf '"'"'#!/usr/bin/env bash\necho fake-built-crafter\n'"'"' > "$out"' \
+    'chmod +x "$out"' \
+    > "$shim_dir/go"
+  chmod +x "$shim_dir/go"
+  echo "$shim_dir"
+}
+
 # Build a symlink-based "safe_bin" directory that mirrors the real PATH but
 # omits the specified command name.  Returns the directory path via stdout.
 # The caller is responsible for removing the directory when done.
@@ -427,6 +461,37 @@ test_global_copies_local_cli_binary() {
   assert_file_exists "$home_dir/.claude/crafter/bin/crafter"
 }
 
+test_global_builds_cli_from_source_when_local_binary_missing() {
+  local tmp home_dir output ec local_bin backup_bin had_local_bin fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+
+  local_bin="$REPO_DIR/cli/bin/crafter"
+  backup_bin="$tmp/crafter-bin-backup"
+  had_local_bin=0
+  if [[ -f "$local_bin" ]]; then
+    mv "$local_bin" "$backup_bin"
+    had_local_bin=1
+  fi
+
+  fake_go_bin="$(_make_fake_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  result_ec=$ec
+  PATH="$old_path"
+
+  if [[ $had_local_bin -eq 1 ]]; then
+    mv "$backup_bin" "$local_bin"
+  fi
+
+  assert_exit_code 0 "$result_ec"
+  assert_file_exists "$home_dir/.claude/crafter/bin/crafter"
+  assert_file_exists "$home_dir/.local/bin/crafter"
+  assert_contains "$output" "Building CLI binary from source"
+}
+
 test_global_links_cli_to_home_local_bin() {
   local tmp home_dir fake_bin output ec
   tmp="$(_make_tmp)"
@@ -484,6 +549,37 @@ test_local_copies_local_cli_binary() {
 
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$proj_dir/.claude/crafter/bin/crafter"
+}
+
+test_local_builds_cli_from_source_when_local_binary_missing() {
+  local tmp home_dir proj_dir output ec local_bin backup_bin had_local_bin fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+
+  local_bin="$REPO_DIR/cli/bin/crafter"
+  backup_bin="$tmp/crafter-bin-backup"
+  had_local_bin=0
+  if [[ -f "$local_bin" ]]; then
+    mv "$local_bin" "$backup_bin"
+    had_local_bin=1
+  fi
+
+  fake_go_bin="$(_make_fake_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  result_ec=$ec
+  PATH="$old_path"
+
+  if [[ $had_local_bin -eq 1 ]]; then
+    mv "$backup_bin" "$local_bin"
+  fi
+
+  assert_exit_code 0 "$result_ec"
+  assert_file_exists "$proj_dir/.claude/crafter/bin/crafter"
+  assert_contains "$output" "Building CLI binary from source"
 }
 
 test_local_does_not_link_cli_to_home_local_bin() {
