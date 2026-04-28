@@ -11,6 +11,7 @@
 
 ## Guides
 
+- [Change Lifecycle](guides/change-lifecycle.md)
 - [Branch Protection Baseline](guides/branch-protection.md)
 
 ## Feature Specifications
