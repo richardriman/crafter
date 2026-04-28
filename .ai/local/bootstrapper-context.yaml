@@ -1,0 +1,119 @@
+schema_version: 1
+
+project:
+  name: crafter
+  description: Lightweight human-in-the-loop AI development methodology and CLI for Claude Code.
+  tech_stack:
+    - Go
+    - Shell
+    - JavaScript
+    - Markdown
+  repo_type: single-service
+  primary_language: Go
+  existing_docs:
+    - README.md
+    - AGENTS.md
+    - CLAUDE.md
+    - docs/philosophy.md
+    - docs/plugin-system.md
+  existing_ci: null
+
+tracker:
+  type: github
+  project_key: null
+  owner: richardriman
+  repo: crafter
+
+interview:
+  questions_asked:
+    - question: "Which tracker is the source of truth for backlog and delivery: GitHub Issues, Jira, Linear, or local markdown?"
+      answer: "GitHub Issues"
+      date: 2026-04-23
+    - question: "Do you use the gh CLI for PR operations, or GitHub MCP?"
+      answer: "gh CLI"
+      date: 2026-04-23
+    - question: "Who merges PRs and what review requirements are mandatory before merge?"
+      answer: "CODEOWNERS review is required before merge"
+      date: 2026-04-23
+    - question: "Do you use estimation (story points/t-shirt sizing)?"
+      answer: "No estimation"
+      date: 2026-04-23
+    - question: "Do tickets frequently lack enough context, and do you want a Definition of Ready checklist in pm-instructions?"
+      answer: "Yes"
+      date: 2026-04-23
+    - question: "Any required quality gates beyond current tests (e.g., lint, formatting, release checks)?"
+      answer: "No additional quality gates"
+      date: 2026-04-23
+    - question: "What labels should map GitHub workflow states (todo/in-progress/review/blocked/done)?"
+      answer: "Use standard ADOS labels: change, in-progress, review, blocked, delivered"
+      date: 2026-04-23
+    - question: "I could not find a CODEOWNERS file in this repo; is review enforcement configured via branch protection/org rules, or should bootstrap add TODO guidance?"
+      answer: "Review/merge handled by human repository owner; no formal CODEOWNERS document exists"
+      date: 2026-04-23
+    - question: "What branch naming convention should be used in PM instructions?"
+      answer: "conventional feature|fix|refactor|chore|docs/GH-<id>-<slug>"
+      date: 2026-04-23
+    - question: "Where should documentation-handbook.md be copied from in your ADOS installation (source path), or should I draft a minimal project-local handbook instead?"
+      answer: "Use fallback minimal handbook"
+      date: 2026-04-23
+  pending_questions:
+    []
+
+confidence:
+  agents_md: 0.92
+  pm_instructions: 0.94
+  pr_instructions: 0.9
+  documentation_handbook: 0.92
+  feature_specs: 0.65
+  overview_docs: 0.82
+  templates: 0.3
+
+artifacts:
+  agents_md:
+    status: written
+    path: AGENTS.md
+  pm_instructions:
+    status: written
+    path: .ai/agent/pm-instructions.md
+  pr_instructions:
+    status: written
+    path: .ai/agent/pr-instructions.md
+  documentation_handbook:
+    status: written
+    path: doc/documentation-handbook.md
+  feature_specs:
+    - name: Skillbook Learning System
+      status: written
+      path: doc/spec/features/skillbook-learning-system.md
+  overview_docs:
+    - name: North Star
+      status: written
+      path: doc/overview/north-star.md
+    - name: Architecture Overview
+      status: written
+      path: doc/overview/architecture-overview.md
+  templates:
+    status: pending
+    path: doc/templates/
+
+sessions:
+  - started: 2026-04-23T08:02:24Z
+    phase: Human Interview
+    notes: "Initialized bootstrap state. Completed repo scan and confidence assessment; prepared targeted interview questions."
+  - started: 2026-04-23T08:09:48Z
+    phase: Human Interview
+    notes: "Captured tracker, PR access method, review requirement, estimation preference, DoR need, and quality gate answers. Remaining: workflow labels and CODEOWNERS enforcement location."
+  - started: 2026-04-23T08:12:35Z
+    phase: Draft Generation
+    notes: "Completed interview for tracker/PR workflow labels and review ownership. Prepared draft set for AGENTS.md, pm-instructions, pr-instructions, and recommended overview/feature spec artifacts."
+  - started: 2026-04-23T08:22:52Z
+    phase: Human Review
+    notes: "Captured explicit branch naming convention for pm-instructions and requested clarification on documentation-handbook purpose before approval."
+  - started: 2026-04-23T08:26:27Z
+    phase: Human Review
+    notes: "User selected fallback minimal documentation handbook; all interview blockers resolved, ready for final draft approval and write confirmation."
+  - started: 2026-04-23T08:28:58Z
+    phase: Write
+    notes: "Wrote approved artifacts to filesystem, including AGENTS.md update, PM/PR instructions, handbook, overview docs, feature spec, and doc index."
+
+last_updated: 2026-04-23T08:28:58Z
