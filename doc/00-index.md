@@ -9,6 +9,10 @@
 - [North Star](overview/north-star.md)
 - [Architecture Overview](overview/architecture-overview.md)
 
+## Guides
+
+- [Branch Protection Baseline](guides/branch-protection.md)
+
 ## Feature Specifications
 
 - [Skillbook Learning System](spec/features/skillbook-learning-system.md)
