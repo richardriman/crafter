@@ -77,9 +77,13 @@ Agent role definitions, model tiers, and context budgets are specified in `rules
 
 Every significant action requires explicit user approval: plan approval before execution, review-fix loop consent for Critical/Major findings, diff review before commit, commit only on user command.
 
+### Vertical Planning and Drift Checks
+
+`/crafter-do` plans work as vertical execution contracts. Each phase and step defines a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions. The Implementer works one step at a time, the Verifier runs step drift checks before the next step, and full Review runs after phase verification unless a high-risk step requires immediate review.
+
 ### Adaptive Scope Detection
 
-`/crafter-do` auto-classifies tasks as Small (1-3 files, direct flow), Medium (multiple files, step-by-step), or Large (research first, then step-by-step).
+`/crafter-do` first checks whether the request is complete enough to plan, then auto-classifies tasks as Small (1-3 files, isolated), Medium (multiple files/cross-cutting), or Large (incomplete, architectural, many files, or unfamiliar). Incomplete tasks go through targeted discussion and/or research before planning.
 
 ### Task Lifecycle
 

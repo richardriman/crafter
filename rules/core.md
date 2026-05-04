@@ -27,3 +27,5 @@
 - **Simplicity First:** Prefer the smallest change that solves today's requirement. Avoid speculative abstractions and unused flexibility.
 - **Surgical Changes:** Every changed line must trace to the approved request. Avoid drive-by refactors and adjacent "improvements."
 - **Goal-Driven Execution:** Convert work into verifiable criteria and iterate until each criterion is clearly satisfied.
+
+For `/crafter-do`, these guardrails are expressed as a **Karpathy Contract** in the plan. Each phase and step defines outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions. Implementers work inside that contract, Verifiers check drift against it, and Reviewers score the completed phase against it.

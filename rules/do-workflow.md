@@ -1,13 +1,17 @@
 # Standard Change Workflow Rules
 
 ### PLAN
-- Always propose a plan before taking any action.
+- Always run a lightweight completeness/refinement check before planning.
+- If the request is not complete enough to plan, do targeted discussion and/or research before planning.
+- A request is complete enough to plan when the goal, scope, non-goals, acceptance criteria, constraints, risks, and validation strategy are clear.
+- Always propose a plan before taking implementation action.
 - Write plans in plain, conversational language — not XML, not machine-readable syntax.
 - Explain **why**, not just what.
-- Include verification criteria (how you'll know the change is correct).
+- Write plans as vertical execution contracts, not concrete implementation scripts.
+- Include step drift criteria and phase verification criteria (how you'll know the change is correct and still inside scope).
 - For non-trivial changes, mention alternatives that were considered.
 - Surface assumptions and ambiguous interpretations explicitly.
-- Include a simplicity checkpoint: explain why the proposed approach is the minimal sufficient one.
+- Include a Karpathy Contract for each phase and step: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions.
 
 ### APPROVE
 - Never proceed without explicit user approval of the plan.
@@ -19,14 +23,22 @@
 - Never change architecture without prior discussion.
 - If something unexpected is discovered mid-execution that would materially change the plan, stop and inform the user before continuing.
 - Avoid speculative additions ("while we're here" features, abstractions, configurability) unless explicitly approved.
+- Execute one step at a time. Do not implement future steps early.
 
 ### VERIFY
-- Check each verification criterion defined in the plan.
+- After each step, run a lightweight step drift check against that step's Karpathy Contract.
+- Step drift checks classify drift as: no drift, harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery.
+- Harmful drift blocks the next step until the current step is fixed.
+- Scope drift requires user approval or replanning.
+- Beneficial local drift may continue only when recorded as an accepted decision.
+- After all steps in a phase pass drift checks, run phase verification against the phase verification criteria.
 - Run tests if applicable.
-- Report clearly what passed and what (if anything) did not.
+- Report clearly what passed, what failed, and what workflow action is required.
 - Verify goals, not just activity: each criterion must map to observable evidence.
 
 ### REVIEW
+- Run full review after phase verification passes, not after every step.
+- Run full review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
 - **Output format is mandatory** — reproduce the Reviewer's **Diff summary** and **Issues found** tables directly. Copy the markdown tables as-is. **Never** convert tables to prose, bullet lists, or any other format. Expected structure:
 
   ```
@@ -64,8 +76,8 @@
 
 | Scope | Characteristics | Workflow |
 |---|---|---|
-| **Small** | 1–3 files, clear intent, isolated change | Direct plan → execute → verify → review (with fix loop) → commit |
-| **Medium** | Multiple files, clear intent, cross-cutting | Plan with numbered steps → execute and verify and review (with fix loop) per step |
-| **Large** | Vague request, architectural impact, many files, unfamiliar territory | Research/discuss first → plan with steps → execute per step → verify per step → review (with fix loop) per step |
+| **Small** | 1–3 files, clear intent, isolated change | Completeness check → contract plan → execute step(s) → drift check per step → phase verification → phase review (with fix loop) → commit |
+| **Medium** | Multiple files, clear intent, cross-cutting | Completeness check → contract plan with vertical phase(s) → execute one step at a time → drift check per step → phase verification and review per phase |
+| **Large** | Incomplete/vague request, architectural impact, many files, or unfamiliar territory | Completeness check → research/discuss until complete → contract plan with vertical phases → execute one step at a time → drift check per step → phase verification and review per phase |
 
 When scope is ambiguous, ask the user rather than guessing. However, if the user has already provided a clear, detailed request, do not ask them to repeat or clarify what they have already stated. Scope ambiguity means you cannot determine whether the change is Small/Medium/Large — it does not mean you need more information about the user's intent.

@@ -77,7 +77,7 @@ crafter update --local
 | `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
 | `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
 
-`/crafter-do` enforces Karpathy-inspired guardrails across planning, implementation, and review: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**.
+`/crafter-do` enforces Karpathy-inspired guardrails across planning, implementation, verification, and review: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**. Plans are vertical execution contracts with step-level drift checks and phase-level review.
 
 ## Project Context Files
 
@@ -99,17 +99,17 @@ This matters because running planning, implementation, verification, and review 
 
 | Agent | Role | Used in |
 |---|---|---|
-| **Planner** | Tech lead — proposes the plan | `/crafter-do` PLAN step |
-| **Implementer** | Senior developer — implements the approved plan | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
-| **Verifier** | QA engineer — checks criteria, finds regressions | `/crafter-do` VERIFY, `/crafter-debug` verification |
-| **Reviewer** | Code reviewer — looks for bugs, security issues, deviations | `/crafter-do` REVIEW step |
+| **Planner** | Tech lead — writes the execution contract | `/crafter-do` PLAN step |
+| **Implementer** | Senior developer — implements the current approved step | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
+| **Verifier** | QA engineer — checks step drift, criteria, and regressions | `/crafter-do` VERIFY, `/crafter-debug` verification |
+| **Reviewer** | Code reviewer — looks for bugs, security issues, unapproved deviations | `/crafter-do` REVIEW step |
 | **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter-map-project`, Large scope research, `/crafter-debug` hypothesis |
 
 Agents for each role are defined as native Claude Code agents in `~/.claude/agents/`. The orchestrator spawns agents by name and provides each one with only the context it needs.
 
-### Automatic Parallelization
+### Vertical Verification
 
-Claude Code automatically runs independent tool calls in parallel. In practice, this means the orchestrator may spawn **Verify and Review simultaneously** after implementation, since their inputs don't depend on each other. This is expected behavior — not a bug — and it speeds up the workflow without any loss of correctness. If the review-fix loop triggers, both steps are re-run on the updated files anyway.
+`/crafter-do` executes one step at a time. After each step, the Verifier performs a lightweight drift check against the approved contract. Once all steps in a phase pass, phase verification runs, then full review checks the coherent phase diff. High-risk steps can still trigger immediate review when needed.
 
 ## Philosophy
 
