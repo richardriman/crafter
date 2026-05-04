@@ -7,6 +7,7 @@
 - Topic derivation from branch: get the git branch name from the project directory (e.g., `git -C {PROJECT_PATH} branch --show-current`) and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
 - On main/master: derive the topic from the user's request (first few meaningful words, slug-ified using the same sanitization rules).
 - Examples: branch `feat/add-health-check` → `20260220-feat-add-health-check.md`; branch `RR-do-cool-thing` → `20260220-rr-do-cool-thing.md`
+- Store the exact current git branch in task metadata as `**Work branch:** <branch>`. This field is the deterministic source of truth for where the task must be resumed/executed.
 - **Language:** All task file content — topic slug, request description, plan, decisions, outcome — must always be written in English, regardless of the user's conversation language. This reinforces the core rule: "Persistent files (.crafter/*, saved plans): always English."
 
 ## Resume Detection
@@ -16,9 +17,10 @@ Runs at workflow start, before scope detection.
 1. Get the current git branch name from the project directory: `git -C {PROJECT_PATH} branch --show-current`.
 2. **Use Grep to search efficiently.** Run a Grep for `**Status:** active` across all files in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`. This returns only files with active tasks — do not read every file individually. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching.
 3. If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: "continue", "resume", "pokracuj", "dál", "further", "next step", "carry on" — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection.
-4. If on a feature branch: match files whose topic part corresponds to the sanitized branch name.
-5. If on main/master: show all active task files and let the user choose.
+4. Prefer active task files whose metadata contains `**Work branch:** <current branch>`. This exact branch metadata match is the deterministic primary match.
+5. If no active task has a matching `Work branch`, fall back to legacy matching: if on a feature branch, match files whose topic part corresponds to the sanitized branch name; if on main/master, show all active task files and let the user choose.
 6. If a match is found: read the task file, present its contents to the user, and ask whether to resume or start fresh.
+   - If the task file has a `Work branch` value that differs from the current branch, do not resume silently. Tell the user the expected branch and ask whether to switch branches, continue anyway, or start fresh.
    - If resuming, determine the appropriate workflow step from the task file:
      - Request filled but Plan section still contains `_(pending)_` → go to scope detection / planning.
      - Plan filled with `**Plan status:** draft` → go to plan approval (present plan summary to user and wait for approval).
@@ -34,7 +36,7 @@ Runs at workflow start, before scope detection.
 Runs after the first user-interaction gate (completeness/scope in `/crafter-do`, symptom collection in `/crafter-debug`).
 
 1. Create the `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` directory if it does not exist.
-2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active`.
+2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active` and set `Work branch` to the exact current git branch from `git -C {PROJECT_PATH} branch --show-current`.
 
 ## Task File Updates
 
