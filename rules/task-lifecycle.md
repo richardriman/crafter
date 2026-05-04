@@ -5,8 +5,9 @@
 - Location: `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/<filename>.md` — where `PROJECT_PATH` and `CRAFTER_DIR` are determined by the orchestrator's project/context resolution step (see `skills/crafter-do/SKILL.md`).
 - Format: `YYYYMMDD-<topic>.md`
 - Topic derivation from branch: get the git branch name from the project directory (e.g., `git -C {PROJECT_PATH} branch --show-current`) and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
-- On main/master: derive the topic from the user's request (first few meaningful words, slug-ified using the same sanitization rules).
+- On main/master for fresh work: derive a proposed topic branch from the user's request (first few meaningful words, slug-ified using the same sanitization rules) and choose a suitable conventional prefix such as `fix/`, `feature/`, `refactor/`, `docs/`, or `chore/` based on intent. Present the proposed branch to the user and ask whether to create/switch to it before task creation. Do not silently keep working on main/master.
 - Examples: branch `feat/add-health-check` → `20260220-feat-add-health-check.md`; branch `RR-do-cool-thing` → `20260220-rr-do-cool-thing.md`
+- Store the exact current git branch in task metadata as `**Work branch:** <branch>`. This field is the deterministic source of truth for where the task must be resumed/executed.
 - **Language:** All task file content — topic slug, request description, plan, decisions, outcome — must always be written in English, regardless of the user's conversation language. This reinforces the core rule: "Persistent files (.crafter/*, saved plans): always English."
 
 ## Resume Detection
@@ -16,42 +17,60 @@ Runs at workflow start, before scope detection.
 1. Get the current git branch name from the project directory: `git -C {PROJECT_PATH} branch --show-current`.
 2. **Use Grep to search efficiently.** Run a Grep for `**Status:** active` across all files in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`. This returns only files with active tasks — do not read every file individually. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching.
 3. If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: "continue", "resume", "pokracuj", "dál", "further", "next step", "carry on" — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection.
-4. If on a feature branch: match files whose topic part corresponds to the sanitized branch name.
-5. If on main/master: show all active task files and let the user choose.
+4. Prefer active task files whose metadata contains `**Work branch:** <current branch>`. This exact branch metadata match is the deterministic primary match.
+5. If no active task has a matching `Work branch`, fall back to legacy matching: if on a feature branch, match files whose topic part corresponds to the sanitized branch name; if on main/master, show all active task files and let the user choose.
 6. If a match is found: read the task file, present its contents to the user, and ask whether to resume or start fresh.
+   - If the task file has a `Work branch` value that differs from the current branch, do not resume silently. Tell the user the expected branch and ask whether to switch branches, continue anyway, or start fresh.
    - If resuming, determine the appropriate workflow step from the task file:
      - Request filled but Plan section still contains `_(pending)_` → go to scope detection / planning.
      - Plan filled with `**Plan status:** draft` → go to plan approval (present plan summary to user and wait for approval).
-     - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next).
+      - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next), unless all steps in the current phase are checked and that phase has a pending verification/review gate.
      - Otherwise (unrecognized Plan content) → present to user and ask how to proceed.
    - If starting fresh: proceed normally (the old file stays as-is; a new one will be created after scope detection).
 7. If no match is found and you are on a feature branch (not main/master): run a branch/request relevance sanity check before proceeding. Compare the effective request (`$ARGUMENTS`) with the branch topic at a high level. If there is a reasonable suspicion that the request is unrelated to the current branch (for example, stale branch context, clearly different task intent, or low topical overlap), do not proceed silently. Ask the user how to continue and wait for a decision.
    - Recommended prompt: "You are on branch `<branch>`, but this request may be unrelated. Should I continue on this branch, or switch/start from another branch first?"
-8. If no match is found and either (a) you are on main/master, or (b) the user confirms the current feature branch is correct: proceed normally. Task file creation happens after scope detection.
+8. If no match is found and you are on main/master: do not proceed silently. Derive a suitable topic branch proposal from the effective request, present it to the user, and ask whether to create/switch to it before planning. Only proceed after the user explicitly accepts the topic branch or explicitly chooses to stay on main/master anyway.
+9. If no match is found and the user confirms the current feature branch is correct: proceed normally. Task file creation happens after scope detection.
 
 ## Task File Creation
 
-Runs after the first user-interaction gate (scope detection in `/crafter-do`, symptom collection in `/crafter-debug`).
+Runs after the first user-interaction gate (completeness/scope in `/crafter-do`, symptom collection in `/crafter-debug`).
 
 1. Create the `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` directory if it does not exist.
-2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active`.
+2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active` and set `Work branch` to the exact current git branch from `git -C {PROJECT_PATH} branch --show-current`.
+3. For fresh work, if the current branch is still `main` or `master`, stop and ask the user how to proceed instead of writing `main/master` into `Work branch`. Fresh tasks should normally move to an approved topic branch first.
 
 ## Task File Updates
 
 Runs at each gate, silently — no user interaction needed.
 
 - **After planning:** The Planner agent writes the full plan directly to the Plan section (with checkboxes for each step) and sets `**Plan status:** draft`. After the user approves the plan, the orchestrator changes the status to `**Plan status:** approved` (administrative edit via Edit tool). These are the only two valid states for the plan status field.
-- **After each step's full cycle (Execute → Verify → Review):** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
+- **After each step's Execute → Step Drift Check cycle:** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
+- **After phase verification:** Mark the phase verification gate complete in the Plan section (for example, change `- [ ] Phase verification` to `- [x] Phase verification`).
+- **After phase review:** Mark the phase review gate complete in the Plan section (for example, change `- [ ] Phase review` to `- [x] Phase review`). A phase is complete only when all step checkboxes and both phase gates are checked.
+- **After accepted local beneficial drift:** Append to the Decisions section using `Decision (Orchestrator Accepted)` when the drift is local, beneficial, does not affect scope or later steps, and meets the workflow rules.
+- **After user-approved drift or scope change:** Append to the Decisions section using `Decision (User Accepted)`. If the scope expands or the request is refined during discussion, also update the Request section to reflect the final agreed-upon scope before proceeding to execution. The Request should serve as an accurate record of what was actually done, not just the initial input.
 - **After fix approval (debug workflow):** Write the proposed fix to the Plan section.
 - **After notable review findings:** Append to the Decisions section.
-- **After scope expansion:** If the scope expands or the request is refined during discussion (e.g., additional steps are added to the plan), update the Request section to reflect the final agreed-upon scope before proceeding to execution. The Request should serve as an accurate record of what was actually done, not just the initial input.
+
+Decision examples:
+
+- `- **Decision (Orchestrator Accepted):** Accepted local deviation in Phase 1 Step 2: reused an existing helper instead of introducing a new path. **Reason:** Preserved scope, reduced duplication, and did not affect later steps.`
+- `- **Decision (User Accepted):** Expanded Phase 2 to include CLI flag validation discovered during Step 1. **Reason:** The current plan would leave the feature incomplete.`
+
+## Phase Gate Resume Rules
+
+- If the first unchecked item is a normal step, resume at Execute for that step.
+- If all steps in a phase are checked but `Phase verification` is unchecked, resume at phase verification.
+- If all steps and `Phase verification` are checked but `Phase review` is unchecked, resume at phase review.
+- If a task file has no explicit phase gates, use the first unchecked step as the source of truth for backward compatibility.
 
 ## Task File Completion
 
 Runs during post-change, after commit.
 
 - Fill in the Outcome section with the commit SHA and a brief summary.
-- Check off any remaining plan steps (`- [ ]` → `- [x]`).
+- Check off any remaining plan steps and phase gates (`- [ ]` → `- [x]`).
 - Set Status to `completed`.
 
 ## Edge Cases

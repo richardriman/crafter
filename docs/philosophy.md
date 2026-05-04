@@ -21,6 +21,9 @@ No auto-commits. No silent refactors. No guessing when the request is ambiguous.
 ### Conversational
 Plans are written in plain language, for a human reader. Not XML. Not structured task objects. Not pipe-delimited fields. If you can't explain the plan clearly in a few paragraphs, the plan isn't ready yet.
 
+### Vertical execution contracts
+Plans describe outcomes, boundaries, and verification evidence — not line-by-line implementation recipes. Work is organized as vertical phases with step-level drift checks. A phase is reviewed only after its steps satisfy the contract, which keeps review focused without allowing implementation drift to accumulate.
+
 ### Adaptive
 One command (`/crafter-do`) adapts to the size of the task. A one-line fix and a cross-cutting refactor both go through the same command — the workflow adjusts to match the scope automatically.
 
@@ -38,12 +41,12 @@ This matters because running planning, implementation, verification, and review 
 Five roles cover the full workflow:
 
 - **Planner** — proposes the implementation plan
-- **Implementer** — executes the approved plan
-- **Verifier** — checks verification criteria and looks for regressions
-- **Reviewer** — reviews the diff for bugs, security issues, and plan deviations
+- **Implementer** — implements the current approved step
+- **Verifier** — checks verification criteria, step drift, and regressions
+- **Reviewer** — reviews the completed phase for bugs, security issues, and unapproved contract deviations
 - **Analyzer** — reads and maps the codebase for research and architecture work
 
-Verify and Review can run in parallel after implementation, since their inputs are independent. This is expected behavior — not a shortcut — and it speeds up the workflow without sacrificing correctness.
+Step drift checks run after each step. Full Review normally runs after phase verification passes, so review focuses on a coherent phase rather than every small implementation step. High-risk steps can still trigger immediate review when needed.
 
 ---
 
@@ -55,6 +58,8 @@ Every change passes through four checkpoints before it is considered done:
 - **Simplicity First** — prefer the smallest change that solves today's requirement; avoid speculative abstractions
 - **Surgical Changes** — every changed line must trace to the approved request; no drive-by refactors
 - **Goal-Driven Execution** — convert work into verifiable criteria and iterate until each criterion is satisfied
+
+In `/crafter-do`, these guardrails are captured in each phase and step as a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions.
 
 These apply across planning, implementation, and review — not just at one stage.
 

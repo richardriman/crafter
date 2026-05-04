@@ -34,6 +34,7 @@ Issue is prioritised and ready to start.
 Active work has begun.
 
 - Apply label: `in-progress` (keep `change`)
+- If starting from `main/master`, propose and create a topic branch before active work begins.
 - Create a branch: `feature|fix|refactor|chore|docs/GH-<id>-<slug>`
 - Work in commits following [Conventional Commits](https://www.conventionalcommits.org/):
   `feat`, `fix`, `refactor`, `docs`, `chore`, `test`

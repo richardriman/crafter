@@ -14,8 +14,8 @@ The orchestrator is a **dispatcher** only: it manages workflow, communicates wit
 
 | Agent | Role |
 |---|---|
-| `crafter-planner` | Researcher + architect — explores codebase deeply, produces implementation-ready plans with file:line references |
-| `crafter-implementer` | Executor — mechanically executes the Planner's detailed plan |
+| `crafter-planner` | Researcher + architect — explores enough context to produce vertical execution contracts with outcomes, boundaries, drift criteria, and verification evidence |
+| `crafter-implementer` | Executor — implements the current approved step inside its contract and reports deviations/discoveries |
 | `crafter-analyzer` | Investigator — project mapping or research/investigation tasks |
 | `crafter-verifier` | QA — checks verification criteria |
 | `crafter-reviewer` | Code reviewer — reviews changes against plan and conventions |
