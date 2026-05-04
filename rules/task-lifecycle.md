@@ -5,7 +5,7 @@
 - Location: `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/<filename>.md` — where `PROJECT_PATH` and `CRAFTER_DIR` are determined by the orchestrator's project/context resolution step (see `skills/crafter-do/SKILL.md`).
 - Format: `YYYYMMDD-<topic>.md`
 - Topic derivation from branch: get the git branch name from the project directory (e.g., `git -C {PROJECT_PATH} branch --show-current`) and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
-- On main/master: derive the topic from the user's request (first few meaningful words, slug-ified using the same sanitization rules).
+- On main/master for fresh work: derive a proposed topic branch from the user's request (first few meaningful words, slug-ified using the same sanitization rules) and choose a suitable conventional prefix such as `fix/`, `feature/`, `refactor/`, `docs/`, or `chore/` based on intent. Present the proposed branch to the user and ask whether to create/switch to it before task creation. Do not silently keep working on main/master.
 - Examples: branch `feat/add-health-check` → `20260220-feat-add-health-check.md`; branch `RR-do-cool-thing` → `20260220-rr-do-cool-thing.md`
 - Store the exact current git branch in task metadata as `**Work branch:** <branch>`. This field is the deterministic source of truth for where the task must be resumed/executed.
 - **Language:** All task file content — topic slug, request description, plan, decisions, outcome — must always be written in English, regardless of the user's conversation language. This reinforces the core rule: "Persistent files (.crafter/*, saved plans): always English."
@@ -29,7 +29,8 @@ Runs at workflow start, before scope detection.
    - If starting fresh: proceed normally (the old file stays as-is; a new one will be created after scope detection).
 7. If no match is found and you are on a feature branch (not main/master): run a branch/request relevance sanity check before proceeding. Compare the effective request (`$ARGUMENTS`) with the branch topic at a high level. If there is a reasonable suspicion that the request is unrelated to the current branch (for example, stale branch context, clearly different task intent, or low topical overlap), do not proceed silently. Ask the user how to continue and wait for a decision.
    - Recommended prompt: "You are on branch `<branch>`, but this request may be unrelated. Should I continue on this branch, or switch/start from another branch first?"
-8. If no match is found and either (a) you are on main/master, or (b) the user confirms the current feature branch is correct: proceed normally. Task file creation happens after scope detection.
+8. If no match is found and you are on main/master: do not proceed silently. Derive a suitable topic branch proposal from the effective request, present it to the user, and ask whether to create/switch to it before planning. Only proceed after the user explicitly accepts the topic branch or explicitly chooses to stay on main/master anyway.
+9. If no match is found and the user confirms the current feature branch is correct: proceed normally. Task file creation happens after scope detection.
 
 ## Task File Creation
 
@@ -37,6 +38,7 @@ Runs after the first user-interaction gate (completeness/scope in `/crafter-do`,
 
 1. Create the `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` directory if it does not exist.
 2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active` and set `Work branch` to the exact current git branch from `git -C {PROJECT_PATH} branch --show-current`.
+3. For fresh work, if the current branch is still `main` or `master`, stop and ask the user how to proceed instead of writing `main/master` into `Work branch`. Fresh tasks should normally move to an approved topic branch first.
 
 ## Task File Updates
 

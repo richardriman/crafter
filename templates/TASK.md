@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Date:** <!-- YYYY-MM-DD -->
-- **Work branch:** <!-- git branch where this task must be resumed/executed -->
+- **Work branch:** <!-- topic branch where this task must be resumed/executed; avoid main/master for fresh work -->
 - **Status:** <!-- active | completed | abandoned -->
 - **Scope:** <!-- Small | Medium | Large -->
 
