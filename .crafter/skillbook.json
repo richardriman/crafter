@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-05T21:08:41Z",
+  "skills": [
+    {
+      "id": "7b91fbef8829ffe0",
+      "agent": "implementer",
+      "rule": "When implementing approval-path conditions, ensure the conditions cover ALL end-of-flow states explicitly — narrow conditions create coverage gaps that pass surface-level review but break in edge cases (e.g., 'fix loop ran successfully' state).",
+      "rationale": "Fix-loop completion state was not explicitly covered in approval conditions, causing an edge-case gap that passed initial review but surfaced during verification of the green-commits task.",
+      "sourceTask": "green-commits",
+      "confidence": "low",
+      "addedAt": "2026-05-05T21:08:41Z",
+      "appliedCount": 0,
+      "deprecated": false
+    }
+  ]
+}

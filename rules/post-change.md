@@ -13,18 +13,26 @@ If nothing needs updating, move on silently.
 
 ## COMMIT
 
-**Only commit when the user explicitly says to.**
+The orchestrator commits **automatically** — no user prompt for the commit itself — when all three preconditions are met:
+
+1. **Phase verification passed** — the Verifier has signed off on the phase.
+2. **Clean review** — the review fix loop has closed with no Critical or Major findings remaining.
+3. **Approval signal received** — the orchestrator has received an approval signal via one of the three paths defined in the phase summary approval gate in `~/.claude/crafter/skills/crafter-do/SKILL.md` (auto-approve on clean summary | silence-approve when the `--fast` flag is set | explicit user approval as default).
 
 Use conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`
 
 One logical change = one commit.
 
+**Do not push to remote.** Pushing is explicitly forbidden as part of the automatic commit flow.
+
 ## Update STATE.md
 
-After a successful commit, update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md`:
+At end-of-task (after the final phase's per-phase commit), update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` and include this change in the consolidated end-of-task commit (see section below):
 - Add an entry to **Recent Changes**
 - Update **Current Focus** if it has shifted
 - Remove or update any relevant **Known Issues** entries
+
+Stage the STATE.md edit but do not commit it on its own — it lands as part of the consolidated end-of-task commit (see section below).
 
 Show the user what was updated.
 
@@ -60,6 +68,18 @@ After completing the task file, reflect on the task and extract observations for
 Focus on project-specific patterns, not general programming knowledge:
 - Good: "This project uses X pattern for Y", "Tests need Z setup", "The review found A was a recurring issue"
 - Bad: "Always use descriptive variable names" (too generic), "Fixed a typo" (not a pattern)
+
+## Consolidated End-of-Task Commit
+
+After the final phase's per-phase commit has landed, the orchestrator may produce one **consolidated follow-up commit** covering end-of-task housekeeping:
+
+- PROJECT.md / ARCHITECTURE.md updates
+- skillbook entry updates
+- STATE.md update
+
+If any of these updates exist, bundle them into a **single** commit using conventional commits format. Do not create separate commits for docs, skillbook, and STATE.md. If none of these updates are needed, no follow-up commit is created.
+
+This commit shares the same constraints as the per-phase commit: automatic, no push to remote, conventional commits format.
 
 ## Session Wrap-Up
 

@@ -75,11 +75,11 @@ Agent role definitions, model tiers, and context budgets are specified in `rules
 
 ### Human-in-the-Loop Gates
 
-Every significant action requires explicit user approval: plan approval before execution, review-fix loop consent for Critical/Major findings, diff review before commit, commit only on user command.
+Every significant action requires user approval: plan approval before execution, diff review before commit. Phase-close commits are no longer gated on an explicit per-commit command — instead they are triggered automatically once phase verification passes and a clean review summary is produced. Approval follows one of three paths: (1) auto-approve when the review summary is clean and no user intervention is needed, (2) silence-approve when the `--fast` flag is set (silence is treated as approval), or (3) explicit user approval for any other case. Critical or Major review findings trigger a mandatory fix-loop with a 5-iteration cap before the commit can proceed.
 
 ### Vertical Planning and Drift Checks
 
-`/crafter-do` plans work as vertical execution contracts. Each phase and step defines a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions. The Implementer works one step at a time, the Verifier runs step drift checks before the next step, and full Review runs after phase verification unless a high-risk step requires immediate review.
+`/crafter-do` plans work as vertical execution contracts. Each phase and step defines a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions. The Implementer works one step at a time, the Verifier runs step drift checks before the next step, and full Review runs after phase verification unless a high-risk step requires immediate review. The phase-close flow now includes Step 6b (Phase Summary and Auto-Commit) as a standard step before moving to the next phase or to Steps 7–9.
 
 ### Adaptive Scope Detection
 

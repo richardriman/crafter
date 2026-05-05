@@ -1,6 +1,7 @@
 ---
 name: "crafter-do"
 description: "Perform a change using Crafter workflow (adaptive: small/medium/large scope)"
+fast: false
 ---
 
 Read and follow these rules:
@@ -8,6 +9,25 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/do-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`
 - `~/.claude/crafter/rules/task-lifecycle.md`
+
+## Skill options
+
+In prose this flag is called `--fast`; in frontmatter it is set as `fast: true`.
+
+### `--fast` (default: off)
+
+Set `fast: true` in this skill's frontmatter to enable silence-as-approval for phase summaries.
+
+**Trade-off — speed vs. explicitness:**
+
+- **With `--fast` on:** after the review loop closes clean and remaining Minor/Suggestion findings exist, the orchestrator presents the Phase Summary but treats user silence as implicit approval. Each remaining Minor/Suggestion finding is automatically recorded as a tech-debt entry in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`), and the commit proceeds without waiting for an explicit "approved" response. Phases ship faster at the cost of reduced visibility into deferred findings.
+- **Without `--fast` (default):** the orchestrator waits for an explicit affirmative response from the user before committing. Silence is never treated as approval. This is the safe, deliberate path — choose it when explicitness matters more than speed.
+
+The `--fast` flag does **not** bypass the manual-verification exception: if a phase or step explicitly mentions non-automatable testing (UI, external integration), explicit user confirmation is always required regardless of this flag.
+
+See Step 6b for the approval path that consumes this flag.
+
+---
 
 You are the **orchestrator**. Your job is to manage the workflow, communicate with the user, and delegate work to agents. You do not analyze code, implement changes, or review diffs yourself — you pass context to the right agent and relay results back to the user.
 
@@ -171,19 +191,70 @@ d. Present the review results to the user. **Output format is mandatory:**
 
    **STOP — ALWAYS wait for the user's response before proceeding, regardless of severity. Never auto-proceed when findings exist.**
 
-   Only if there are zero findings at all: proceed automatically to Step 6a.
+   Only if there are zero findings at all: proceed directly to Step 6b (auto-approve path).
 
 e. After the user responds:
-   - If there are **Critical or Major issues**: ask **"Fix and re-review"** (recommended) or **"Proceed anyway"**.
-   - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6a.
-f. If the user chooses to fix:
-   1. Check the iteration count. If 3 iterations have already been completed, do not start a 4th — present all remaining issues and recommend the user proceed to Steps 7–9 or intervene manually. Do not continue to sub-step (f.2).
+   - If there are **Critical or Major issues**: on user acknowledgement, enter the fix loop — there is no "Proceed anyway" choice for those severities. Go to sub-step (f).
+   - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6b.
+f. Fix loop for Critical/Major issues:
+   1. Check the iteration count. If 5 iterations have already been completed, do not start a 6th. Present all remaining Critical/Major findings to the user and ask them to choose one of:
+      - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
+      - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
+      - **(c) replan-and-abort** — abandon the current phase and return to planning.
+      Do not continue to sub-step (f.2) until the user has chosen.
    2. Spawn the `crafter-implementer` agent. Provide it with: the list of Critical/Major issues from the review (severity, file, line, description), the approved phase contract, and accepted deviations for context. The Implementer reads files itself.
    3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
    4. Re-run **Step 5a (PHASE VERIFICATION)** on the newly changed files.
    5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
 
 After review completes, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+
+## Step 6b — Phase Summary and Auto-Commit
+
+After the review loop closes clean (no Critical or Major findings remain), the orchestrator produces and presents a structured **Phase Summary** to the user, then gates the commit on an approval signal.
+
+### Phase Summary content
+
+The summary is assembled from context already available to the orchestrator — no new task-file fields or agent invocations are needed:
+
+- **What was implemented** — a brief statement of what the phase delivered (derived from the phase name/description in the task file).
+- **Auto-fixed findings** — any Critical or Major findings that were raised during the fix loop and cleared before the review closed clean. List each by severity and short description.
+- **Remaining Minor/Suggestion findings** — any open Minor or Suggestion items from the final review report.
+- **Accepted Decisions** — any Decision entries recorded during this phase (from Step 5 drift-check handling or the review loop).
+
+If there were no findings of any kind (review was clean on the first pass, fix loop never ran, no Decisions recorded), the summary may be omitted — the orchestrator proceeds directly via the auto-approve path below.
+
+### Approval paths
+
+Choose the first path that applies:
+
+**(1) Auto-approve on clean summary (no user interaction required)**
+
+Conditions: zero remaining findings of any severity in the final review state (this covers both the case where the review was clean on the first pass AND the case where the fix loop ran and cleared all Critical/Major with no Minor/Suggestion remaining).
+
+**Exception — manual verification:** If the phase plan or any of its steps explicitly states that verification of this phase requires manual testing (e.g., UI interaction, external integration, non-automatable scenarios), the orchestrator must **wait for explicit user confirmation** even on a fully clean summary. Matching is case-insensitive — "requires", "REQUIRES", "Required", etc., all trigger the wait. Do not introduce a new task-file schema for this flag — treat any plain-text statement that verification requires manual testing as sufficient to trigger the wait; mentions that no manual verification is needed do not trigger it. This exception overrides auto-approve entirely for that phase.
+
+When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `~/.claude/crafter/rules/post-change.md`.
+
+**(2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)**
+
+Conditions: the crafter-do skill carries the `--fast` flag (declared in Skill options above) AND remaining Minor/Suggestion findings exist.
+
+Present the Phase Summary and wait for the user's next turn; if that turn does not raise concerns about the summary, treat it as implicit approval and commit. Record each remaining Minor/Suggestion finding as a tech-debt entry in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`), then proceed to the commit per `~/.claude/crafter/rules/post-change.md`.
+
+Note: the manual-verification exception in path (1) also applies here — if manual verification is required, `--fast` does not bypass the explicit confirmation wait.
+
+**(3) Explicit approval — default**
+
+Conditions: remaining Minor/Suggestion findings exist AND the `--fast` flag is not set.
+
+Present the Phase Summary and wait for an affirmative response from the user. **Silence does not count as approval.** Do not proceed to the commit until the user explicitly confirms (e.g., "approved", "looks good", "proceed"). If the user raises concerns, resolve them before committing.
+
+### Commit
+
+On approval (any path), run the commit per `~/.claude/crafter/rules/post-change.md`. The commit is automatic — no additional user prompt for the commit command itself.
+
+After committing, continue to **Step 6a** (session break, Medium/Large scope) or **Steps 7–9** (last phase or Small scope).
 
 ## Step 6a — Session Break (Medium/Large scope only)
 
@@ -199,13 +270,15 @@ The resume detection in Step 0 will pick up the active task file and continue fr
 
 ## Steps 7–9 — Post-Change
 
+The per-phase commit for the final phase has already landed via Step 6b. Steps 7–9 cover any end-of-task follow-up work. If docs, skillbook, or STATE.md all require no updates, no follow-up commit is created.
+
 Follow the post-change steps in `~/.claude/crafter/rules/post-change.md`. The checklist below is a quick-reference summary — `post-change.md` is the source of truth for details.
 
 **MANDATORY CHECKLIST — do not skip any item:**
 
 1. **Check docs** — review whether `{PROJECT_PATH}/{CRAFTER_DIR}/PROJECT.md` or `ARCHITECTURE.md` need updates (delegate ARCHITECTURE.md check to Implementer). If nothing needs updating, move on silently.
-2. **Commit** — only commit when the user explicitly says to. Do not silently skip this step. Use conventional commits format.
-3. **Update STATE.md** — after a successful commit, update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues). Show the user what changed.
+2. **Consolidated end-of-task commit** — if any of the following exist: PROJECT.md/ARCHITECTURE.md updates (item 1), a skillbook entry, or STATE.md changes (item 3), bundle them all into **one single consolidated commit** using conventional commits format. This commit is automatic per `~/.claude/crafter/rules/post-change.md`. Do not create separate commits for docs, skillbook, and STATE.md. If none of those updates are needed, no follow-up commit is created.
+3. **Update STATE.md** — update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues) and include this update in the consolidated commit (item 2). Show the user what changed.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps. The task file is in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`.
 5. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter-do` or `/crafter-debug` to keep context clean.
 
