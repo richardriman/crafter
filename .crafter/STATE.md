@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-05 | Green commits + per-phase auto-commit — Critical/Major review findings mandatory to fix (5-iteration cap with three user choices on cap-hit), new Step 6b Phase Summary and Auto-Commit with three approval paths (auto / `--fast` silence / explicit), manual-verification override, consolidated end-of-task commit for docs+skillbook+STATE.md, new `--fast` metadata flag (default off) | 7d24131 |
 | 2026-03-25 | Skillbook system — Go CLI binary (`crafter skillbook`) with get/add/init subcommands, prompt integration (delegation.md + post-change.md), install script binary download, documentation | 1600677 |
 | 2026-03-06 | Workflow hardening — `git -C {PROJECT_PATH}` branch detection, English-only task files, mandatory post-change checklist, scope expansion rule | 5d46339 |
 | 2026-03-06 | Smarter /crafter:do entry logic — multi-project workspace support (`--project` flag + auto-discovery), Grep-based resume detection with resume-intent words, guardrails against ignoring clear user input, `{PROJECT_PATH}` across all rule files | 47745a3 |
@@ -30,6 +31,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 - [ ] Model profiles — matice agent × profil (quality/balanced/budget) → model tier. Prompt-only, orchestrátor čte config a předává `--model` agentům. Inspirace: Nightshift `model-profiles.ts`
 - [x] ~~Skillbook — self-learning agents~~ (implemented in 1600677 as Go CLI binary)
 - [ ] Holdout validation — nezávislý agent ověří implementaci proti kritériím, která implementer neviděl. Informační bariéra čistě v prompt designu. Inspirace: Nightshift holdout pattern
+- [ ] `--fast` auto-apply Minor recommendations — when reviewer's output contains a clear recommendation for a Minor/Suggestion finding, the orchestrator (under `--fast`) auto-applies the recommendation, documents it as accepted, and continues. Requires defining a stable "clear recommendation" detection pattern from the reviewer output.
 
 ## Ideas
 
