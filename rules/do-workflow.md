@@ -65,11 +65,14 @@
 
 - **STOP — ALWAYS wait for the user's response before proceeding, regardless of severity. Never auto-proceed when findings exist.** Only if there are literally zero findings: proceed automatically to the next workflow step.
 
-- **After the user responds:** Critical or Major issues trigger the "Fix and re-review" (recommended) or "Proceed anyway" prompt. Only Minor/Suggestion findings → proceed.
+- **After the user responds:** Critical or Major issues trigger the mandatory fix loop — there is no "Proceed anyway" choice for those severities. Only Minor/Suggestion findings → proceed.
 - The `crafter-reviewer` agent produces a diff summary and issue report as part of its review output.
 - Issues are categorized by severity (Critical, Major, Minor, Suggestion).
 - Only Critical and Major issues trigger the fix loop.
-- The review-fix loop runs a maximum of 3 iterations — a 4th iteration never starts.
+- The review-fix loop runs a maximum of 5 iterations — a 6th iteration never starts automatically. If the cap is reached with Critical/Major findings still present, the orchestrator stops and asks the user to choose:
+  - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
+  - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
+  - **(c) replan-and-abort** — abandon the current phase and return to planning.
 - Minor issues and Suggestions are informational only.
 
 ## Scope Detection
