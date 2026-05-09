@@ -289,13 +289,13 @@ The filename within the run-dir is fixed by kind: `crafter buffer uat ...` write
 
 The Phase 3 review surfaced seven Minor/Suggestion findings. None blocking. Recorded as deferred polish:
 
-- **Minor #1 — `rules/do-workflow.md` line 142:** Cleanup paragraph contract-vs-status ordering is reversed (mentions PR-composition as a contract trigger before clarifying it is not yet implemented). Recommend leading with current behavior (workspace-teardown only) and forward-referencing GH#17 as the future second trigger.
+- ~~**Minor #1 — `rules/do-workflow.md` line 142:** Cleanup paragraph contract-vs-status ordering is reversed (mentions PR-composition as a contract trigger before clarifying it is not yet implemented). Recommend leading with current behavior (workspace-teardown only) and forward-referencing GH#17 as the future second trigger.~~ → resolved in Phase 3 polish pass
 - **Minor #2 — `rules/do-workflow.md` line 132:** New `### Run directory lifecycle` H3 silently terminates the `### --auto` parent section. Placement (sibling of `### --auto`, after `#### Ad-hoc escape hatch`) is defensible but the location decision was not flagged for review in the commit message or Decision entry as Step 1's contract requested.
-- **Minor #3 — `skills/crafter-buffer/SKILL.md` line 8:** Buffer skill still references "Phase 3 of task `20260509-feat-gh-16-buffer-skill`" instead of `rules/do-workflow.md → ### Run directory lifecycle`. Out of Phase 3 scope (file is Phase 2 artifact). Belongs to a separate small polish task.
-- **Suggestion #4 — `rules/do-workflow.md` line 136:** "Eager creation at Step 4 — rather than Step 0 / Step 3" — the rule file does not enumerate steps; numbering lives in `skills/crafter-do/SKILL.md`. Add a cross-reference or use descriptive phase names.
+- ~~**Minor #3 — `skills/crafter-buffer/SKILL.md` line 8:** Buffer skill still references "Phase 3 of task `20260509-feat-gh-16-buffer-skill`" instead of `rules/do-workflow.md → ### Run directory lifecycle`. Out of Phase 3 scope (file is Phase 2 artifact). Belongs to a separate small polish task.~~ → resolved in Phase 3 polish pass
+- ~~**Suggestion #4 — `rules/do-workflow.md` line 136:** "Eager creation at Step 4 — rather than Step 0 / Step 3" — the rule file does not enumerate steps; numbering lives in `skills/crafter-do/SKILL.md`. Add a cross-reference or use descriptive phase names.~~ → resolved in Phase 3 polish pass
 - **Suggestion #5 — `rules/do-workflow.md` line 134:** "This is the same value the orchestrator already tracks" — opaque without a pointer to `task-lifecycle.md` or `crafter-do/SKILL.md` Step 0/2.
 - **Suggestion #6 — `rules/do-workflow.md` line 144:** Downstream-projects MUST requirement lives only in prose. Consider surfacing in `install.sh` or README in a follow-up.
-- **Suggestion #7 — `.gitignore` line 2:** New `.crafter/run/` entry has no comment; a one-line comment would improve discoverability.
+- ~~**Suggestion #7 — `.gitignore` line 2:** New `.crafter/run/` entry has no comment; a one-line comment would improve discoverability.~~ → resolved in Phase 3 polish pass
 
 ## Outcome
 

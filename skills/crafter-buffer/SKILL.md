@@ -5,7 +5,7 @@ description: "Append a UAT or Gap entry to the current run's buffer (.crafter/ru
 
 ## What this skill does
 
-This skill appends a single NDJSON entry to a per-run buffer file under `.crafter/run/<task-id>/`. Sub-agents (implementer, verifier, reviewer) use it to record findings that should not block the current run — UAT items (manual QA that humans must validate) or Gap items (deferred tech-debt / out-of-scope follow-ups). It is most relevant under `--auto` mode (see GH#15 / `skills/crafter-do/SKILL.md`) where blocking on unresolvable findings would defeat unattended orchestration, but it is equally useful in standard mode whenever a finding should be persistent rather than embedded in chat. The run-directory lifecycle (creation, persistence, cleanup) is defined in Phase 3 of task `20260509-feat-gh-16-buffer-skill`.
+This skill appends a single NDJSON entry to a per-run buffer file under `.crafter/run/<task-id>/`. Sub-agents (implementer, verifier, reviewer) use it to record findings that should not block the current run — UAT items (manual QA that humans must validate) or Gap items (deferred tech-debt / out-of-scope follow-ups). It is most relevant under `--auto` mode (see GH#15 / `skills/crafter-do/SKILL.md`) where blocking on unresolvable findings would defeat unattended orchestration, but it is equally useful in standard mode whenever a finding should be persistent rather than embedded in chat. The run-directory lifecycle (creation, persistence, cleanup) is defined in `rules/do-workflow.md` → `### Run directory lifecycle`.
 
 ## Operations
 
