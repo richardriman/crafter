@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-05T21:08:41Z",
+  "updatedAt": "2026-05-08T22:32:20Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     }
   ]

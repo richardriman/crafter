@@ -32,6 +32,10 @@
 - Scope drift requires user approval or replanning.
 - Beneficial local drift may continue only when recorded as an accepted decision.
 - After all steps in a phase pass drift checks, run phase verification against the phase verification criteria.
+- **Under `--auto`:** drift handling has three branches; default and `--fast` drift handling are unchanged.
+  - **Drift that does NOT threaten green commits** — record as a Decision (Orchestrator Accepted) or Gaps buffer entry (forward reference to GH#16) and continue without pausing.
+  - **Drift that DOES threaten green commits** — treat as a fix-loop trigger (re-delegate to the Implementer); if the verifier further classifies the drift as plan-obsoleting, route to the Ad-hoc escape hatch exit (see the `### --auto (unattended orchestration)` section).
+  - **Verifier "ask user" recommendation** — if non-blocking, downgrade to "record and continue" (Decision or Gaps buffer entry); if blocking, route to the Ad-hoc escape hatch exit.
 - Run tests if applicable.
 - Report clearly what passed, what failed, and what workflow action is required.
 - Verify goals, not just activity: each criterion must map to observable evidence.
@@ -73,7 +77,59 @@
   - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
   - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
   - **(c) replan-and-abort** — abandon the current phase and return to planning.
+
+  Under `--auto`, the cap-reached state does NOT present the (a)/(b)/(c) choice. Instead, the orchestrator exits with state — the task file remains the handoff artifact, with the unresolved Critical/Major findings recorded as Decisions and the phase left uncommitted. The run terminates without violating the green-commit invariant. See the `### --auto (unattended orchestration)` section below for the full contract.
+
 - Minor issues and Suggestions are informational only.
+
+### --auto (unattended orchestration)
+
+> **Buffer mechanics note:** All mentions of UAT buffer, Gaps buffer, and `crafter-buffer` skill in this section are forward references to companion task GH#16, which owns their implementation. Nothing in this section requires GH#16 to be delivered — the forward references describe intended behavior once GH#16 lands.
+
+`--auto` enables fully unattended orchestration (Symphony, CI bots, or any non-interactive context). After plan approval, the run executes Plan → Execute → Verify → Review → PR end-to-end without stopping for anything that does not threaten green commits.
+
+**`--auto` is mutually exclusive with `--fast`.** Passing both flags produces a clear parser-level error and the workflow does not start. `--auto` strictly supersedes and replaces `--fast`; it is not an extension of it. The rejection happens at the orchestrator entry point, before any project or task-file work begins.
+
+#### Green-commit invariant
+
+This is a binding rule for all `--auto` runs: **`--auto` MUST never produce a non-green commit.** If the auto-fix loop cannot bring the phase back to green within budget, `--auto` exits with state — the run terminates and the task file is left as the handoff artifact for a human or upstream orchestrator to pick up. It does NOT commit and continue. The four retained gates below are the only legal exit points from an `--auto` run; everything else must be handled automatically.
+
+#### Retained gates
+
+Four conditions cause `--auto` to stop. Each is an **exit + handoff via the task file as state, NOT an interactive pause** — the run terminates, leaving the task file with enough context for the orchestrator or a human to resume.
+
+- **Initial clarification** — the Analyzer cannot understand the ticket well enough to produce a plan. The task file records the blocking question(s) and the run stops before planning.
+- **Plan approval** — PLAN.md is ready and awaiting human approval. The run stops after the Analyzer produces the plan; execution does not begin until a human approves.
+- **Green-commit cap reached** — the Critical/Major fix loop has exhausted its iteration budget (configured in the REVIEW section above) with Critical or Major findings still present after the final iteration. The unresolved findings are recorded as Decisions in the task file, the phase is left uncommitted, and the run terminates. Note: if the budget is exhausted but all findings were cleared in the final iteration, that is a normal continue path — the cap-reached gate fires only when Critical/Major findings remain after the last allowed iteration.
+- **Ad-hoc escape hatch** — the orchestrator is genuinely blocked by something outside the normal fix-loop: missing auth/secret, hard contradiction in inputs, infrastructure outage, or an irrecoverable agent blocker. Full details are in `#### Ad-hoc escape hatch` below.
+
+#### Removed gates
+
+The following conditions are gates in the default or `--fast` flows but are **not blocking under `--auto`**:
+
+- **Manual-verification exception** — recorded into the UAT buffer (GH#16) rather than blocking execution.
+- **Critical/Major review findings the auto-fix loop can clear within budget** — the loop fixes them and continues; what was auto-fixed is recorded in Decisions.
+- **Minor/Suggestion review findings** — recorded into Decisions as tech debt, same as today's `--fast` behavior.
+- **Karpathy scorecard FLAGs** — recorded into Decisions or Gaps buffer (GH#16) depending on nature; execution continues.
+- **Step-drift outcomes that do not threaten green commits** — recorded into Gaps buffer or UAT buffer (GH#16); execution continues.
+- **All phase-summary approval gates between phases** — under `--auto`, Phase Summary is not surfaced to the user; the commit proceeds automatically once the phase is green.
+
+#### Ad-hoc escape hatch
+
+The escape hatch is the catch-all exit for situations the other three retained gates do not cover. The other three gates are predictable points (initial clarification at the front, plan approval after planning, cap reached during the review fix-loop). The escape hatch handles genuinely unforeseen blockers that can surface anywhere else in the run.
+
+**Trigger conditions** (illustrative, not exhaustive):
+
+- Missing auth or secret the run cannot proceed without
+- Hard contradiction in inputs (e.g., the task file's request and the approved plan diverge irreconcilably mid-execution)
+- Infrastructure outage (CI service down, registry unreachable, etc.)
+- Irrecoverable agent blocker (Implementer or Verifier hits a state it cannot recover from after exhausting in-step retries)
+
+**Behavior on trigger:** Same exit semantics as the other retained gates — exit with state, the task file remains the handoff artifact, the unresolved blocker is recorded as a Decision (or a structured blocker entry) in the task file's Decisions section, no commit, run terminates without violating the green-commit invariant.
+
+**Scope boundary — agent-side recognition is NOT defined here:** This subsection documents the orchestrator's behavior on receiving a blocker signal. How the Implementer or Verifier detects and emits a blocker signal under `--auto` is owned by companion task GH#18 (Reviewer/Verifier/Implementer auto-fix-or-document semantics under `--auto`).
+
+**Rarity expectation:** In healthy `--auto` runs this exit should be uncommon. Most issues should be either auto-fixable within the fix-loop budget, recordable as Decisions or Gaps buffer, or caught by one of the other three gates. The escape hatch is the safety net, not a routine path.
 
 ## Scope Detection
 
