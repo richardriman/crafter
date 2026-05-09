@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-09
 - **Work branch:** feat/GH-15-auto-flag
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -131,4 +131,15 @@ Operationalize the Phase 1 contract at the skill surface: declare the flag, docu
 - **Decision (User Accepted) — 2026-05-09:** Issue #15 body refined before planning. Added green-commit invariant as binding constraint; promoted "green-commit cap reached" and "ad-hoc escape hatch" from implicit behavior to explicit retained gates (2 → 4); made `--auto` mutually exclusive with `--fast` at parser level. **Reason:** Original issue language said Critical/Major findings would be buffered "not blocking", which would silently break the green-commit invariant — hard contradiction. User chose green-commit as the higher-precedence rule. Mutual exclusion with `--fast` chosen to eliminate ambiguity in flag combination semantics.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Delivered:** GH#15 `--auto` flag contract for crafter-do unattended orchestration — pure flag plumbing + workflow documentation, no code execution paths. Lays the contract that companion tasks GH#16 (UAT/Gaps buffer skill), GH#17 (PR composer), and GH#18 (agent prompts) will consume.
+
+**Phase 1 commit:** `828815e` — `docs(rules): document --auto flag contract in do-workflow.md (GH#15 Phase 1)` — added `### --auto (unattended orchestration)` section to `rules/do-workflow.md` with green-commit invariant, four retained gates, removed gates list, and `--auto`/`--fast` mutual exclusion; added `--auto` clauses to existing REVIEW (fix-loop cap exit) and VERIFY (drift downgrade) sections; added `#### Ad-hoc escape hatch` subsection.
+
+**Phase 2 commit:** `308f828` — `feat(skill): wire --auto flag into crafter-do skill (GH#15 Phase 2)` — added `auto: false` to YAML frontmatter, `### --auto (default: off)` Skill options subsection, `## Flag Validation (before anything else)` block before Project Resolution, restructured `## Step 6b — Phase Summary and Auto-Commit` so the `--auto` branch precedes the existing three approval paths (paths byte-equivalent for non-`--auto` runs), and a single-sentence `--auto` cross-reference in Step 6f.1 above the `(a)/(b)/(c)` cap-reached choices. `### --fast` subsection updated with symmetric mutual-exclusion mention.
+
+**Verification:** Phase 1 and Phase 2 both passed phase verification. Phase 1 review applied fixes #1–#4 + #7 in a polish iteration; #5 + #6 deferred as recorded tech debt. Phase 2 review applied polish for Minor #1 + #2 (cross-consistency tighten-ups for SKILL.md ↔ `rules/do-workflow.md`); Minor #3 + Suggestions #4–#5 recorded as tech-debt Decisions.
+
+**End-of-task commit:** consolidates ARCHITECTURE.md `### Human-in-the-Loop Gates` paragraph for the new `--auto` mode, STATE.md Recent Changes entry, and 2 new skillbook observations (one reviewer, one implementer).
+
+**Deviations from plan:** None beyond the four accepted deviations recorded in `## Decisions` (bullet labels for retained gates in `### --auto`, structural repositioning of `### Phase Summary content` block in Step 6b, inline placement of `--auto` cross-reference in Step 6f.1, and skillbook/task-file metadata side-effects from orchestrator-level Bash calls).
