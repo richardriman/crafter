@@ -33,7 +33,7 @@
 - Beneficial local drift may continue only when recorded as an accepted decision.
 - After all steps in a phase pass drift checks, run phase verification against the phase verification criteria.
 - **Under `--auto`:** drift handling has three branches; default and `--fast` drift handling are unchanged.
-  - **Drift that does NOT threaten green commits** — record as a Decision (Orchestrator Accepted) or Gaps buffer entry (forward reference to GH#16) and continue without pausing.
+  - **Drift that does NOT threaten green commits** — record as a Decision (Orchestrator Accepted) or Gaps buffer entry (see `skills/crafter-buffer/SKILL.md`) and continue without pausing.
   - **Drift that DOES threaten green commits** — treat as a fix-loop trigger (re-delegate to the Implementer); if the verifier further classifies the drift as plan-obsoleting, route to the Ad-hoc escape hatch exit (see the `### --auto (unattended orchestration)` section).
   - **Verifier "ask user" recommendation** — if non-blocking, downgrade to "record and continue" (Decision or Gaps buffer entry); if blocking, route to the Ad-hoc escape hatch exit.
 - Run tests if applicable.
@@ -84,8 +84,6 @@
 
 ### --auto (unattended orchestration)
 
-> **Buffer mechanics note:** All mentions of UAT buffer, Gaps buffer, and `crafter-buffer` skill in this section are forward references to companion task GH#16, which owns their implementation. Nothing in this section requires GH#16 to be delivered — the forward references describe intended behavior once GH#16 lands.
-
 `--auto` enables fully unattended orchestration (Symphony, CI bots, or any non-interactive context). After plan approval, the run executes Plan → Execute → Verify → Review → PR end-to-end without stopping for anything that does not threaten green commits.
 
 **`--auto` is mutually exclusive with `--fast`.** Passing both flags produces a clear parser-level error and the workflow does not start. `--auto` strictly supersedes and replaces `--fast`; it is not an extension of it. The rejection happens at the orchestrator entry point, before any project or task-file work begins.
@@ -107,11 +105,11 @@ Four conditions cause `--auto` to stop. Each is an **exit + handoff via the task
 
 The following conditions are gates in the default or `--fast` flows but are **not blocking under `--auto`**:
 
-- **Manual-verification exception** — recorded into the UAT buffer (GH#16) rather than blocking execution.
+- **Manual-verification exception** — recorded into the UAT buffer rather than blocking execution.
 - **Critical/Major review findings the auto-fix loop can clear within budget** — the loop fixes them and continues; what was auto-fixed is recorded in Decisions.
 - **Minor/Suggestion review findings** — recorded into Decisions as tech debt, same as today's `--fast` behavior.
-- **Karpathy scorecard FLAGs** — recorded into Decisions or Gaps buffer (GH#16) depending on nature; execution continues.
-- **Step-drift outcomes that do not threaten green commits** — recorded into Gaps buffer or UAT buffer (GH#16); execution continues.
+- **Karpathy scorecard FLAGs** — recorded into Decisions or Gaps buffer depending on nature; execution continues.
+- **Step-drift outcomes that do not threaten green commits** — recorded into Gaps buffer or UAT buffer; execution continues.
 - **All phase-summary approval gates between phases** — under `--auto`, Phase Summary is not surfaced to the user; the commit proceeds automatically once the phase is green.
 
 #### Ad-hoc escape hatch
@@ -130,6 +128,22 @@ The escape hatch is the catch-all exit for situations the other three retained g
 **Scope boundary — agent-side recognition is NOT defined here:** This subsection documents the orchestrator's behavior on receiving a blocker signal. How the Implementer or Verifier detects and emits a blocker signal under `--auto` is owned by companion task GH#18 (Reviewer/Verifier/Implementer auto-fix-or-document semantics under `--auto`).
 
 **Rarity expectation:** In healthy `--auto` runs this exit should be uncommon. Most issues should be either auto-fixable within the fix-loop budget, recordable as Decisions or Gaps buffer, or caught by one of the other three gates. The escape hatch is the safety net, not a routine path.
+
+### Run directory lifecycle (`.crafter/run/<task-id>/`)
+
+Each run that reaches execution gets a dedicated scratch directory: `.crafter/run/<task-id>/`, where `<task-id>` is the task-file basename without extension (e.g., `20260509-feat-gh-16-buffer-skill`). This is the same value the orchestrator already tracks as the active task identifier; no separate resolution step is needed.
+
+**Creation — eager, at Step 4 (Execute) start.** The directory is created by the orchestrator at the beginning of Step 4, before the first agent is spawned for the first plan step. Lazy creation (deferring to the first `crafter-buffer` call) is rejected because `crafter buffer` requires the directory to exist and does not create it (see `skills/crafter-buffer/SKILL.md` → "Creation behavior"). Eager creation at Step 4 — rather than at an earlier step such as Step 0 (Resume Detection) or Step 3 (Plan) — avoids creating empty directories for runs that are abandoned before execution. `mkdir -p` semantics are correct: if the directory already exists (resume scenario), the command is a no-op.
+
+**Persistence.** The directory and its buffer files persist for the entire duration of the run. Sub-agents may append to buffer files at any point during execution.
+
+**Per-run identity on resume.** Resuming a task reuses the same `<task-id>` and therefore the same directory. If the directory still exists from a prior session, its buffer files are retained and new entries are appended to them. This is intentional: buffer entries from an earlier session in the same task remain valid context for subsequent sessions.
+
+**Cleanup.** After PR composition or on workspace teardown, the orchestrator deletes the run directory and all its contents (`rm -rf .crafter/run/<task-id>/`). Cleanup means full deletion, not merely emptying the directory. The PR-composition cleanup trigger is owned by companion task GH#17; until GH#17 lands, cleanup on workspace teardown is the only active trigger.
+
+**Git hygiene.** The run directory must never appear in commits. The Crafter repo's own `.gitignore` already includes `.crafter/run/`. Downstream projects MUST add `.crafter/run/` to their `.gitignore`.
+
+**No per-run metadata artifact.** There is no `meta.json` or equivalent run-marker file inside the directory. Buffer entries carry `task_id` and `created_at` fields that provide sufficient per-entry traceability without a separate metadata file. Adding a metadata artifact would expand surface beyond what the current PoC requires; this decision can be revisited in GH#17 or GH#18 if the PR composer finds it necessary.
 
 ## Scope Detection
 

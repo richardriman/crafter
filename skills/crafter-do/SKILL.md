@@ -254,7 +254,7 @@ When `--auto` is set (`auto: true` in frontmatter): the orchestrator does **not*
 
 1. Record any Critical/Major findings the auto-fix loop cleared before the review closed clean as `Decision (Auto-Fixed): <severity> — <description>` entries in the task file's `## Decisions` section.
 2. Record any remaining Minor/Suggestion findings from the final review as tech-debt entries in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`).
-3. Record any manual-verification requirements as UAT buffer entries *(buffer skill defined in companion task GH#16)*.
+3. Record any manual-verification requirements as UAT buffer entries via the `crafter-buffer` skill (see `skills/crafter-buffer/SKILL.md`).
 4. Commit automatically per `~/.claude/crafter/rules/post-change.md`.
 
 For the canonical four-retained-gates and green-commit-invariant rules that govern this branch — including what constitutes a commit-blocking condition vs. a record-and-continue condition — see `rules/do-workflow.md` → `### --auto (unattended orchestration)`.
