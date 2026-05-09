@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-05T21:08:41Z",
+  "updatedAt": "2026-05-09T11:14:14Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,6 +10,28 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
+      "appliedCount": 3,
+      "deprecated": false
+    },
+    {
+      "id": "8c045cab9dea3432",
+      "agent": "reviewer",
+      "rule": "When reviewing changes with a canonical-vs-surface relationship (e.g., rules file as source of truth + skill file as user-facing surface), verify that EVERY item enumerated in the canonical source also appears in the surface enumeration — even when the surface uses a 'see canonical for full list' pointer. Partial enumerations are subtle cross-consistency drift; the pointer alone is not a substitute for the surface having a complete-by-itself summary.",
+      "rationale": "Phase 2 review of GH#15 caught two Minor findings (#1 and #2) where the SKILL.md auto-branch checklist and removed-gates inline enumeration each silently omitted the most consequential item from rules/do-workflow.md (auto-fixed Critical/Major recorded as Decisions; Critical/Major findings the loop can clear). Both surfaces had a 'see rules for full list' pointer, so a quick glance suggested completeness — but a reader following only the SKILL.md prose would miss core --auto semantics. The polish iteration tightened cross-consistency promised by the Phase 2 contract.",
+      "sourceTask": "20260509-feat-gh-15-auto-flag.md",
+      "confidence": "low",
+      "addedAt": "2026-05-09T11:14:07Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "7db74d6bcb47cb1a",
+      "agent": "implementer",
+      "rule": "When a step contract says 'do not modify content X', distinguish text-byte-equivalence from positional-byte-equivalence. Structural repositioning of a block (moving it under a different heading, folding it into a new lead-in) is permitted as long as the actual text is unchanged. If the repositioning is needed to make the new structure coherent, do it and explicitly call it out as 'structural repositioning, text byte-equivalent' in the implementation summary so the verifier can confirm the distinction quickly.",
+      "rationale": "Phase 2 Step 3 of GH#15 needed Step 6b restructured to add the --auto branch at the top, which required folding the existing Phase Summary content block into the new non-auto lead-in. The implementer correctly preserved every word of the four bullets and the 'If there were no findings...' paragraph — only the heading and paragraph position changed. The verifier confirmed this was acceptable structural repositioning, not drift on criterion (h). Surfacing the distinction in the summary made the drift check fast.",
+      "sourceTask": "20260509-feat-gh-15-auto-flag.md",
+      "confidence": "low",
+      "addedAt": "2026-05-09T11:14:14Z",
       "appliedCount": 0,
       "deprecated": false
     }

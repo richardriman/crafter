@@ -8,6 +8,7 @@ Improving existing commands — refining the do/debug/map-project/status workflo
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-09 | `--auto` flag for crafter-do (GH#15) — unattended orchestration mode with binding green-commit invariant, four retained gates (initial clarification, plan approval, green-commit cap reached, ad-hoc escape hatch), and parser-level mutual exclusion with `--fast`. Phase 1 documented the contract in `rules/do-workflow.md`; Phase 2 wired the flag into `skills/crafter-do/SKILL.md` (frontmatter, Skill options, Flag Validation block, Step 6b restructure). Forward references to GH#16/#17/#18 for buffer skill, PR composer, and agent prompt updates. | 828815e + 308f828 |
 | 2026-05-05 | Green commits + per-phase auto-commit — Critical/Major review findings mandatory to fix (5-iteration cap with three user choices on cap-hit), new Step 6b Phase Summary and Auto-Commit with three approval paths (auto / `--fast` silence / explicit), manual-verification override, consolidated end-of-task commit for docs+skillbook+STATE.md, new `--fast` metadata flag (default off) | 7d24131 |
 | 2026-03-25 | Skillbook system — Go CLI binary (`crafter skillbook`) with get/add/init subcommands, prompt integration (delegation.md + post-change.md), install script binary download, documentation | 1600677 |
 | 2026-03-06 | Workflow hardening — `git -C {PROJECT_PATH}` branch detection, English-only task files, mandatory post-change checklist, scope expansion rule | 5d46339 |

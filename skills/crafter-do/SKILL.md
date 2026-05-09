@@ -2,6 +2,7 @@
 name: "crafter-do"
 description: "Perform a change using Crafter workflow (adaptive: small/medium/large scope)"
 fast: false
+auto: false
 ---
 
 Read and follow these rules:
@@ -12,7 +13,7 @@ Read and follow these rules:
 
 ## Skill options
 
-In prose this flag is called `--fast`; in frontmatter it is set as `fast: true`.
+In prose these flags are called `--fast` and `--auto`; in frontmatter they are set as `fast: true` and `auto: true`.
 
 ### `--fast` (default: off)
 
@@ -25,7 +26,30 @@ Set `fast: true` in this skill's frontmatter to enable silence-as-approval for p
 
 The `--fast` flag does **not** bypass the manual-verification exception: if a phase or step explicitly mentions non-automatable testing (UI, external integration), explicit user confirmation is always required regardless of this flag.
 
+`--fast` and `--auto` are mutually exclusive — passing both produces a clear error and the workflow stops. See `### --auto (default: off)` below for unattended-orchestration semantics.
+
 See Step 6b for the approval path that consumes this flag.
+
+### `--auto` (default: off)
+
+Set `auto: true` in this skill's frontmatter to enable fully unattended orchestration (Symphony, CI bots, or any non-interactive context).
+
+After plan approval, the run executes Plan → Execute → Verify → Review → PR end-to-end without stopping for anything that does not threaten green commits. Phase summaries are not surfaced to the user; commits proceed automatically once a phase is green.
+
+**`--auto` is mutually exclusive with `--fast`.** Passing both produces a clear parser-level error and the workflow does not start.
+
+**Green-commit invariant:** `--auto` MUST never produce a non-green commit. If the auto-fix loop cannot bring the phase back to green within budget, the run exits with state and hands off to the orchestrator without committing. See `rules/do-workflow.md` → `### --auto (unattended orchestration)` for the full invariant statement.
+
+**Four retained gates** (each is an exit + handoff via the task file, NOT an interactive pause). See `rules/do-workflow.md` → `#### Retained gates` for full descriptions:
+
+- **Initial clarification** — Analyzer cannot understand the ticket well enough to produce a plan.
+- **Plan approval** — PLAN.md is ready and awaiting human approval before execution begins.
+- **Green-commit cap reached** — Critical/Major fix loop exhausted its iteration budget with findings still present.
+- **Ad-hoc escape hatch** — genuinely blocked by something outside the fix-loop (missing auth/secret, hard contradiction, infrastructure outage, irrecoverable agent blocker).
+
+Everything else (Critical/Major findings the auto-fix loop can clear within budget, manual-verification exception, Minor/Suggestion findings, Karpathy FLAGs, non-blocking drift, all phase-summary approval gates) is handled automatically — see `rules/do-workflow.md` → `#### Removed gates`.
+
+See Step 6b for the approval-path branch that consumes this flag.
 
 ---
 
@@ -34,6 +58,14 @@ You are the **orchestrator**. Your job is to manage the workflow, communicate wi
 The user's raw input is: $ARGUMENTS
 
 ---
+
+## Flag Validation (before anything else)
+
+`--auto` and `--fast` are mutually exclusive. If both flags are active (`auto: true` AND `fast: true` in frontmatter, or equivalent invocation context indicating both are set), produce a clear error and stop immediately — do not proceed to project resolution, resume detection, or any other workflow step:
+
+> Error: `--auto` and `--fast` are mutually exclusive — pass at most one. `--auto` strictly supersedes `--fast` per `rules/do-workflow.md` → `### --auto`.
+
+See `rules/do-workflow.md` → `### --auto (unattended orchestration)` for the canonical mutual-exclusion rule.
 
 ## Project Resolution (before anything else)
 
@@ -198,6 +230,7 @@ e. After the user responds:
    - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6b.
 f. Fix loop for Critical/Major issues:
    1. Check the iteration count. If 5 iterations have already been completed, do not start a 6th. Present all remaining Critical/Major findings to the user and ask them to choose one of:
+      Under `--auto`, the orchestrator does not present the `(a)/(b)/(c)` choice — it exits with state per `rules/do-workflow.md` → `### --auto (unattended orchestration)` (the green-commit cap retained gate; the task file remains the handoff artifact).
       - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
       - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
       - **(c) replan-and-abort** — abandon the current phase and return to planning.
@@ -211,11 +244,28 @@ After review completes, record any notable decisions in the task file per `~/.cl
 
 ## Step 6b — Phase Summary and Auto-Commit
 
-After the review loop closes clean (no Critical or Major findings remain), the orchestrator produces and presents a structured **Phase Summary** to the user, then gates the commit on an approval signal.
+After the review loop closes clean (no Critical or Major findings remain), the orchestrator chooses an approval path based on the active flags.
 
-### Phase Summary content
+### Approval paths
 
-The summary is assembled from context already available to the orchestrator — no new task-file fields or agent invocations are needed:
+#### `--auto` branch (precedes paths 1–3)
+
+When `--auto` is set (`auto: true` in frontmatter): the orchestrator does **not** surface a Phase Summary to the user and does **not** wait for any approval signal. Instead:
+
+1. Record any Critical/Major findings the auto-fix loop cleared before the review closed clean as `Decision (Auto-Fixed): <severity> — <description>` entries in the task file's `## Decisions` section.
+2. Record any remaining Minor/Suggestion findings from the final review as tech-debt entries in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`).
+3. Record any manual-verification requirements as UAT buffer entries *(buffer skill defined in companion task GH#16)*.
+4. Commit automatically per `~/.claude/crafter/rules/post-change.md`.
+
+For the canonical four-retained-gates and green-commit-invariant rules that govern this branch — including what constitutes a commit-blocking condition vs. a record-and-continue condition — see `rules/do-workflow.md` → `### --auto (unattended orchestration)`.
+
+When `--auto` is **not** set, fall through to paths (1)–(3) below.
+
+---
+
+**Paths (1)–(3) apply only when `--auto` is not set.**
+
+For non-`--auto` runs, the orchestrator produces and presents a structured **Phase Summary** to the user, then gates the commit on an approval signal. The summary is assembled from context already available to the orchestrator — no new task-file fields or agent invocations are needed:
 
 - **What was implemented** — a brief statement of what the phase delivered (derived from the phase name/description in the task file).
 - **Auto-fixed findings** — any Critical or Major findings that were raised during the fix loop and cleared before the review closed clean. List each by severity and short description.
@@ -224,11 +274,9 @@ The summary is assembled from context already available to the orchestrator — 
 
 If there were no findings of any kind (review was clean on the first pass, fix loop never ran, no Decisions recorded), the summary may be omitted — the orchestrator proceeds directly via the auto-approve path below.
 
-### Approval paths
-
 Choose the first path that applies:
 
-**(1) Auto-approve on clean summary (no user interaction required)**
+#### (1) Auto-approve on clean summary (no user interaction required)
 
 Conditions: zero remaining findings of any severity in the final review state (this covers both the case where the review was clean on the first pass AND the case where the fix loop ran and cleared all Critical/Major with no Minor/Suggestion remaining).
 
@@ -236,7 +284,7 @@ Conditions: zero remaining findings of any severity in the final review state (t
 
 When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `~/.claude/crafter/rules/post-change.md`.
 
-**(2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)**
+#### (2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)
 
 Conditions: the crafter-do skill carries the `--fast` flag (declared in Skill options above) AND remaining Minor/Suggestion findings exist.
 
@@ -244,7 +292,7 @@ Present the Phase Summary and wait for the user's next turn; if that turn does n
 
 Note: the manual-verification exception in path (1) also applies here — if manual verification is required, `--fast` does not bypass the explicit confirmation wait.
 
-**(3) Explicit approval — default**
+#### (3) Explicit approval — default
 
 Conditions: remaining Minor/Suggestion findings exist AND the `--fast` flag is not set.
 
