@@ -1,0 +1,107 @@
+name: Change request
+description: Propose a delivery-ready change with clear context and acceptance criteria.
+title: "[CHANGE] "
+labels:
+  - change
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill this template completely. Avoid secrets/tokens.
+
+        This issue template enforces a lightweight Definition of Ready (DoR), so work can start without back-and-forth clarification.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are we solving, and for whom?
+      placeholder: Describe current pain, impact, and affected users/maintainers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: Desired outcome
+      description: What should be true when this issue is done?
+      placeholder: Describe expected behavior and success conditions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is explicitly in scope?
+      placeholder: List included areas/files/components.
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-goals
+      description: What is explicitly out of scope?
+      placeholder: List things this issue will not address.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Provide testable criteria. One bullet per criterion.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: context-links
+    attributes:
+      label: Context links
+      description: Link related docs, PRs, issues, commits, or discussions.
+      placeholder: Paste links and explain relevance.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: How should reviewers verify the change?
+      placeholder: Tests to run, steps to reproduce, expected outputs.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dor
+    attributes:
+      label: Definition of Ready checklist
+      description: Confirm all preconditions are met.
+      options:
+        - label: Problem statement is clear and actionable.
+          required: true
+        - label: Acceptance criteria are specific and testable.
+          required: true
+        - label: Scope and non-goals are explicit.
+          required: true
+        - label: Context links are provided.
+          required: true
+        - label: Verification plan is defined.
+          required: true
