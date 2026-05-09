@@ -13,7 +13,7 @@ Read and follow these rules:
 
 ## Skill options
 
-In prose this flag is called `--fast`; in frontmatter it is set as `fast: true`.
+In prose these flags are called `--fast` and `--auto`; in frontmatter they are set as `fast: true` and `auto: true`.
 
 ### `--fast` (default: off)
 
@@ -248,7 +248,7 @@ After the review loop closes clean (no Critical or Major findings remain), the o
 
 ### Approval paths
 
-**`--auto` branch (precedes paths 1–3)**
+#### `--auto` branch (precedes paths 1–3)
 
 When `--auto` is set (`auto: true` in frontmatter): the orchestrator does **not** surface a Phase Summary to the user and does **not** wait for any approval signal. Instead:
 
@@ -276,7 +276,7 @@ If there were no findings of any kind (review was clean on the first pass, fix l
 
 Choose the first path that applies:
 
-**(1) Auto-approve on clean summary (no user interaction required)**
+#### (1) Auto-approve on clean summary (no user interaction required)
 
 Conditions: zero remaining findings of any severity in the final review state (this covers both the case where the review was clean on the first pass AND the case where the fix loop ran and cleared all Critical/Major with no Minor/Suggestion remaining).
 
@@ -284,7 +284,7 @@ Conditions: zero remaining findings of any severity in the final review state (t
 
 When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `~/.claude/crafter/rules/post-change.md`.
 
-**(2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)**
+#### (2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)
 
 Conditions: the crafter-do skill carries the `--fast` flag (declared in Skill options above) AND remaining Minor/Suggestion findings exist.
 
@@ -292,7 +292,7 @@ Present the Phase Summary and wait for the user's next turn; if that turn does n
 
 Note: the manual-verification exception in path (1) also applies here — if manual verification is required, `--fast` does not bypass the explicit confirmation wait.
 
-**(3) Explicit approval — default**
+#### (3) Explicit approval — default
 
 Conditions: remaining Minor/Suggestion findings exist AND the `--fast` flag is not set.
 
