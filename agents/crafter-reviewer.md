@@ -87,3 +87,31 @@ Use **PASS** only when evidence in the changed files supports it; otherwise use 
 **Recommendations:**
 - **Must fix (Critical/Major):** list each Critical and Major finding by number, or "None" if there are no Critical or Major findings.
 - **Optional (Minor/Suggestion):** list each Minor and Suggestion finding by number, or "None" if there are no Minor or Suggestion findings.
+
+## Behavior under --auto
+
+This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, you must append a classification table after the **Recommendations** section. The table assigns each Critical or Major finding a routing bucket so the orchestrator knows how to handle it without pausing for human input.
+
+Minor and Suggestion findings do not appear in this table — the orchestrator records them as tech debt automatically and does not need per-finding routing.
+
+**Classification table format:**
+
+| Finding # | Bucket | Reason |
+|---|---|---|
+| 1 | auto-fixable / uat / gap | One-line justification |
+
+**Decision tree — apply in order:**
+
+1. **gap** — the finding is out of scope for the current phase contract, is an architectural smell, deferred refactor, or missing test coverage that was never in scope. The orchestrator will create a Gaps buffer entry and continue.
+2. **uat** — the finding cannot be verified or fixed by code alone: it requires manual browser interaction, a live external service, human business judgment, or an environment the agent cannot access. The orchestrator will create a UAT buffer entry and continue.
+3. **auto-fixable** — the finding is a Critical or Major bug, security issue, or contract deviation that is fully within scope and can be corrected by the Implementer with the information already available. This is the default bucket for Critical/Major findings that do not meet the `gap` or `uat` criteria above.
+
+**Example:**
+
+| Finding # | Bucket | Reason |
+|---|---|---|
+| 1 | auto-fixable | Null-check logic error in scope; Implementer has all context needed to fix. |
+| 3 | uat | Correct behavior depends on live OAuth provider; cannot be verified in CI. |
+| 5 | gap | Missing integration test coverage — out of scope for this phase contract. |
+
+If there are no Critical or Major findings, write "No Critical or Major findings — no auto classification required."

@@ -45,3 +45,27 @@ Return a summary of what was implemented:
 - State whether any future steps may be affected. If not, say "No future-step impact."
 - Note any blockers encountered. If none, say "No blockers encountered."
 - Do not include the full file contents — just the summary.
+
+## Behavior under --auto
+
+This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, you must tag each item in the **deviations/discoveries** section of your output with one of the following classifications so the orchestrator can route it without pausing for human input.
+
+**Classification tags:**
+
+- **[uat-worthy]** — the item cannot be confirmed by code inspection alone: it requires manual browser interaction, a live external service, human business judgment, or an environment the agent cannot access. The orchestrator will create a UAT buffer entry and continue.
+- **[gap-worthy]** — the item is out of scope for the current phase contract: it is an architectural smell, missing test coverage, a deferred refactor, or a discovery that belongs in a future phase. The orchestrator will create a Gaps buffer entry and continue.
+- **[no-buffer]** — the item is local, self-contained, and fully resolved by this implementation step. No buffer entry is needed.
+
+**How to apply:**
+
+Append the tag in brackets at the end of each deviation/discovery line. If there are no deviations or discoveries, write "No deviations or discoveries." as usual — no tags are needed.
+
+**Example (under --auto):**
+
+- Chose inline guard clause over extracted helper for readability — simpler and equivalent. [no-buffer]
+- Live webhook delivery cannot be verified without a running endpoint. [uat-worthy]
+- Auth token rotation logic is missing — was never in scope for this phase. [gap-worthy]
+
+**Escape-hatch condition:**
+
+If you encounter a genuinely blocking condition (as defined in `rules/do-workflow.md` → `#### Ad-hoc escape hatch`), stop and report it as a blocker in your implementation summary (using the standard blockers field from the Output format section above). Do not tag blockers with `uat-worthy` or `gap-worthy` — blockers cause the orchestrator to exit regardless of `--auto` mode.

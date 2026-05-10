@@ -2,12 +2,13 @@
 
 ## Current Focus
 
-GH#17 PR composer complete; next up GH#18 agent prompt updates (blocking→buffer migration).
+GH#18 agent auto-fix-or-document semantics complete; `--auto` pipeline (GH#15→16→17→18) is feature-complete.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-10 | Agent `--auto` semantics (GH#18) — Reviewer three-bucket classification (auto-fixable/uat/gap), Verifier routing metadata per recommendation, Implementer buffer-worthy discovery tagging; escape hatch placeholder in `do-workflow.md` replaced with agent-side signal documentation; completes `--auto` pipeline | TBD |
 | 2026-05-10 | PR composer (GH#17) — `crafter pr-body` Go subcommand reads per-run NDJSON buffers and task file, renders `## Manual QA Plan`, `## Known Gaps`, `## Decisions` sections; Step 9b in `skills/crafter-do/SKILL.md` wires it into the `--auto` end-of-task flow; GH#16 forward references resolved | TBD |
 | 2026-05-10 | `crafter-buffer` skill (GH#16) — NDJSON `.crafter/run/<task-id>/` buffers, Go subcommand `crafter buffer uat\|gap`, run-directory lifecycle in `rules/do-workflow.md`, `.crafter/run/` in `.gitignore`, GH#15 forward references resolved | a786116 |
 | 2026-05-09 | `--auto` flag for crafter-do (GH#15) — unattended orchestration mode with binding green-commit invariant, four retained gates (initial clarification, plan approval, green-commit cap reached, ad-hoc escape hatch), and parser-level mutual exclusion with `--fast`. Phase 1 documented the contract in `rules/do-workflow.md`; Phase 2 wired the flag into `skills/crafter-do/SKILL.md` (frontmatter, Skill options, Flag Validation block, Step 6b restructure). Forward references to GH#16/#17/#18 for buffer skill, PR composer, and agent prompt updates. | 828815e + 308f828 |

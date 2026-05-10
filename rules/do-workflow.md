@@ -125,7 +125,11 @@ The escape hatch is the catch-all exit for situations the other three retained g
 
 **Behavior on trigger:** Same exit semantics as the other retained gates — exit with state, the task file remains the handoff artifact, the unresolved blocker is recorded as a Decision (or a structured blocker entry) in the task file's Decisions section, no commit, run terminates without violating the green-commit invariant.
 
-**Scope boundary — agent-side recognition is NOT defined here:** This subsection documents the orchestrator's behavior on receiving a blocker signal. How the Implementer or Verifier detects and emits a blocker signal under `--auto` is owned by companion task GH#18 (Reviewer/Verifier/Implementer auto-fix-or-document semantics under `--auto`).
+**Agent-side signal criteria:** Each agent has a defined mechanism for emitting a blocker signal; see the respective agent prompt for the authoritative definition. In summary:
+
+- The **Reviewer** (`agents/crafter-reviewer.md` → `## Behavior under --auto`) does NOT emit blocker signals — its three-bucket decision tree (gap → uat → auto-fixable) is exhaustive, with `auto-fixable` as the catch-all default, so every Critical or Major finding is always classified deterministically.
+- The **Verifier** (`agents/crafter-verifier.md` → `## Behavior under --auto`) emits a blocker via a "replan" recommendation or an "ask user" recommendation with `escape-hatch` routing, covering missing auth/secret, hard contradiction, infrastructure outage, or irrecoverable state.
+- The **Implementer** (`agents/crafter-implementer.md` → `## Behavior under --auto`) emits a blocker when it encounters a genuine impediment that cannot be classified as uat-worthy or gap-worthy.
 
 **Rarity expectation:** In healthy `--auto` runs this exit should be uncommon. Most issues should be either auto-fixable within the fix-loop budget, recordable as Decisions or Gaps buffer, or caught by one of the other three gates. The escape hatch is the safety net, not a routine path.
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-10T02:56:42Z",
+  "updatedAt": "2026-05-10T10:53:45Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 4,
+      "appliedCount": 5,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 1,
+      "appliedCount": 2,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 1,
+      "appliedCount": 2,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     },
     {
@@ -65,7 +65,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:32Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     },
     {
@@ -87,6 +87,28 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
+      "appliedCount": 1,
+      "deprecated": false
+    },
+    {
+      "id": "f5813d301291993b",
+      "agent": "reviewer",
+      "rule": "When reviewing agent prompt additions that define exhaustive decision trees (catch-all defaults), verify that any cross-references in other files accurately describe whether the agent can or cannot produce 'unclassifiable' outputs. Exhaustive decision trees by definition cannot emit escape-hatch signals — cross-reference claims to the contrary are factual errors.",
+      "rationale": "Reviewer's --auto classification had auto-fixable as catch-all default, making blocker emission impossible, but do-workflow.md claimed the Reviewer emits blockers. Caught as Major finding in review.",
+      "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
+      "confidence": "low",
+      "addedAt": "2026-05-10T10:53:38Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "bd3f8b7aedc31896",
+      "agent": "implementer",
+      "rule": "When adding conditional sections to agent prompt files (e.g., --auto mode sections), ensure cross-references written in companion documentation files (like rules/*.md) accurately describe the actual behavior of the implemented section — especially regarding which agents can and cannot emit specific signals.",
+      "rationale": "Implementer wrote escape hatch summary in do-workflow.md claiming all three agents emit blockers, but the Reviewer's exhaustive decision tree makes blocker emission impossible. The cross-reference was written against intent rather than implementation.",
+      "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
+      "confidence": "low",
+      "addedAt": "2026-05-10T10:53:45Z",
       "appliedCount": 0,
       "deprecated": false
     }
