@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-09T11:14:14Z",
+  "updatedAt": "2026-05-10T00:10:52Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 3,
+      "appliedCount": 4,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     },
     {
@@ -32,6 +32,28 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
+      "appliedCount": 1,
+      "deprecated": false
+    },
+    {
+      "id": "6c6bb51cffac08df",
+      "agent": "implementer",
+      "rule": "When a buffer or log-append subcommand must handle values containing code fences and blank lines, prefer explicit caller-provided required flags over shell heredocs or env vars. The 'explicit required flags' pattern — `--run-dir`, `--task-id`, `--created-by` passed by the caller — avoids implicit environment lookup, makes the call site self-documenting, and moves the quoting responsibility to the Go flag parser rather than the calling shell, which handles multi-line strings and backticks far more reliably.",
+      "rationale": "GH#16 crafter-buffer implementation: the decision to require `--run-dir`, `--task-id`, and `--created-by` as explicit flags (rather than auto-resolving from the environment) meant Phase 4 Step 2's awkward-content round-trip (fenced code blocks, triple backticks, blank-line runs) exercised only the Go JSON encoder — not shell quoting. All three entries round-tripped cleanly. The pattern also makes each buffer invocation auditable without knowing the caller's environment.",
+      "sourceTask": "20260509-feat-gh-16-buffer-skill",
+      "confidence": "low",
+      "addedAt": "2026-05-10T00:10:41Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "cbc640051fb016fd",
+      "agent": "orchestrator",
+      "rule": "When verifying a serialization round-trip for content with awkward characters (fenced code blocks, embedded blank lines, literal triple backticks), construct the verification set to exercise each escape class in a separate entry rather than combining them. Separate entries make the failure mode obvious — if one entry fails but the others pass, the exact escape class that broke is immediately identifiable without re-running a combined test case.",
+      "rationale": "GH#16 Phase 4 Step 2: three distinct `crafter buffer uat` invocations targeted one escape class each — fenced code block via ANSI-C quoting, literal triple-backtick inline, embedded blank lines. All three passed. Because they were separate entries in the same NDJSON file, the Python round-trip check could report per-entry pass/fail against the known-good expected value, making the verification evidence unambiguous and independently reproducible.",
+      "sourceTask": "20260509-feat-gh-16-buffer-skill",
+      "confidence": "low",
+      "addedAt": "2026-05-10T00:10:52Z",
       "appliedCount": 0,
       "deprecated": false
     }

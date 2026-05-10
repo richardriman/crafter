@@ -1,1 +1,3 @@
 tmp/
+# Per-run scratch dir for crafter-buffer (UAT/Gaps buffers)
+.crafter/run/

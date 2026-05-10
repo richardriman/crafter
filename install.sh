@@ -298,11 +298,12 @@ install_to() {
 
   echo "Installing Crafter $label..."
 
-  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project"
+  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project" "$skills_dest/crafter-buffer"
   cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"          "$skills_dest/crafter-do/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-debug/SKILL.md"       "$skills_dest/crafter-debug/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-status/SKILL.md"      "$skills_dest/crafter-status/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-map-project/SKILL.md" "$skills_dest/crafter-map-project/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-buffer/SKILL.md"      "$skills_dest/crafter-buffer/SKILL.md"
 
   mkdir -p "$crafter_dest"
   cp "$SCRIPT_DIR/VERSION"                 "$crafter_dest/VERSION"
