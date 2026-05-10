@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-10T00:10:52Z",
+  "updatedAt": "2026-05-10T02:56:42Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -54,6 +54,39 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:52Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "573d8377e6d7f3b8",
+      "agent": "reviewer",
+      "rule": "When reusing an indent/format helper, check whether it applies to the whole content or only to continuation lines — applying it to the whole content over-indents the first line when that line is meant to render inline (e.g., after an em-dash separator).",
+      "rationale": "GH#17 Phase 2 review found  calling indentBlock(detail) which over-indented the first line by 2 spaces, producing '— ' + 2-space-prefix + content (3 spaces between em-dash and content). Tests didn't catch it because no multi-line-detail test existed. Pattern: indent helpers usually want lines[1:] only, with lines[0] going inline.",
+      "sourceTask": "20260510-feat-gh-17-pr-composer",
+      "confidence": "low",
+      "addedAt": "2026-05-10T02:56:32Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "364ccd163daf6cc0",
+      "agent": "implementer",
+      "rule": "When using bufio.Scanner to read user-controlled text files (NDJSON buffers, Markdown task files, etc.), explicitly set scanner.Buffer with a sane upper bound (e.g., 1 MB) and wrap bufio.ErrTooLong with file path + limit info — the default 64KB token-size limit is silently too small for many real inputs.",
+      "rationale": "GH#17 Phase 2 review found two Major findings (#3, #4) where bufio.Scanner default 64KB cap caused opaque errors on \u003e64KB lines in buffer files and task-file Markdown. Pattern: scanner.Buffer(make([]byte, 0, 64*1024), 1\u003c\u003c20) before the read loop, plus errors.Is(err, bufio.ErrTooLong) wrapping for clarity.",
+      "sourceTask": "20260510-feat-gh-17-pr-composer",
+      "confidence": "low",
+      "addedAt": "2026-05-10T02:56:34Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "c1b846af1762d0c3",
+      "agent": "implementer",
+      "rule": "When constructing  (or any shell command interpolating user-controlled text into double-quoted arguments), capture the value into a Bash variable first (TITLE=$(git log -1 --format='%s')) and pass \"$TITLE\" — Bash does not perform word-splitting on the right-hand side of assignment, so the variable captures literal content including embedded quotes/backticks/dollars/bangs.",
+      "rationale": "GH#17 Phase 3 review caught a Major title-quoting hazard in skills/crafter-do/SKILL.md Step 9b:  would break on commit subjects containing special characters. The variable-capture pattern is the standard Bash-safe form. Alternative: gh ≥ 2.40 supports --title-file - for stdin input.",
+      "sourceTask": "20260510-feat-gh-17-pr-composer",
+      "confidence": "low",
+      "addedAt": "2026-05-10T02:56:42Z",
       "appliedCount": 0,
       "deprecated": false
     }

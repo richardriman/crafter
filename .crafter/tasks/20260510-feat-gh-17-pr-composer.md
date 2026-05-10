@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-10
 - **Work branch:** feat/gh-17-pr-composer
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -505,3 +505,9 @@ The Phase 3 review surfaced 4 Major findings on Step 9b's wiring and the docs sw
 - **Decision (Tech Debt — auto-recorded): Suggestion — Acceptance-criteria checkboxes at top of task file are still unchecked; an explicit per-AC mapping block would make the seven-to-N audit one-click.**
 
 ## Outcome
+
+GH#17 delivered in three phases. Phase 1 (`679a06e`) recorded four architectural decisions before any artifact was written: Go CLI subcommand as the rendering surface (Decision 1), extraction of `## Decisions` co-located inside the Go renderer (Decision 2), a Crafter-composed Summary + Test plan baseline with the three issue-mandated appended sections in order (Decision 3), and precise UAT/Gap Markdown rendering templates (Decision 4). The Phase 1 review auto-fixed 2 Major findings (tautological prose and template/example disagreement on blank-separator shape); 10 Minor/Suggestion items recorded as tech debt. Phase 2 (`ebd48af`) shipped `cli/cmd/pr_body.go`, `cli/internal/prbody/` (`format.go`, `decisions.go`, `assemble.go`, and their `*_test.go` counterparts), and the `crafter pr-body --run-dir <path> --task-file <path>` subcommand with full fixture validation across all empty-source, marker-only, multi-entry, and code-fence matrix cells. The Phase 2 review auto-fixed 4 Major findings (Gap detail over-indentation, missing multi-line-detail test coverage, 64 KB scanner cap on buffer files, same cap on the task-file Decisions extractor); 15 Minor/Suggestion items recorded as tech debt. Phase 3 (`a74ab5e`) wired Step 9b (PR Composition) into `skills/crafter-do/SKILL.md` after Steps 7–9, resolved both GH#16 forward-reference hedges in `rules/do-workflow.md` (cleanup-after-PR trigger now definitive, metadata-artifact hedge replaced with past-tense policy), and swept `.crafter/PROJECT.md`, `.crafter/ARCHITECTURE.md`, `.crafter/STATE.md`, and `rules/post-change.md` (STATE.md backfill convention codified). The Phase 3 review auto-fixed 4 Major findings (title-quoting hazard, wrong trigger precondition on no-consolidated-commit path, missing STATE.md backfill convention, under-specified baseline body); 11 Minor/Suggestion items recorded as tech debt. The per-AC mapping to specific files/sections (Phase 3 review iteration-1 Suggestion #15) is deferred as tech debt — NOT blocking.
+
+The `.crafter/STATE.md` commit-hash placeholder (`TBD`) will be backfilled by a `chore(state):` commit after the PR merges, per the GH#16 precedent (`5e8ceba`).
+
+All seven issue acceptance criteria are satisfied (see checkboxes in `## Request`).
