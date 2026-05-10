@@ -5,6 +5,8 @@
 ```
 crafter/
 ├── skills/                      # Canonical Crafter workflow definitions (skills-first source)
+│   ├── crafter-buffer/
+│   │   └── SKILL.md             # crafter-buffer — append UAT or Gap entries to the per-run NDJSON buffer
 │   ├── crafter-debug/
 │   │   └── SKILL.md             # crafter-debug — debugging orchestrator
 │   ├── crafter-do/
@@ -20,6 +22,15 @@ crafter/
 ├── cli/                         # Go CLI binary source (crafter utility tool)
 │   ├── main.go                  # Entry point
 │   ├── cmd/                     # Cobra command definitions
+│   │   ├── buffer.go            # `crafter buffer` parent command
+│   │   ├── buffer_gap.go        # `crafter buffer gap` — append Gap entry to gaps-buffer.jsonl
+│   │   ├── buffer_uat.go        # `crafter buffer uat` — append UAT entry to uat-buffer.jsonl
+│   │   ├── skillbook.go         # `crafter skillbook` parent command
+│   │   ├── skillbook_add.go     # `crafter skillbook add`
+│   │   ├── skillbook_get.go     # `crafter skillbook get`
+│   │   ├── skillbook_init.go    # `crafter skillbook init`
+│   │   └── update.go            # `crafter update`
+│   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
 │   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
@@ -104,10 +115,14 @@ Task files in `.crafter/tasks/` serve dual purposes: active resume state while w
 A Go CLI binary (`crafter`) provides deterministic utilities that LLMs handle poorly. The binary is a utility tool, NOT orchestration — orchestration stays in markdown prompts. The CLI is invoked via Bash by the orchestrator.
 
 Current subcommands:
+- `crafter buffer uat` — append a UAT entry (NDJSON line) to `<run-dir>/uat-buffer.jsonl`, creating the file with a marker line if missing
+- `crafter buffer gap` — append a Gap entry (NDJSON line) to `<run-dir>/gaps-buffer.jsonl`, creating the file with a marker line if missing
 - `crafter skillbook get` — read skillbook, filter/sort skills, format as markdown, increment appliedCount
 - `crafter skillbook add` — add observation with Jaccard dedup and confidence promotion
 - `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
+
+Run-directory lifecycle (`.crafter/run/<task-id>/`) — canonical wording in `rules/do-workflow.md → ### Run directory lifecycle`.
 
 Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-arm64. Binaries attached to GitHub releases. `install.sh` downloads the correct binary to `~/.claude/crafter/bin/crafter` and links global installs to `~/.local/bin/crafter` for shell usage.
 

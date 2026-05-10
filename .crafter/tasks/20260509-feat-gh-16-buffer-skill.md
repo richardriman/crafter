@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-09
 - **Work branch:** feat/gh-16-buffer-skill
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -32,12 +32,12 @@ Both append a structured Markdown block to the corresponding buffer file (creati
 **Resolved question** _(see Decision 1)_**:** unified schema (`kind: uat | gap`) vs. distinct schemas — the issue defers to implementation; the task documents the chosen decision in `## Decisions`.
 
 **Acceptance criteria** (from issue):
-- [ ] `skills/crafter-buffer/SKILL.md` exists and documents the two append operations
-- [ ] Buffer file format documented with at least 2 example entries each (UAT, Gap)
-- [ ] `crafter-buffer uat ...` creates the file if missing and appends a well-formed entry
-- [ ] `crafter-buffer gap ...` does the same for the gaps buffer
-- [ ] `.crafter/run/<task-id>/` directory creation + lifecycle is documented in workflow rules
-- [ ] `.gitignore` (or template equivalent) excludes `.crafter/run/`
+- [x] `skills/crafter-buffer/SKILL.md` exists and documents the two append operations (see `skills/crafter-buffer/SKILL.md`)
+- [x] Buffer file format documented with at least 2 example entries each (UAT, Gap) (see SKILL.md — 2 UAT examples, 2 Gap examples with code-fence and multi-line content)
+- [x] `crafter-buffer uat ...` creates the file if missing and appends a well-formed entry (see `cli/internal/buffer/store.go` + Phase 4 Step 1/2 round-trip evidence)
+- [x] `crafter-buffer gap ...` does the same for the gaps buffer (see `cli/internal/buffer/store.go` + Phase 4 Step 1 round-trip evidence)
+- [x] `.crafter/run/<task-id>/` directory creation + lifecycle is documented in workflow rules (see `rules/do-workflow.md → ### Run directory lifecycle`)
+- [x] `.gitignore` (or template equivalent) excludes `.crafter/run/` (see `.gitignore` line 3)
 - [x] Schema decision (unified vs distinct) is documented _(see Decision 1)_
 
 **Out of scope:**
@@ -112,10 +112,10 @@ Land the workflow-level integration: document `.crafter/run/<task-id>/` lifecycl
 
 Run the three verification round-trips the issue requires (append-then-read for each kind, code-fence-safe parsing, concurrency note), close the task file, and update STATE.md / skillbook / ARCHITECTURE.md per the standard end-of-task pattern.
 
-- [ ] **Step 1 — Round-trip verification (UAT and Gap).** From a clean working tree, simulate or actually run a `crafter-buffer uat …` invocation followed by reading `.crafter/run/<task-id>/uat-buffer.jsonl` to confirm the entry parses back into its constituent fields without loss. Do the same for `crafter-buffer gap …`. Run each twice in succession on the same file to confirm the append (not overwrite) behavior and the inter-entry delimiter survives. Record the verification evidence as plain text in the task file's `## Outcome` section (or as a separate code block in the verification step's drift report).
-- [ ] **Step 2 — Append-then-read round trip with awkward content.** Append three entries via `crafter buffer uat` (or `gap`) whose payload exercises JSON string escaping: (i) a `verify`/`detail` field containing a fenced code block (` ```bash ... ``` `) expressed as a JSON-escaped multi-line string; (ii) an entry containing literal triple backticks inline; (iii) an entry with embedded blank lines. Confirm the buffer file remains valid NDJSON: line count equals entry count (`wc -l <buffer>` matches the number of appends), each line parses as JSON (verification tool of the implementer's choice — `jq -c . <buffer>` if available, else `python3 -c "import json,sys; [json.loads(l) for l in sys.stdin]" <buffer>` — must succeed with no errors), and the parsed values round-trip back to the original strings.
-- [ ] **Step 3 — Concurrency note verification.** Confirm the concurrency policy chosen in Phase 1 Step 3 is documented in both the skill (SKILL.md) and the workflow rules where relevant. If the policy is "sequential under the orchestrator," confirm `rules/do-workflow.md` agent-spawning sections do not implicitly enable parallel sub-agents touching the buffer. If the policy involves locking, confirm the lock idiom is documented and tested with two simulated concurrent appends.
-- [ ] **Step 4 — End-of-task housekeeping.** Per `rules/post-change.md`: update `.crafter/STATE.md` Recent Changes with the new buffer skill and run-directory lifecycle; update `.crafter/ARCHITECTURE.md` to add `skills/crafter-buffer/` (and, if applicable, `cli/internal/buffer/` + the new cobra commands) to the Structure tree and to mention the skill under "Skills"; capture one or two skillbook observations (one Implementer-level, one orchestrator-level if appropriate); fill in `## Outcome` in the task file; commit the consolidated end-of-task changes.
+- [x] **Step 1 — Round-trip verification (UAT and Gap).** From a clean working tree, simulate or actually run a `crafter-buffer uat …` invocation followed by reading `.crafter/run/<task-id>/uat-buffer.jsonl` to confirm the entry parses back into its constituent fields without loss. Do the same for `crafter-buffer gap …`. Run each twice in succession on the same file to confirm the append (not overwrite) behavior and the inter-entry delimiter survives. Record the verification evidence as plain text in the task file's `## Outcome` section (or as a separate code block in the verification step's drift report).
+- [x] **Step 2 — Append-then-read round trip with awkward content.** Append three entries via `crafter buffer uat` (or `gap`) whose payload exercises JSON string escaping: (i) a `verify`/`detail` field containing a fenced code block (` ```bash ... ``` `) expressed as a JSON-escaped multi-line string; (ii) an entry containing literal triple backticks inline; (iii) an entry with embedded blank lines. Confirm the buffer file remains valid NDJSON: line count equals entry count (`wc -l <buffer>` matches the number of appends), each line parses as JSON (verification tool of the implementer's choice — `jq -c . <buffer>` if available, else `python3 -c "import json,sys; [json.loads(l) for l in sys.stdin]" <buffer>` — must succeed with no errors), and the parsed values round-trip back to the original strings.
+- [x] **Step 3 — Concurrency note verification.** Confirm the concurrency policy chosen in Phase 1 Step 3 is documented in both the skill (SKILL.md) and the workflow rules where relevant. If the policy is "sequential under the orchestrator," confirm `rules/do-workflow.md` agent-spawning sections do not implicitly enable parallel sub-agents touching the buffer. If the policy involves locking, confirm the lock idiom is documented and tested with two simulated concurrent appends.
+- [x] **Step 4 — End-of-task housekeeping.** Per `rules/post-change.md`: update `.crafter/STATE.md` Recent Changes with the new buffer skill and run-directory lifecycle; update `.crafter/ARCHITECTURE.md` to add `skills/crafter-buffer/` (and, if applicable, `cli/internal/buffer/` + the new cobra commands) to the Structure tree and to mention the skill under "Skills"; capture one or two skillbook observations (one Implementer-level, one orchestrator-level if appropriate); fill in `## Outcome` in the task file; commit the consolidated end-of-task changes.
 
 **Drift criteria:** Drift if (a) verification is declared "passing" without recorded evidence in the task file or commit message, (b) ARCHITECTURE.md update omits the new skill or the new CLI surface (if Go-backed) — that is the single canonical structure document, (c) STATE.md update is skipped, (d) the commit bundles unrelated changes.
 
@@ -297,6 +297,145 @@ The Phase 3 review surfaced seven Minor/Suggestion findings. None blocking. Reco
 - **Suggestion #6 — `rules/do-workflow.md` line 144:** Downstream-projects MUST requirement lives only in prose. Consider surfacing in `install.sh` or README in a follow-up.
 - ~~**Suggestion #7 — `.gitignore` line 2:** New `.crafter/run/` entry has no comment; a one-line comment would improve discoverability.~~ → resolved in Phase 3 polish pass
 
+### Decision (Tech Debt — auto-recorded under `--fast`, Phase 4 Review): 2026-05-10
+
+The Phase 4 review surfaced three Suggestion findings that were not addressed in the polish pass. Recorded as deferred polish for a future task:
+
+- **Suggestion #6 — `.crafter/ARCHITECTURE.md` lines 24-32:** The `cli/cmd/` Structure tree was expanded from a single-line "Cobra command definitions" into a fully enumerated tree listing pre-existing files (`skillbook*.go`, `update.go`) outside the GH#16 surface. Beneficial drift (symmetry with the new buffer files) but a structural expansion beyond the changed-surface of this task. No corrective action recommended; flagging for awareness.
+- **Suggestion #7 — `.crafter/ARCHITECTURE.md` line 33:** The `cli/internal/buffer/` description names a single implementation detail ("O_APPEND atomic write") that the parallel `cli/internal/skillbook/` description does not match in framing. Cosmetic.
+- **Suggestion #8 — `.crafter/STATE.md` line 5:** `## Current Focus` mixes a finished item ("GH#16 buffer skill complete") with two future items; convention is ongoing-only. Trim in next session if not done by then.
+
+## Phase 4 — Verification evidence
+
+### Step 1 — Round-trip verification (UAT and Gap) — 2026-05-10
+
+**Build:** `cd cli && go build -o /tmp/crafter-buffer-test/crafter .` — exit 0.
+
+**Run dir:** `.crafter/run/20260509-feat-gh-16-buffer-skill/` created via `mkdir -p`.
+
+**Invocations:** Two `crafter buffer uat …` and two `crafter buffer gap …` against the same `--run-dir`. Required flags used: `--run-dir`, `--title`, `--source`, `--created-by`, `--task-id`, plus kind-specific flags (`--verify` + `--why-manual` for UAT; `--detail` + `--followup` for gap). All four invocations exited 0.
+
+**File state after appends:**
+- `uat-buffer.jsonl` = 3 lines: 1 marker line `{"_marker":"uat-buffer","_format":"ndjson-v1"}` + 2 entry lines.
+- `gaps-buffer.jsonl` = 3 lines: 1 marker line `{"_marker":"gaps-buffer","_format":"ndjson-v1"}` + 2 entry lines.
+
+**Round-trip results (all PASS):**
+- Each line parses as valid JSON.
+- All shared base fields present in every entry: `id`, `kind`, `created_at`, `created_by`, `task_id`, `title`, `source`.
+- UAT-specific fields present: `verify`, `why_manual`.
+- Gap-specific fields present: `detail`, `followup`.
+- Flag values round-trip back without loss for all 4 entries.
+- Both UAT entries have distinct ids (e.g. `d08b05e36546`, `f5f20ead2633`).
+- Both Gap entries have distinct ids (e.g. `26bdbc58e962`, `565534865600`).
+- All 4 ids across both files are distinct (no cross-file collision).
+- Both files end with LF (`0x0a`).
+- Append behavior confirmed: second invocation per kind added a new line, did not overwrite.
+
+**Cleanup:** the `.jsonl` files were removed at the end of the step; the run directory was kept for Phase 4 Step 2 reuse.
+
+**Independent verification:** The Verifier confirmed binary help text lists all 7 required flags per kind, marker lines match the SKILL.md spec exactly, and the working tree was clean throughout.
+
+### Step 2 — Append-then-read with awkward content — 2026-05-10
+
+**Binary:** `/tmp/crafter-buffer-test/crafter` (from Step 1 — no rebuild needed).
+
+**Run dir:** `.crafter/run/20260509-feat-gh-16-buffer-skill/` (empty after Step 1 cleanup).
+
+**Three `crafter buffer uat` invocations** (all exited 0):
+
+Entry (i) — fenced code block in `--verify` via `$'...'` ANSI-C quoting so `\n` becomes a real newline before the binary sees the value:
+```
+--verify $'```bash\necho hello\n```'
+```
+
+Entry (ii) — literal triple backticks inline in `--verify` (single-quoted; backtick is safe inside single quotes):
+```
+--verify 'Use ``` to start a code fence in Markdown'
+```
+
+Entry (iii) — embedded blank lines in `--verify` via `$'...'` ANSI-C quoting:
+```
+--verify $'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.'
+```
+
+All three invocations used: `--run-dir`, `--title`, `--source`, `--created-by crafter-implementer`, `--task-id 20260509-feat-gh-16-buffer-skill`, `--why-manual` (short string per entry).
+
+**File state after appends:**
+
+`wc -l uat-buffer.jsonl` = **4** (1 marker line + 3 entry lines). Matches expectation.
+
+**JSON validity:** `python3 -c "import json,sys; [json.loads(l) for l in open(sys.argv[1])]" uat-buffer.jsonl` — no errors.
+
+**Entry byte sizes (all within 512-byte cap):** marker 47 B; entry (i) 303 B; entry (ii) 331 B; entry (iii) 326 B.
+
+**Round-trip results:**
+
+- Entry (i) PASS: `verify` round-trips to `'```bash\necho hello\n```'` (repr). Newlines preserved; backticks unescaped.
+- Entry (ii) PASS: `verify` round-trips to `'Use ``` to start a code fence in Markdown'` (repr). Literal triple-backticks preserved.
+- Entry (iii) PASS: `verify` round-trips to `'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.'` (repr). Blank-line runs preserved.
+
+**Verification tool output (Python repr per entry):**
+```
+Entry (i):   '```bash\necho hello\n```'
+Entry (ii):  'Use ``` to start a code fence in Markdown'
+Entry (iii): 'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.'
+```
+
+**Cleanup:** `uat-buffer.jsonl` removed; run directory kept (empty) for Step 3.
+
+### Step 3 — Concurrency note verification — 2026-05-10
+
+**SKILL.md concurrency section (lines 214 and 216):**
+
+`skills/crafter-buffer/SKILL.md` contains a dedicated `## Concurrency` section (line 214 header, line 215 blank, line 216 prose). Relevant excerpt:
+
+```
+Writes are sequential under the orchestrator (per Phase 1 Decision 3). The subcommand uses
+`O_APPEND | O_WRONLY | O_CREAT` and issues a single `write(2)` per call (the very first call
+on a fresh file writes the marker line and the first entry in one syscall; subsequent calls
+write only the entry). Steady-state entry-only writes are kept under the POSIX PIPE_BUF bound
+(conservatively 512 bytes on macOS, 4096 on Linux); the one-time coalesced first write (marker
++ first entry, up to ~560 bytes) relies on the stronger regular-file page-cache atomicity that
+Linux ext4/XFS and macOS APFS provide for sub-page writes. Cross-filesystem / NFS scenarios are
+explicitly NOT supported in this PoC. Concurrent calls from multiple sub-agents in the same run
+are out of scope.
+```
+
+This matches Decision (User Accepted): Concurrency policy — 2026-05-09 verbatim: "Sequential writes under the orchestrator + single-syscall `O_APPEND` line-append. No lock manager."
+
+**do-workflow.md agent-spawning sections (sequential confirmation):**
+
+Scanned the following sections for any implicit parallel-agent enablement:
+
+- `### EXECUTE` (lines 21–26): "Execute one step at a time. Do not implement future steps early." Sequential by rule.
+- `### VERIFY` (lines 28–42): describes step drift check then phase verification — single-threaded, sequential.
+- `### REVIEW` (lines 43–83): describes fix-loop iterations up to a cap of 5, sequential by design.
+- `### --auto (unattended orchestration)` (lines 85–131): describes Plan → Execute → Verify → Review as an end-to-end sequential pipeline. The retained gates and auto-fix loop are all described in sequential terms. Removed gates section references "UAT buffer" and "Gaps buffer" for recording findings — these are append calls from a single agent at a time, not concurrent writes.
+- `### Run directory lifecycle` (lines 132–146): states "Sub-agents may append to buffer files at any point during execution" — temporal ("at any point"), not concurrent. No parallelism implied.
+- `#### Ad-hoc escape hatch` (lines 115–130): sequential exit semantics; no parallel spawning described.
+
+No section in `rules/do-workflow.md` explicitly enables parallel sub-agents writing to the buffer simultaneously. The workflow spawns one agent at a time (Implementer, then Verifier, then Reviewer) in a sequential pipeline.
+
+**Lifecycle subsection concurrency check:**
+
+`### Run directory lifecycle` (lines 132–146) contains no mention of concurrency policy — it describes creation timing, persistence, resume, cleanup, and git hygiene. Absence is correct; concurrency is the skill's domain per the step contract.
+
+**Pass/fail:**
+
+- Concurrency policy documented in SKILL.md: **PASS** (lines 214 and 216, `## Concurrency` section matches Decision 3 exactly — sequential under orchestrator, O_APPEND line-append, no lock manager, out-of-scope note for concurrent sub-agents).
+- do-workflow.md does not enable parallel buffer writers: **PASS** (EXECUTE/VERIFY/REVIEW/--auto/Run-directory-lifecycle sections all describe sequential single-agent pipelines; no section grants parallel buffer write access to multiple sub-agents).
+
 ## Outcome
 
-_(pending)_
+GH#16 delivered in four phases:
+
+- **Phase 1** recorded three architectural decisions (distinct NDJSON schema, hybrid Go-backed skill, sequential concurrency under orchestrator) before any artifact was written.
+- **Phase 2** shipped `skills/crafter-buffer/SKILL.md` and the `crafter buffer uat|gap` Go subcommand (`cli/cmd/buffer*.go`, `cli/internal/buffer/`), including the four Phase 2 implementation decisions (ID generation, entry size cap, caller-provided flags, missing-run-dir behavior). SKILL.md was aligned to the implementation in Step 3.
+- **Phase 3** landed the run-directory lifecycle subsection in `rules/do-workflow.md`, the `.crafter/run/` `.gitignore` rule, and resolution of all GH#15 forward references in `rules/do-workflow.md` and `skills/crafter-do/SKILL.md`. A polish pass resolved four of seven Minor/Suggestion findings from the Phase 3 review (see Decision tech-debt entry for the remaining three deferred items).
+- **Phase 4** ran three verification round-trips: UAT+Gap append-then-read (2 entries each, all fields round-trip cleanly); awkward-content round-trip (fenced code block, triple backticks, blank lines — all 3 entries valid NDJSON within the 512-byte cap); concurrency-note cross-check against `rules/do-workflow.md` (no parallel buffer writers implied in any section).
+
+All seven acceptance criteria are now satisfied (see checkboxes in `## Request`).
+
+**Open follow-ups (out of scope for this task):**
+- GH#17 — PR composer: reads and surfaces buffer entries, implements cleanup of `.crafter/run/<task-id>/` after PR composition.
+- GH#18 — Agent prompt updates: migrate sub-agent blocking on unresolvable findings to `crafter buffer` appends.
