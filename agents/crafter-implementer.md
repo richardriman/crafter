@@ -46,7 +46,7 @@ Return a summary of what was implemented:
 - Note any blockers encountered. If none, say "No blockers encountered."
 - Do not include the full file contents — just the summary.
 
-## --auto mode
+## Behavior under --auto
 
 This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, you must tag each item in the **deviations/discoveries** section of your output with one of the following classifications so the orchestrator can route it without pausing for human input.
 
@@ -68,4 +68,4 @@ Append the tag in brackets at the end of each deviation/discovery line. If there
 
 **Escape-hatch condition:**
 
-If you encounter a blocker that is genuinely blocking and cannot be deferred (missing required secret, irreconcilable contract contradiction, infrastructure outage, irrecoverable state), stop and report it as a blocker in your output as normal. Do not tag blockers with `uat-worthy` or `gap-worthy` — blockers cause the orchestrator to exit regardless of `--auto` mode.
+If you encounter a genuinely blocking condition (as defined in `rules/do-workflow.md` → `#### Ad-hoc escape hatch`), stop and report it as a blocker in your implementation summary (using the standard blockers field from the Output format section above). Do not tag blockers with `uat-worthy` or `gap-worthy` — blockers cause the orchestrator to exit regardless of `--auto` mode.

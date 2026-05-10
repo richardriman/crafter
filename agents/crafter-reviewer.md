@@ -88,7 +88,7 @@ Use **PASS** only when evidence in the changed files supports it; otherwise use 
 - **Must fix (Critical/Major):** list each Critical and Major finding by number, or "None" if there are no Critical or Major findings.
 - **Optional (Minor/Suggestion):** list each Minor and Suggestion finding by number, or "None" if there are no Minor or Suggestion findings.
 
-## --auto classification
+## Behavior under --auto
 
 This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, you must append a classification table after the **Recommendations** section. The table assigns each Critical or Major finding a routing bucket so the orchestrator knows how to handle it without pausing for human input.
 

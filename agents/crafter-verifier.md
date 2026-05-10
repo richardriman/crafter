@@ -113,7 +113,7 @@ For each failed criterion, list:
 
 If everything passes and there are no regressions, edge cases, or consistency issues, the entire report is just the summary line.
 
-## --auto sub-classification
+## Behavior under --auto
 
 This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, append a sub-classification block after your standard report. The block provides routing metadata so the orchestrator can handle drift items without pausing for human input.
 
@@ -126,11 +126,12 @@ This section applies only when the orchestrator indicates `--auto` mode in the t
 **record decision and continue** — append a routing line for each drift item:
 
 ```
-Auto-routing: <item summary> → gap | uat
+Auto-routing: <item summary> → gap | uat | no-buffer
 ```
 
 - Use **gap** when the drift is out of scope for the current phase contract, is an architectural smell, missing test coverage, or a deferred refactor that was never in scope. The orchestrator will create a Gaps buffer entry and continue.
 - Use **uat** when the drift cannot be confirmed by code inspection alone: it requires manual browser interaction, a live external service, human business judgment, or an environment the agent cannot access. The orchestrator will create a UAT buffer entry and continue.
+- Use **no-buffer** when the drift is local, self-contained, and fully resolved — the orchestrator records it as a Decision entry only, with no buffer entry needed.
 
 **ask user** — append a routing line for each item:
 
@@ -149,11 +150,4 @@ Auto-routing: escape-hatch — <one-line reason>
 
 ### Escape hatch criteria
 
-Signal `escape-hatch` only when one or more of the following apply:
-
-- Missing auth or secret the run cannot proceed without.
-- Hard contradiction in inputs (e.g., the implementation and the approved plan diverge irreconcilably).
-- Infrastructure outage (CI service down, registry unreachable, etc.).
-- Irrecoverable state the agent cannot recover from after in-step retries.
-
-Do NOT signal escape-hatch for findings that can be deferred as `gap` or `uat`, or for harmful drift that the Implementer can fix within the normal fix loop.
+Signal `escape-hatch` only for genuinely blocking conditions as defined in `rules/do-workflow.md` → `#### Ad-hoc escape hatch`. Do NOT signal escape-hatch for findings that can be deferred as `gap`, `uat`, or `no-buffer`, or for harmful drift that the Implementer can fix within the normal fix loop.
