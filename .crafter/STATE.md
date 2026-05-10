@@ -2,12 +2,13 @@
 
 ## Current Focus
 
-Improving existing commands — GH#16 buffer skill complete; next up GH#17 PR composer (buffer reading + cleanup) and GH#18 agent prompt updates (blocking→buffer migration).
+GH#17 PR composer complete; next up GH#18 agent prompt updates (blocking→buffer migration).
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-10 | PR composer (GH#17) — `crafter pr-body` Go subcommand reads per-run NDJSON buffers and task file, renders `## Manual QA Plan`, `## Known Gaps`, `## Decisions` sections; Step 9b in `skills/crafter-do/SKILL.md` wires it into the `--auto` end-of-task flow; GH#16 forward references resolved | TBD |
 | 2026-05-10 | `crafter-buffer` skill (GH#16) — NDJSON `.crafter/run/<task-id>/` buffers, Go subcommand `crafter buffer uat\|gap`, run-directory lifecycle in `rules/do-workflow.md`, `.crafter/run/` in `.gitignore`, GH#15 forward references resolved | a786116 |
 | 2026-05-09 | `--auto` flag for crafter-do (GH#15) — unattended orchestration mode with binding green-commit invariant, four retained gates (initial clarification, plan approval, green-commit cap reached, ad-hoc escape hatch), and parser-level mutual exclusion with `--fast`. Phase 1 documented the contract in `rules/do-workflow.md`; Phase 2 wired the flag into `skills/crafter-do/SKILL.md` (frontmatter, Skill options, Flag Validation block, Step 6b restructure). Forward references to GH#16/#17/#18 for buffer skill, PR composer, and agent prompt updates. | 828815e + 308f828 |
 | 2026-05-05 | Green commits + per-phase auto-commit — Critical/Major review findings mandatory to fix (5-iteration cap with three user choices on cap-hit), new Step 6b Phase Summary and Auto-Commit with three approval paths (auto / `--fast` silence / explicit), manual-verification override, consolidated end-of-task commit for docs+skillbook+STATE.md, new `--fast` metadata flag (default off) | 7d24131 |
