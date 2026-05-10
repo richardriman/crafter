@@ -81,6 +81,12 @@ If any of these updates exist, bundle them into a **single** commit using conven
 
 This commit shares the same constraints as the per-phase commit: automatic, no push to remote, conventional commits format.
 
+## STATE.md commit-hash backfill
+
+When the orchestrator updates `STATE.md` "Recent Changes" with a row referencing the current task before the per-task commit lands, use a `TBD` placeholder for the commit hash. After the PR is opened (or the per-task commit lands locally if no PR is being opened), a small `chore(state): backfill GH#NN commit hash in STATE.md` commit replaces `TBD` with the real SHA. This pattern was first used in GH#16 (`5e8ceba`) and is the standard way to handle the chicken-and-egg between "STATE.md updated" and "the commit that updates STATE.md."
+
+Do NOT introduce a different placeholder convention — keep it consistent with the GH#16 precedent.
+
 ## Session Wrap-Up
 
 After completing the task, suggest that the user can start a fresh session for the next piece of work:

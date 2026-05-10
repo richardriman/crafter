@@ -139,11 +139,14 @@ Each run that reaches execution gets a dedicated scratch directory: `.crafter/ru
 
 **Per-run identity on resume.** Resuming a task reuses the same `<task-id>` and therefore the same directory. If the directory still exists from a prior session, its buffer files are retained and new entries are appended to them. This is intentional: buffer entries from an earlier session in the same task remain valid context for subsequent sessions.
 
-**Cleanup.** Cleanup happens on workspace teardown — the orchestrator deletes the run directory and all its contents (`rm -rf .crafter/run/<task-id>/`). Cleanup means full deletion, not merely emptying the directory. Companion task GH#17 will add a second cleanup trigger after PR composition; until GH#17 lands, workspace teardown is the only active trigger.
+**Cleanup.** Two triggers perform the same action — full deletion of the run directory and all its contents (`rm -rf .crafter/run/<task-id>/`):
+
+1. **After successful `gh pr create`** (`--auto` runs only) — the primary cleanup trigger. The orchestrator runs the cleanup hook immediately after `gh pr create` succeeds (see `skills/crafter-do/SKILL.md` → Step 9b, "Success handling"). If `gh pr create` fails, cleanup is skipped and the run directory is preserved for retry/debug.
+2. **On workspace teardown** — the safety-net trigger, active for all runs. Catches any run that exits via one of the four retained gates (plan rejected, scope-change abort, green-commit violation, escape-hatch blocker) before reaching PR composition, as well as non-`--auto` runs where the user composes the PR manually.
 
 **Git hygiene.** The run directory must never appear in commits. The Crafter repo's own `.gitignore` already includes `.crafter/run/`. Downstream projects MUST add `.crafter/run/` to their `.gitignore`.
 
-**No per-run metadata artifact.** There is no `meta.json` or equivalent run-marker file inside the directory. Buffer entries carry `task_id` and `created_at` fields that provide sufficient per-entry traceability without a separate metadata file. Adding a metadata artifact would expand surface beyond what the current PoC requires; this decision can be revisited in GH#17 or GH#18 if the PR composer finds it necessary.
+**No per-run metadata artifact.** There is no `meta.json` or equivalent run-marker file inside the directory. Buffer entries carry `task_id` and `created_at` fields that provide sufficient per-entry traceability without a separate metadata file. GH#17 confirmed this: the PR composer reads only the two NDJSON buffer files and the task file's `## Decisions` section — no metadata artifact is needed. This remains the policy until a future change demonstrates a concrete need.
 
 ## Scope Detection
 

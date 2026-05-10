@@ -25,12 +25,14 @@ crafter/
 │   │   ├── buffer.go            # `crafter buffer` parent command
 │   │   ├── buffer_gap.go        # `crafter buffer gap` — append Gap entry to gaps-buffer.jsonl
 │   │   ├── buffer_uat.go        # `crafter buffer uat` — append UAT entry to uat-buffer.jsonl
+│   │   ├── pr_body.go           # `crafter pr-body` — render PR body sections from buffers + task file
 │   │   ├── skillbook.go         # `crafter skillbook` parent command
 │   │   ├── skillbook_add.go     # `crafter skillbook add`
 │   │   ├── skillbook_get.go     # `crafter skillbook get`
 │   │   ├── skillbook_init.go    # `crafter skillbook init`
 │   │   └── update.go            # `crafter update`
 │   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
+│   ├── internal/prbody/         # PR body renderer (reads NDJSON buffers + task file, emits markdown sections)
 │   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
@@ -121,10 +123,15 @@ Current subcommands:
 - `crafter skillbook add` — add observation with Jaccard dedup and confidence promotion
 - `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
+- `crafter pr-body` — read per-run NDJSON buffers and task file, render `## Manual QA Plan`, `## Known Gaps`, and `## Decisions` sections for the PR body
 
 Run-directory lifecycle (`.crafter/run/<task-id>/`) — canonical wording in `rules/do-workflow.md → ### Run directory lifecycle`.
 
 Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-arm64. Binaries attached to GitHub releases. `install.sh` downloads the correct binary to `~/.claude/crafter/bin/crafter` and links global installs to `~/.local/bin/crafter` for shell usage.
+
+### PR Composer — `--auto` End-of-Task PR Creation
+
+Under `--auto`, Step 9b (defined in `skills/crafter-do/SKILL.md → ## Step 9b`) closes the run by opening a GitHub PR. The orchestrator composes a baseline body (Summary + Test plan) from the task file's `## Plan → Approach` and `## Outcome` sections, then invokes `crafter pr-body --run-dir .crafter/run/<task-id>/ --task-file …` to render three appended sections (`## Manual QA Plan`, `## Known Gaps`, `## Decisions`) from the per-run NDJSON buffers. The two parts are concatenated and passed to `gh pr create`. On success the run directory is deleted; on failure the run directory is preserved and the ad-hoc escape hatch is triggered. This mirrors the GH#16 buffer pattern — deterministic rendering is delegated to the Go binary, not inlined as LLM prose.
 
 ### Skillbook — Project-Level Learning
 
