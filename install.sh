@@ -298,12 +298,13 @@ install_to() {
 
   echo "Installing Crafter $label..."
 
-  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project" "$skills_dest/crafter-buffer"
-  cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"          "$skills_dest/crafter-do/SKILL.md"
-  cp "$SCRIPT_DIR/skills/crafter-debug/SKILL.md"       "$skills_dest/crafter-debug/SKILL.md"
-  cp "$SCRIPT_DIR/skills/crafter-status/SKILL.md"      "$skills_dest/crafter-status/SKILL.md"
-  cp "$SCRIPT_DIR/skills/crafter-map-project/SKILL.md" "$skills_dest/crafter-map-project/SKILL.md"
-  cp "$SCRIPT_DIR/skills/crafter-buffer/SKILL.md"      "$skills_dest/crafter-buffer/SKILL.md"
+  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project" "$skills_dest/crafter-buffer" "$skills_dest/crafter-scaffold-task"
+  cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"             "$skills_dest/crafter-do/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-debug/SKILL.md"          "$skills_dest/crafter-debug/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-status/SKILL.md"         "$skills_dest/crafter-status/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-map-project/SKILL.md"    "$skills_dest/crafter-map-project/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-buffer/SKILL.md"         "$skills_dest/crafter-buffer/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-scaffold-task/SKILL.md"  "$skills_dest/crafter-scaffold-task/SKILL.md"
 
   mkdir -p "$crafter_dest"
   cp "$SCRIPT_DIR/VERSION"                 "$crafter_dest/VERSION"
@@ -315,6 +316,11 @@ install_to() {
   cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
   cp "$SCRIPT_DIR/rules/task-lifecycle.md" "$rules_dest/task-lifecycle.md"
+
+  mkdir -p "$rules_dest/do"
+  cp "$SCRIPT_DIR/rules/do/flag-validation.md"        "$rules_dest/do/flag-validation.md"
+  cp "$SCRIPT_DIR/rules/do/project-resolution.md"     "$rules_dest/do/project-resolution.md"
+  cp "$SCRIPT_DIR/rules/do/extension-skills.md"       "$rules_dest/do/extension-skills.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"

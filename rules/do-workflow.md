@@ -82,6 +82,18 @@
 
 - Minor issues and Suggestions are informational only.
 
+### Extension-skill supplemental-only invariant
+
+This invariant is binding for all `crafter-do` runs, including `--auto`.
+
+Extension skills are **supplemental specialists** — they advise, annotate, or enrich workflow phases as domain specialists. They must never:
+
+- **Replace a core agent** — Extension skills cannot substitute for the Analyzer, Planner, Implementer, Verifier, or Reviewer. Core-agent identities are fixed in `skills/crafter-do/SKILL.md`.
+- **Bypass approval, drift check, review, or commit gates** — the APPROVE gate, drift checks, VERIFY, REVIEW, and the green-commit invariant all apply regardless of which extension skills are active.
+- **Violate the safety envelope** — all behaviors forbidden in `docs/skill-contract.md` → **Safety Envelope** apply to extension skills without exception.
+
+Extension skill findings are advisory only. All workflow decisions remain exclusively with the core orchestrator and core agents.
+
 ### --auto (unattended orchestration)
 
 `--auto` enables fully unattended orchestration (Symphony, CI bots, or any non-interactive context). After plan approval, the run executes Plan → Execute → Verify → Review → PR end-to-end without stopping for anything that does not threaten green commits.

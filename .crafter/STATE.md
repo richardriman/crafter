@@ -2,12 +2,14 @@
 
 ## Current Focus
 
-GH#18 agent auto-fix-or-document semantics complete; `--auto` pipeline (GH#15→16→17→18) is feature-complete.
+`crafter-do` core-capability decomposition Slice 1 complete on branch `feat/composable-skill-contracts` (all 3 phases delivered, verified, reviewed). Branch ready for follow-up slices or PR.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-17 | `crafter-do` core-capability decomposition Slice 1 — Phase 1 design note (`docs/core-capabilities.md`: taxonomy + `{CRAFTER_HOME}` runtime-path policy), Phase 2 preamble extraction (Flag Validation / Project Resolution / Extension Skills → `rules/do/*`, byte-identical, installer deploys `rules/do/`), Phase 2 review #2 resolved (loader grouping comments), Phase 3 runtime-path hygiene (`extension-skills.md` global path → `{CRAFTER_HOME}/skills/`, sibling task delineated). Verifier 7/7 PASS, reviewer no findings. Follow-up slices (Step 0–9b modules) recorded in task Outcome. | 8133f12 + b2d74e8 + 7142673 |
+| 2026-05-16 | Composable skill contracts — added `docs/skill-contract.md` with the eight-field Skill Contract and Safety Envelope, cross-linked plugin/architecture docs, wired `crafter-do` to discover compatible extension skills at Steps 1/4/6 as supplemental-only specialists, and codified the invariant in `rules/do-workflow.md` | ac1f40b + 5fe353f + e31096b |
 | 2026-05-10 | Agent `--auto` semantics (GH#18) — Reviewer three-bucket classification (auto-fixable/uat/gap), Verifier routing metadata per recommendation, Implementer buffer-worthy discovery tagging; escape hatch placeholder in `do-workflow.md` replaced with agent-side signal documentation; completes `--auto` pipeline | TBD |
 | 2026-05-10 | PR composer (GH#17) — `crafter pr-body` Go subcommand reads per-run NDJSON buffers and task file, renders `## Manual QA Plan`, `## Known Gaps`, `## Decisions` sections; Step 9b in `skills/crafter-do/SKILL.md` wires it into the `--auto` end-of-task flow; GH#16 forward references resolved | TBD |
 | 2026-05-10 | `crafter-buffer` skill (GH#16) — NDJSON `.crafter/run/<task-id>/` buffers, Go subcommand `crafter buffer uat\|gap`, run-directory lifecycle in `rules/do-workflow.md`, `.crafter/run/` in `.gitignore`, GH#15 forward references resolved | a786116 |
@@ -31,6 +33,7 @@ GH#18 agent auto-fix-or-document semantics complete; `--auto` pipeline (GH#15→
 
 ## Planned
 
+- [x] ~~Refactor `crafter-do` into composable core capability modules — Slice 1 complete (`.crafter/tasks/20260517-refactor-crafter-do-core-capabilities.md`): design note + preamble extraction + runtime-path policy~~. **Follow-up slices** (Step 0–9b capability modules) listed in that task's `## Outcome` for the next planning session
 - [ ] Optional project-level review rules — reviewer loads `.crafter/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
 - [ ] Model profiles — matice agent × profil (quality/balanced/budget) → model tier. Prompt-only, orchestrátor čte config a předává `--model` agentům. Inspirace: Nightshift `model-profiles.ts`
 - [x] ~~Skillbook — self-learning agents~~ (implemented in 1600677 as Go CLI binary)
