@@ -103,6 +103,40 @@ Do NOT read `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it 
 
 ---
 
+## Extension Skills
+
+An **extension skill** is any Crafter-compatible skill — beyond the core agents shipped with Crafter — that declares a Skill Contract block in its own `SKILL.md`. Extension skills act as **supplemental specialists**: they advise, annotate, or enrich workflow phases, but they never replace a core agent or bypass an approval gate.
+
+**v1 invariant — supplemental only.** Extension skills in v1 are advisory. They may contribute observations, checklists, or domain-specific findings, but all workflow decisions (plan approval, commit approval, phase gates) remain exclusively with the core orchestrator and core agents.
+
+### Discovery
+
+When the workflow starts, scan these `skills/` directories in priority order (most specific to least):
+
+| Priority | Location | Scope |
+|---|---|---|
+| 1 (highest) | `{PROJECT_PATH}/.claude/crafter/skills/` | Current project |
+| 2 | First `../.claude/crafter/skills/` found walking up parent directories | Parent project |
+| 3 (lowest) | `~/.claude/crafter/skills/` | Global (user-wide) |
+
+For each `skills/<skill-name>/SKILL.md` found, read it and check whether it contains a `## Skill Contract` section. If it does, the skill is Crafter-compatible and eligible for consideration. If the same skill name appears at multiple levels, the most specific one wins.
+
+### Safety envelope
+
+Every extension skill must satisfy the full safety envelope defined in `docs/skill-contract.md` → **Safety Envelope**. If a skill's contract cannot satisfy all envelope items, it must declare that incompatibility explicitly and the orchestrator must not invoke it.
+
+### Where extension skills apply
+
+Compatible extension skills may be considered at three workflow phases:
+
+- **Step 1 (Completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
+- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation.
+- **Step 6 (Review)** — a skill may provide additional review criteria beyond the core Reviewer's checklist.
+
+In all cases the core agent for that phase runs first and is authoritative. Extension skill findings are supplemental context.
+
+---
+
 ## Step 0 — Resume Detection
 
 Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
@@ -133,6 +167,8 @@ Based on the project context files, completeness check, and request, classify th
 - **Small** — touches 1–3 files, intent is clear, change is isolated
 - **Medium** — touches multiple files, intent is clear, change is cross-cutting
 - **Large** — incomplete/vague request, architectural impact, many files, or unfamiliar territory
+
+**Extension skill check (supplemental only).** Before finalising the scope classification, check for compatible extension skills discovered at startup (see `## Extension Skills`). If any skill's `When-Applies` matches the request, record their names and capabilities. Pass this list as supplemental context when delegating to the Analyzer in Step 2 or when building plan context in Step 3, so those agents can consult the extension skills as domain specialists. Extension skills may contribute domain-specific completeness criteria; they cannot replace the orchestrator's scope classification or scope-gate decision. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 If the request is complete enough to plan, create the task file per `~/.claude/crafter/rules/task-lifecycle.md` and continue to Step 3. Respect the main/master guard first — fresh task files should normally capture the approved topic branch, not `main/master`.
 
@@ -168,6 +204,8 @@ Once the user approves, use the Edit tool directly to change `**Plan status:** d
 If the approved plan contains **phases** (groups of steps under phase headings), execute one step at a time. Phase boundaries determine when phase verification and full review run.
 
 ## Step 4 — EXECUTE
+
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `## Extension Skills`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 Delegate implementation to the **`crafter-implementer`** agent:
 
@@ -208,6 +246,8 @@ When all steps in the current phase have passed drift checks, delegate phase ver
 If phase verification fails, discuss the result with the user and decide whether to re-delegate to the Implementer, adjust the plan, or re-run a specific step drift check.
 
 ## Step 6 — REVIEW
+
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `## Extension Skills`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 After phase verification passes, delegate code review to the `crafter-reviewer` agent and handle findings. The review-fix iteration count starts at 0. Run review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
 
