@@ -2,13 +2,13 @@
 
 ## Current Focus
 
-Composable skill contracts for `crafter-do` are complete; the workflow now has a supplemental-only extension-skill model.
+Draft plan active for refactoring `crafter-do` into internal core capability modules on branch `feat/composable-skill-contracts`.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
-| 2026-05-16 | Composable skill contracts — added `docs/skill-contract.md` with the eight-field Skill Contract and Safety Envelope, cross-linked plugin/architecture docs, wired `crafter-do` to discover compatible extension skills at Steps 1/4/6 as supplemental-only specialists, and codified the invariant in `rules/do-workflow.md` | ac1f40b + 5fe353f |
+| 2026-05-16 | Composable skill contracts — added `docs/skill-contract.md` with the eight-field Skill Contract and Safety Envelope, cross-linked plugin/architecture docs, wired `crafter-do` to discover compatible extension skills at Steps 1/4/6 as supplemental-only specialists, and codified the invariant in `rules/do-workflow.md` | ac1f40b + 5fe353f + e31096b |
 | 2026-05-10 | Agent `--auto` semantics (GH#18) — Reviewer three-bucket classification (auto-fixable/uat/gap), Verifier routing metadata per recommendation, Implementer buffer-worthy discovery tagging; escape hatch placeholder in `do-workflow.md` replaced with agent-side signal documentation; completes `--auto` pipeline | TBD |
 | 2026-05-10 | PR composer (GH#17) — `crafter pr-body` Go subcommand reads per-run NDJSON buffers and task file, renders `## Manual QA Plan`, `## Known Gaps`, `## Decisions` sections; Step 9b in `skills/crafter-do/SKILL.md` wires it into the `--auto` end-of-task flow; GH#16 forward references resolved | TBD |
 | 2026-05-10 | `crafter-buffer` skill (GH#16) — NDJSON `.crafter/run/<task-id>/` buffers, Go subcommand `crafter buffer uat\|gap`, run-directory lifecycle in `rules/do-workflow.md`, `.crafter/run/` in `.gitignore`, GH#15 forward references resolved | a786116 |
@@ -32,6 +32,7 @@ Composable skill contracts for `crafter-do` are complete; the workflow now has a
 
 ## Planned
 
+- [ ] Refactor `crafter-do` into composable core capability modules — draft plan in `.crafter/tasks/20260517-refactor-crafter-do-core-capabilities.md`; current recommendation is design note + first safe preamble extraction slice, with extension packaging/distribution out of scope and Claude/Copilot runtime neutrality treated as a constraint
 - [ ] Optional project-level review rules — reviewer loads `.crafter/review-rules.md` (if present) as additional context, allowing projects to define language-specific, framework-specific, or team-specific review criteria
 - [ ] Model profiles — matice agent × profil (quality/balanced/budget) → model tier. Prompt-only, orchestrátor čte config a předává `--model` agentům. Inspirace: Nightshift `model-profiles.ts`
 - [x] ~~Skillbook — self-learning agents~~ (implemented in 1600677 as Go CLI binary)
