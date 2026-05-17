@@ -57,7 +57,7 @@ The current resume detection instructions are too terse — the orchestrator som
   Rewrite the "Resume Detection" section to be more explicit and procedural:
 
   1. Keep step 1 (get branch name).
-  2. Rewrite step 2 to be emphatic and efficient: "**Use Grep to search efficiently.** Run a Grep for `**Status:** active` across all files in `{PROJECT_PATH}/.planning/tasks/`. This returns only files with active tasks — do not read every file individually. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching."
+  2. Rewrite step 2 to be emphatic and efficient: "**Use Grep to search efficiently.** Run a Grep for active task metadata across all files in `{PROJECT_PATH}/.planning/tasks/`. This returns only files with active tasks — do not read every file individually. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching."
   3. Keep steps 3-4 (branch matching vs. main branch behavior).
   4. Add a new step between current 4 and 5: "If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: 'continue', 'resume', 'pokracuj', 'dál', 'further', 'next step', 'carry on' — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection."
   5. Keep steps 5-6 (match found / no match behavior).

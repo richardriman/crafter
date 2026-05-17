@@ -94,7 +94,7 @@ Apply the extension-skill discovery and supplemental-only rules in `~/.claude/cr
 
 Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
 
-**Important:** If the effective request contains resume-intent words (continue, resume, pokracuj, dál, further, next step, carry on, etc.), you must be thorough in searching for active tasks. Use Grep to search for `**Status:** active` in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` before concluding no active task exists.
+**Important:** If the effective request contains resume-intent words (continue, resume, pokracuj, dál, further, next step, carry on, etc.), you must be thorough in searching for active tasks. Use Grep to search for active task metadata lines only (`^- \*\*Status:\*\* active$|^\*\*Status:\*\* active$`) in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` before concluding no active task exists.
 
 If resuming an active task, first check the plan status in the task file:
 - If the task file contains `**Work branch:** <branch>` and `<branch>` differs from the current branch, do not resume silently. Tell the user the expected branch and ask whether to switch branches, continue anyway, or start fresh.
