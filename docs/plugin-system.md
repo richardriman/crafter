@@ -209,3 +209,7 @@ In addition to general review criteria, check for:
 2. **Additive only** — plugins extend behavior, they do not replace or override core rules.
 3. **No runtime dependencies** — plugins are markdown files, same as core Crafter. No package manager, no build step.
 4. **Transparent** — active plugins and their effects are visible via `/crafter-status`.
+
+## Skill Compatibility
+
+Extension skills that add new Crafter workflows must conform to the Crafter skill contract (required fields, safety envelope, forbidden behaviors). See [`docs/skill-contract.md`](skill-contract.md) for the full specification.

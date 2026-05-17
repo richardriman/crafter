@@ -144,6 +144,7 @@ The skillbook file (`{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json`, with `.crafte
 ## Conventions
 
 - Skill files are Markdown with YAML frontmatter (`skills/*/SKILL.md`)
+- Extension skills must satisfy the Crafter skill contract — see [`docs/skill-contract.md`](../docs/skill-contract.md)
 - Agent files define the role, constraints, and output format for each agent. The orchestrator spawns agents via the Task tool with a task description; agents explore the codebase themselves using their Read/Grep/Glob tools.
 - `install.sh` uses `set -euo pipefail` for strict error handling
 - Rules are split into per-concern fragments; each skill loads only the fragments it needs
