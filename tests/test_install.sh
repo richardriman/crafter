@@ -278,12 +278,13 @@ _run_installer_no_cmd() {
 # ---------------------------------------------------------------------------
 # Shared file list used by global-install tests (issue #9: avoid duplication)
 # ---------------------------------------------------------------------------
-# 20 files installed by install_global / install_to
+# 21 files installed by install_global / install_to
 _EXPECTED_FILES_REL=(
   "skills/crafter-do/SKILL.md"
   "skills/crafter-debug/SKILL.md"
   "skills/crafter-status/SKILL.md"
   "skills/crafter-map-project/SKILL.md"
+  "skills/crafter-scaffold-task/SKILL.md"
   "crafter/VERSION"
   "crafter/rules/core.md"
   "crafter/rules/do-workflow.md"
