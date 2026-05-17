@@ -295,6 +295,7 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/do/flag-validation.md"
   "crafter/rules/do/project-resolution.md"
   "crafter/rules/do/extension-skills.md"
+  "crafter/rules/do/step-0-resume.md"
   "crafter/templates/PROJECT.md"
   "crafter/templates/ARCHITECTURE.md"
   "crafter/templates/STATE.md"
