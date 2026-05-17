@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-17
 - **Work branch:** refactor/crafter-do-slice-3-steps-1-2
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -116,20 +116,20 @@ After Phase 1, `## Step 1 — Completeness and scope` and `## Step 2 — DISCUSS
 
 After Phase 2 the two new modules follow the `{CRAFTER_HOME}` runtime-path policy and the design-note ledger reflects what shipped. Narrow, proof-of-policy scope — no repo-wide sweep.
 
-- [ ] **2.1 — Apply the `{CRAFTER_HOME}` policy to both new modules.** In `rules/do/step-1-scope.md`, replace each concrete runtime path `~/.claude/crafter/rules/do/extension-skills.md` → `{CRAFTER_HOME}/rules/do/extension-skills.md` and `~/.claude/crafter/rules/task-lifecycle.md` → `{CRAFTER_HOME}/rules/task-lifecycle.md`. In `rules/do/step-2-discuss.md`, replace `~/.claude/crafter/rules/task-lifecycle.md` → `{CRAFTER_HOME}/rules/task-lifecycle.md`. The bare `rules/do-workflow.md → ### Extension-skill supplemental-only invariant` reference and the bare `crafter-analyzer` agent name are not concrete `~/.claude/...` runtime install paths and stay unchanged. Re-enumerate the exact occurrences at edit time to ensure every `~/.claude/...` in each module is normalized and nothing else. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
+- [x] **2.1 — Apply the `{CRAFTER_HOME}` policy to both new modules.** In `rules/do/step-1-scope.md`, replace each concrete runtime path `~/.claude/crafter/rules/do/extension-skills.md` → `{CRAFTER_HOME}/rules/do/extension-skills.md` and `~/.claude/crafter/rules/task-lifecycle.md` → `{CRAFTER_HOME}/rules/task-lifecycle.md`. In `rules/do/step-2-discuss.md`, replace `~/.claude/crafter/rules/task-lifecycle.md` → `{CRAFTER_HOME}/rules/task-lifecycle.md`. The bare `rules/do-workflow.md → ### Extension-skill supplemental-only invariant` reference and the bare `crafter-analyzer` agent name are not concrete `~/.claude/...` runtime install paths and stay unchanged. Re-enumerate the exact occurrences at edit time to ensure every `~/.claude/...` in each module is normalized and nothing else. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
   - **Karpathy contract:** outcome = both new modules have zero hard-coded `~/.claude/...` references and the correct `{CRAFTER_HOME}/...` forms; scope = only `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md`; non-goals = repo-wide normalization, editing SKILL.md, editing `rules/task-lifecycle.md` / `rules/do-workflow.md` / `rules/do/extension-skills.md`, adding installer path logic, adding a footnote (Slice 1/2 needed none for analogous substitutions); simplicity = exactly the enumerated string substitutions and no more; drift = normalizing other files, introducing new placeholders, rewording surrounding prose, normalizing bare module/agent mentions; verification = each module contains zero `~/.claude/...` references; `step-1-scope.md` has exactly the two `{CRAFTER_HOME}/...` forms and `step-2-discuss.md` exactly one; bare `do-workflow.md`/`crafter-analyzer` mentions unchanged; stop = if applying the policy would require installer changes, stop (scope escalation).
 
-- [ ] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, append a Slice 3 entry to the "Applied in this task" / runtime-path ledger (after the existing Slice 2 entry) recording that Slice 3 created `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md` and applied the `{CRAFTER_HOME}` policy to their runtime references (Step 1: `extension-skills.md` + `task-lifecycle.md`; Step 2: `task-lifecycle.md`), restating that the bare `do-workflow.md`/`crafter-analyzer` mentions are not runtime paths and that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines, consistent in tone and structure with the Slice 1/2 entries; do not restructure the doc or re-tag taxonomy rows.
+- [x] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, append a Slice 3 entry to the "Applied in this task" / runtime-path ledger (after the existing Slice 2 entry) recording that Slice 3 created `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md` and applied the `{CRAFTER_HOME}` policy to their runtime references (Step 1: `extension-skills.md` + `task-lifecycle.md`; Step 2: `task-lifecycle.md`), restating that the bare `do-workflow.md`/`crafter-analyzer` mentions are not runtime paths and that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines, consistent in tone and structure with the Slice 1/2 entries; do not restructure the doc or re-tag taxonomy rows.
   - **Karpathy contract:** outcome = the design note accurately reflects Slice 3's shipped scope, consistent with the Slice 1/2 ledger entries; scope = a few lines in `docs/core-capabilities.md` (the runtime-path "Applied in this task" area); non-goals = restructuring the taxonomy, restating the sibling task's plan, claiming repo-wide normalization, re-tagging other taxonomy rows, editing the Slice 1/2 entries beyond appending; simplicity = ≤ ~5 added lines; drift = expanding into a meta runtime-portability narrative or contradicting prior ledger entries; verification = the ledger names Slice 3, both new modules, the exact substitutions, and the sibling-task owner, and reads consistently with the Slice 2 entry; stop = if the edit would contradict the existing Slice 1/2 ledger entries, stop and reconcile explicitly.
 
-- [ ] **Phase 2 verification.** `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md` have zero hard-coded `~/.claude/...` references and exactly the enumerated `{CRAFTER_HOME}/...` forms; bare `do-workflow.md`/`crafter-analyzer` mentions unchanged; `docs/core-capabilities.md` ledger reflects Slice 3 consistently with Slice 1/2; no files outside this phase's set touched; behavior still byte-identical.
-- [ ] **Phase 2 review.** `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy applied exactly to the enumerated paths).
+- [x] **Phase 2 verification.** — crafter-verifier 6/6 PASS. `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md` have zero hard-coded `~/.claude/...` references and exactly the enumerated `{CRAFTER_HOME}/...` forms; bare `do-workflow.md`/`crafter-analyzer` mentions unchanged; `docs/core-capabilities.md` ledger reflects Slice 3 consistently with Slice 1/2; no files outside this phase's set touched; behavior still byte-identical.
+- [x] **Phase 2 review.** — crafter-reviewer no findings; scorecard all PASS. `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy applied exactly to the enumerated paths).
 
 #### Post-task housekeeping
 
-- [ ] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
-- [ ] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
-- [ ] **Follow-up note** — record next deferred slice (Steps 3–4) in `## Outcome`.
+- [x] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
+- [x] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
+- [x] **Follow-up note** — recorded in `## Outcome`.
 
 ### 6. Karpathy Contract — overall
 
@@ -165,4 +165,12 @@ This contract protects the byte-identical behavior of `crafter-do`'s completenes
 - **Decision (User Accepted):** Phase 1 review Suggestion #1 — user requested the fix. Removed the redundant secondary path citations (` per rules/do-workflow.md → ### Extension-skill supplemental-only invariant` from the Step 1 stub; ` per rules/task-lifecycle.md` from the Step 2 stub) so both new stubs match the established Step 0 stub convention (point to the module via `~/.claude/...`, state bindings in plain prose, no secondary path re-citation). All bindings retained; module pointers and headings unchanged; the full references still live in the modules. Local, beneficial, behavior-preserving consistency fix.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Status:** Complete. Both phases delivered; behavior byte-identical.
+
+- **Phase 1** (commit `9668a3b`): `## Step 1 — Completeness and scope` and `## Step 2 — DISCUSS / RESEARCH …` extracted verbatim into new `rules/do/step-1-scope.md` and `rules/do/step-2-discuss.md` (H2→H1 only); both SKILL.md sections reduced to binding-preserving pointer stubs under retained headings, matching the Step 0 stub convention (module pointer + bindings in prose, no secondary path re-citation — review Suggestion #1 fixed per user request); +2 loader-list entries; two mechanical `install.sh` cp lines + two `tests/test_install.sh` entries. Pre-extraction binding gate GO (5/5 clusters); verifier 7/7 PASS; test 45/0 (new files confirmed exercised inside existing test loops).
+- **Phase 2** (this commit): `{CRAFTER_HOME}` policy applied to the modules' runtime paths — step-1-scope.md ×2 (`extension-skills.md` + `task-lifecycle.md`), step-2-discuss.md ×1 (`task-lifecycle.md`); bare `do-workflow.md`/`crafter-analyzer` mentions preserved; `docs/core-capabilities.md` ledger extended with a Slice 3 entry consistent with Slice 1/2. Verifier 6/6 PASS; reviewer no findings.
+
+**Deviations from plan:** None affecting scope. Review Suggestion #1 (stub path-style consistency) fixed at user request and recorded in `## Decisions`.
+
+**Follow-up:** Slice 4 — extract Steps 3–4 (Plan + Execute) per the deferred-slice order in `docs/core-capabilities.md` — remains the next candidate. Remaining deferred modules after that: Steps 5/5a, 6/6b/6a, 7–9/9b.
