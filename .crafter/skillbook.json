@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-10T10:53:45Z",
+  "updatedAt": "2026-05-17T10:15:23Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 5,
+      "appliedCount": 16,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 2,
+      "appliedCount": 7,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 2,
+      "appliedCount": 13,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 1,
+      "appliedCount": 12,
       "deprecated": false
     },
     {
@@ -65,7 +65,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:32Z",
-      "appliedCount": 1,
+      "appliedCount": 6,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 1,
+      "appliedCount": 12,
       "deprecated": false
     },
     {
@@ -87,7 +87,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
-      "appliedCount": 1,
+      "appliedCount": 12,
       "deprecated": false
     },
     {
@@ -98,7 +98,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:38Z",
-      "appliedCount": 0,
+      "appliedCount": 5,
       "deprecated": false
     },
     {
@@ -109,7 +109,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:45Z",
-      "appliedCount": 0,
+      "appliedCount": 11,
       "deprecated": false
     }
   ]

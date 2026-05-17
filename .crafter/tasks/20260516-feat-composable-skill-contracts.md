@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-16
 - **Work branch:** feat/composable-skill-contracts
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -141,4 +141,8 @@ Goal: after Phase B, `crafter-do` knows how to *consider* compatible extension s
 - **Decision (Orchestrator Accepted):** Accepted local A3 formatting drift: `docs/plugin-system.md` received 4 added lines instead of the planned ≤3 because the extra blank line is required for idiomatic Markdown heading structure. **Reason:** The change is local, preserves the short pointer-only intent, duplicates no contract content, and does not affect later steps.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+- Implemented the composable skill contract model in two committed phases:
+  - `ac1f40b` (`docs: add skill contract specification`) added `docs/skill-contract.md`, documented the eight contract fields and Safety Envelope, and cross-linked `docs/plugin-system.md` plus `.crafter/ARCHITECTURE.md`.
+  - `5fe353f` (`docs: wire extension skills into crafter-do`) added the `crafter-do` Extension Skills section, Step 1/4/6 supplemental-only hooks, and the binding supplemental-only invariant in `rules/do-workflow.md`.
+- Verified and reviewed both phases. Phase B review closed clean with no findings.
+- Accepted deviation: `docs/plugin-system.md` used a 4-line Markdown section instead of the planned ≤3-line pointer so the cross-link fits the document's heading-per-topic style.

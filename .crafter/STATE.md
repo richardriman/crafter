@@ -2,12 +2,13 @@
 
 ## Current Focus
 
-GH#18 agent auto-fix-or-document semantics complete; `--auto` pipeline (GH#15→16→17→18) is feature-complete.
+Composable skill contracts for `crafter-do` are complete; the workflow now has a supplemental-only extension-skill model.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-16 | Composable skill contracts — added `docs/skill-contract.md` with the eight-field Skill Contract and Safety Envelope, cross-linked plugin/architecture docs, wired `crafter-do` to discover compatible extension skills at Steps 1/4/6 as supplemental-only specialists, and codified the invariant in `rules/do-workflow.md` | ac1f40b + 5fe353f |
 | 2026-05-10 | Agent `--auto` semantics (GH#18) — Reviewer three-bucket classification (auto-fixable/uat/gap), Verifier routing metadata per recommendation, Implementer buffer-worthy discovery tagging; escape hatch placeholder in `do-workflow.md` replaced with agent-side signal documentation; completes `--auto` pipeline | TBD |
 | 2026-05-10 | PR composer (GH#17) — `crafter pr-body` Go subcommand reads per-run NDJSON buffers and task file, renders `## Manual QA Plan`, `## Known Gaps`, `## Decisions` sections; Step 9b in `skills/crafter-do/SKILL.md` wires it into the `--auto` end-of-task flow; GH#16 forward references resolved | TBD |
 | 2026-05-10 | `crafter-buffer` skill (GH#16) — NDJSON `.crafter/run/<task-id>/` buffers, Go subcommand `crafter buffer uat\|gap`, run-directory lifecycle in `rules/do-workflow.md`, `.crafter/run/` in `.gitignore`, GH#15 forward references resolved | a786116 |
