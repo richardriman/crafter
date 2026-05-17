@@ -317,6 +317,11 @@ install_to() {
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
   cp "$SCRIPT_DIR/rules/task-lifecycle.md" "$rules_dest/task-lifecycle.md"
 
+  mkdir -p "$rules_dest/do"
+  cp "$SCRIPT_DIR/rules/do/flag-validation.md"        "$rules_dest/do/flag-validation.md"
+  cp "$SCRIPT_DIR/rules/do/project-resolution.md"     "$rules_dest/do/project-resolution.md"
+  cp "$SCRIPT_DIR/rules/do/extension-skills.md"       "$rules_dest/do/extension-skills.md"
+
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
   cp "$SCRIPT_DIR/templates/ARCHITECTURE.md"     "$templates_dest/ARCHITECTURE.md"

@@ -10,6 +10,9 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/do-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`
 - `~/.claude/crafter/rules/task-lifecycle.md`
+- `~/.claude/crafter/rules/do/flag-validation.md`
+- `~/.claude/crafter/rules/do/project-resolution.md`
+- `~/.claude/crafter/rules/do/extension-skills.md`
 
 ## Skill options
 
@@ -61,37 +64,11 @@ The user's raw input is: $ARGUMENTS
 
 ## Flag Validation (before anything else)
 
-`--auto` and `--fast` are mutually exclusive. If both flags are active (`auto: true` AND `fast: true` in frontmatter, or equivalent invocation context indicating both are set), produce a clear error and stop immediately — do not proceed to project resolution, resume detection, or any other workflow step:
-
-> Error: `--auto` and `--fast` are mutually exclusive — pass at most one. `--auto` strictly supersedes `--fast` per `rules/do-workflow.md` → `### --auto`.
-
-See `rules/do-workflow.md` → `### --auto (unattended orchestration)` for the canonical mutual-exclusion rule.
+Apply the flag-validation procedure in `~/.claude/crafter/rules/do/flag-validation.md`.
 
 ## Project Resolution (before anything else)
 
-Determine the project root path (`PROJECT_PATH`) so all Crafter context references point to the right place.
-
-1. **Check for `--project <path>` in `$ARGUMENTS`.** If the arguments contain `--project <path>` (e.g., `--project rust fix the parser`), extract the path as `PROJECT_PATH` and strip `--project <path>` from the remaining arguments. The `--project` flag can appear anywhere in the arguments but conventionally comes first. The path is a relative directory path (e.g., `rust`, `rust/`, `packages/frontend`). After extracting the path, verify the directory exists. If it does not exist, tell the user: "Directory `<path>` not found — please check the path and try again." and stop (do not continue the workflow). Use the remaining arguments (after stripping) as the effective `$ARGUMENTS` for all subsequent steps.
-
-2. **If no `--project` was specified**, check whether `.crafter/` exists at the current working directory.
-   - If yes: set `PROJECT_PATH` to `.` (current directory). Done.
-   - If no: scan one level deep for non-hidden directories (skip names starting with `.`) containing `.crafter/` (i.e., check `*/.crafter/`, excluding `.*/.crafter/`).
-      - **Exactly one found:** use it as `PROJECT_PATH`. Inform the user, e.g., "Found project in `rust/`, using it. Tip: you can use `--project rust` to skip this detection next time."
-      - **Multiple found:** list them and ask the user which one to use. Mention the `--project` shortcut so users discover it naturally, e.g., "Found projects: `rust/`, `elixir/`. Which one would you like to work on? (Tip: skip this next time with `/crafter-do --project rust ...`)" — then **wait for the user's response** before continuing.
-      - **None found:** repeat this exact scan using legacy `.planning/` paths as fallback (`.planning/`, `*/.planning/`). If still none found, set `PROJECT_PATH` to `.` (the normal single-project path — `.crafter/` may be created later by the workflow).
-
-3. **Resolve context directory name (`CRAFTER_DIR`) inside `PROJECT_PATH`.**
-   - If `{PROJECT_PATH}/.crafter/` exists: set `CRAFTER_DIR` to `.crafter`.
-   - Else if `{PROJECT_PATH}/.planning/` exists: set `CRAFTER_DIR` to `.planning` (legacy fallback), then proactively offer migration:
-     - Recommended command: `git -C {PROJECT_PATH} mv .planning .crafter`
-     - Ask the user whether to run it now.
-     - If user approves and the command succeeds: set `CRAFTER_DIR` to `.crafter`.
-     - If user declines or the command fails: continue with `.planning`.
-   - Else: set `CRAFTER_DIR` to `.crafter` (new project default).
-
-**Important:** Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow — task files, context files, architecture references passed to agents, everything.
-
-After `--project` extraction, the remaining text is the **effective request** — this is what all subsequent steps refer to when they mention "the user's request" or `$ARGUMENTS`.
+Apply the project-resolution procedure in `~/.claude/crafter/rules/do/project-resolution.md` and set `PROJECT_PATH` and `CRAFTER_DIR` before continuing.
 
 ---
 
@@ -105,35 +82,7 @@ Do NOT read `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it 
 
 ## Extension Skills
 
-An **extension skill** is any Crafter-compatible skill — beyond the core agents shipped with Crafter — that declares a Skill Contract block in its own `SKILL.md`. Extension skills act as **supplemental specialists**: they advise, annotate, or enrich workflow phases, but they never replace a core agent or bypass an approval gate.
-
-**v1 invariant — supplemental only.** Extension skills in v1 are advisory. They may contribute observations, checklists, or domain-specific findings, but all workflow decisions (plan approval, commit approval, phase gates) remain exclusively with the core orchestrator and core agents.
-
-### Discovery
-
-When the workflow starts, scan these `skills/` directories in priority order (most specific to least):
-
-| Priority | Location | Scope |
-|---|---|---|
-| 1 (highest) | `{PROJECT_PATH}/.claude/crafter/skills/` | Current project |
-| 2 | First `../.claude/crafter/skills/` found walking up parent directories | Parent project |
-| 3 (lowest) | `~/.claude/crafter/skills/` | Global (user-wide) |
-
-For each `skills/<skill-name>/SKILL.md` found, read it and check whether it contains a `## Skill Contract` section. If it does, the skill is Crafter-compatible and eligible for consideration. If the same skill name appears at multiple levels, the most specific one wins.
-
-### Safety envelope
-
-Every extension skill must satisfy the full safety envelope defined in `docs/skill-contract.md` → **Safety Envelope**. If a skill's contract cannot satisfy all envelope items, it must declare that incompatibility explicitly and the orchestrator must not invoke it.
-
-### Where extension skills apply
-
-Compatible extension skills may be considered at three workflow phases:
-
-- **Step 1 (Completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
-- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation.
-- **Step 6 (Review)** — a skill may provide additional review criteria beyond the core Reviewer's checklist.
-
-In all cases the core agent for that phase runs first and is authoritative. Extension skill findings are supplemental context.
+Apply the extension-skill discovery and supplemental-only rules in `~/.claude/crafter/rules/do/extension-skills.md`.
 
 ---
 
@@ -168,7 +117,7 @@ Based on the project context files, completeness check, and request, classify th
 - **Medium** — touches multiple files, intent is clear, change is cross-cutting
 - **Large** — incomplete/vague request, architectural impact, many files, or unfamiliar territory
 
-**Extension skill check (supplemental only).** Before finalising the scope classification, check for compatible extension skills discovered at startup (see `## Extension Skills`). If any skill's `When-Applies` matches the request, record their names and capabilities. Pass this list as supplemental context when delegating to the Analyzer in Step 2 or when building plan context in Step 3, so those agents can consult the extension skills as domain specialists. Extension skills may contribute domain-specific completeness criteria; they cannot replace the orchestrator's scope classification or scope-gate decision. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+**Extension skill check (supplemental only).** Before finalising the scope classification, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`). If any skill's `When-Applies` matches the request, record their names and capabilities. Pass this list as supplemental context when delegating to the Analyzer in Step 2 or when building plan context in Step 3, so those agents can consult the extension skills as domain specialists. Extension skills may contribute domain-specific completeness criteria; they cannot replace the orchestrator's scope classification or scope-gate decision. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 If the request is complete enough to plan, create the task file per `~/.claude/crafter/rules/task-lifecycle.md` and continue to Step 3. Respect the main/master guard first — fresh task files should normally capture the approved topic branch, not `main/master`.
 
@@ -205,7 +154,7 @@ If the approved plan contains **phases** (groups of steps under phase headings),
 
 ## Step 4 — EXECUTE
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `## Extension Skills`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 Delegate implementation to the **`crafter-implementer`** agent:
 
@@ -247,7 +196,7 @@ If phase verification fails, discuss the result with the user and decide whether
 
 ## Step 6 — REVIEW
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `## Extension Skills`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 After phase verification passes, delegate code review to the `crafter-reviewer` agent and handle findings. The review-fix iteration count starts at 0. Run review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
 
