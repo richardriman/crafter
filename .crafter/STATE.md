@@ -2,12 +2,13 @@
 
 ## Current Focus
 
-`crafter-do` core-capability decomposition Slice 1 complete on branch `feat/composable-skill-contracts` (all 3 phases delivered, verified, reviewed). Branch ready for follow-up slices or PR.
+`crafter-do` core-capability decomposition Slice 2 complete on branch `refactor/crafter-do-slice-2-step-0` (Step 0 Resume Detection extracted; both phases delivered, verified, reviewed). Branch ready for PR. Slice 1 (preamble) already on `main`.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-17 | `crafter-do` core-capability decomposition Slice 2 — `## Step 0 — Resume Detection` extracted verbatim into `rules/do/step-0-resume.md` (move-and-link, H2→H1; binding-preserving pointer stub retains heading + states resume state/branch-sanity/main-master guards established before Step 1), loader/installer/test wired, `{CRAFTER_HOME}` policy applied to the module's `task-lifecycle.md` ref, design-note ledger extended. Pre-extraction binding gate GO; verifier 7/7 + 6/6 PASS; reviewer no findings; test 45/0. | 53e6143 + 1319d28 |
 | 2026-05-17 | `crafter-do` core-capability decomposition Slice 1 — Phase 1 design note (`docs/core-capabilities.md`: taxonomy + `{CRAFTER_HOME}` runtime-path policy), Phase 2 preamble extraction (Flag Validation / Project Resolution / Extension Skills → `rules/do/*`, byte-identical, installer deploys `rules/do/`), Phase 2 review #2 resolved (loader grouping comments), Phase 3 runtime-path hygiene (`extension-skills.md` global path → `{CRAFTER_HOME}/skills/`, sibling task delineated). Verifier 7/7 PASS, reviewer no findings. Follow-up slices (Step 0–9b modules) recorded in task Outcome. | 8133f12 + b2d74e8 + 7142673 |
 | 2026-05-16 | Composable skill contracts — added `docs/skill-contract.md` with the eight-field Skill Contract and Safety Envelope, cross-linked plugin/architecture docs, wired `crafter-do` to discover compatible extension skills at Steps 1/4/6 as supplemental-only specialists, and codified the invariant in `rules/do-workflow.md` | ac1f40b + 5fe353f + e31096b |
 | 2026-05-10 | Agent `--auto` semantics (GH#18) — Reviewer three-bucket classification (auto-fixable/uat/gap), Verifier routing metadata per recommendation, Implementer buffer-worthy discovery tagging; escape hatch placeholder in `do-workflow.md` replaced with agent-side signal documentation; completes `--auto` pipeline | 498ecec + c94f9c3 + a5d5b9f |

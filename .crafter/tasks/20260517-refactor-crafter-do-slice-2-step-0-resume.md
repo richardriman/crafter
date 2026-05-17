@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-17
 - **Work branch:** refactor/crafter-do-slice-2-step-0
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -104,20 +104,20 @@ After Phase 1, `## Step 0 — Resume Detection` in `SKILL.md` is a thin pointer 
 
 After Phase 2 the new module follows the `{CRAFTER_HOME}` runtime-path policy and the design-note ledger reflects what shipped. Narrow, proof-of-policy scope — no repo-wide sweep.
 
-- [ ] **2.1 — Apply the `{CRAFTER_HOME}` policy to the new module.** In `rules/do/step-0-resume.md`, replace the single concrete runtime path `~/.claude/crafter/rules/task-lifecycle.md` with `{CRAFTER_HOME}/rules/task-lifecycle.md` per the policy in `docs/core-capabilities.md`. The bare `task-lifecycle.md` mention in the branch-sanity guard is not a runtime path and stays unchanged. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
+- [x] **2.1 — Apply the `{CRAFTER_HOME}` policy to the new module.** In `rules/do/step-0-resume.md`, replace the single concrete runtime path `~/.claude/crafter/rules/task-lifecycle.md` with `{CRAFTER_HOME}/rules/task-lifecycle.md` per the policy in `docs/core-capabilities.md`. The bare `task-lifecycle.md` mention in the branch-sanity guard is not a runtime path and stays unchanged. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
   - **Karpathy contract:** outcome = the new module has zero hard-coded `~/.claude/...` references; scope = only `rules/do/step-0-resume.md`; non-goals = repo-wide normalization, editing SKILL.md, editing `rules/task-lifecycle.md`, adding installer path logic, adding a footnote (Slice 1 needed none for an analogous single substitution); simplicity = exactly one string substitution; drift = normalizing other files, introducing new placeholders, rewording surrounding prose; verification = the module contains zero `~/.claude/...` references and exactly one `{CRAFTER_HOME}/rules/task-lifecycle.md`; the bare `task-lifecycle.md` guard mention is unchanged; stop = if applying the policy would require installer changes, stop (scope escalation).
 
-- [ ] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, update the "Applied in this task" / runtime-path ledger to record that Slice 2 created `rules/do/step-0-resume.md` and applied the `{CRAFTER_HOME}` policy to its one `task-lifecycle.md` reference, restating that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines; do not restructure the doc.
+- [x] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, update the "Applied in this task" / runtime-path ledger to record that Slice 2 created `rules/do/step-0-resume.md` and applied the `{CRAFTER_HOME}` policy to its one `task-lifecycle.md` reference, restating that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines; do not restructure the doc.
   - **Karpathy contract:** outcome = the design note accurately reflects Slice 2's shipped scope; scope = a few lines in `docs/core-capabilities.md` (and optionally one cross-reference line if the doc's structure clearly invites it); non-goals = restructuring the taxonomy, restating the sibling task's plan, claiming repo-wide normalization, re-tagging other taxonomy rows; simplicity = ≤ ~5 added/edited lines; drift = expanding into a meta runtime-portability narrative; verification = the ledger names Slice 2, the new module, the one substitution, and the sibling-task owner; stop = if the edit would contradict the existing Slice 1 ledger entry, stop and reconcile explicitly.
 
-- [ ] **Phase 2 verification.** `rules/do/step-0-resume.md` has zero hard-coded `~/.claude/...` references and exactly one `{CRAFTER_HOME}/rules/task-lifecycle.md`; the branch-sanity guard's bare `task-lifecycle.md` is unchanged; `docs/core-capabilities.md` ledger reflects Slice 2; no files outside this phase's set touched; behavior still byte-identical.
-- [ ] **Phase 2 review.** `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy applied exactly once).
+- [x] **Phase 2 verification.** — crafter-verifier 6/6 PASS. `rules/do/step-0-resume.md` has zero hard-coded `~/.claude/...` references and exactly one `{CRAFTER_HOME}/rules/task-lifecycle.md`; the branch-sanity guard's bare `task-lifecycle.md` is unchanged; `docs/core-capabilities.md` ledger reflects Slice 2; no files outside this phase's set touched; behavior still byte-identical.
+- [x] **Phase 2 review.** — crafter-reviewer no findings; scorecard all PASS. `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy applied exactly once).
 
 #### Post-task housekeeping
 
-- [ ] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
-- [ ] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
-- [ ] **Follow-up note** — record in `## Outcome` that Slice 3 (Steps 1–2 per the design-note order) remains the next candidate.
+- [x] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
+- [x] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
+- [x] **Follow-up note** — recorded in `## Outcome`.
 
 ### 6. Karpathy Contract — overall
 
@@ -151,4 +151,14 @@ This contract protects the byte-identical behavior of `crafter-do`'s resume dete
 ## Decisions
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Status:** Complete. Both phases delivered; behavior byte-identical.
+
+- **Phase 1** (commit `53e6143`): `## Step 0 — Resume Detection` extracted verbatim into new `rules/do/step-0-resume.md` (H2→H1 only); SKILL.md Step 0 reduced to a binding-preserving pointer stub under the retained heading (resume state + branch-sanity + main/master guards explicitly established before Step 1); +1 loader-list entry in the `do/*` group; one mechanical `install.sh` cp line + one `tests/test_install.sh` entry. Verifier 7/7 PASS; reviewer no findings; `tests/test_install.sh` 45/0.
+- **Phase 2** (this commit): `{CRAFTER_HOME}` runtime-path policy applied to the module's single `task-lifecycle.md` reference; `docs/core-capabilities.md` ledger extended with a Slice 2 entry consistent with the Slice 1 entry. Verifier 6/6 PASS; reviewer no findings.
+
+**Pre-extraction gate (1.1):** GO — all five Step 0 bindings (task-lifecycle reference, resume-intent rule, plan-status routing, branch-sanity guard, main/master guard) confirmed pointer-preservable; no section quotes Step 0 prose verbatim; Interpretation A (retain heading as stub, zero referrer edits) confirmed.
+
+**Deviations from plan:** None. R2 (installer change required, unlike Slice 1's "likely none") was anticipated in the plan and handled mechanically.
+
+**Follow-up:** Slice 3 — extract Steps 1–2 (Scope + Discuss) per the deferred-slice order in `docs/core-capabilities.md` — remains the next candidate. Remaining deferred modules: Steps 1–2, 3–4, 5/5a, 6/6b/6a, 7–9/9b (see Slice 1 task Outcome for the full list and recommended ordering).
