@@ -321,6 +321,7 @@ install_to() {
   cp "$SCRIPT_DIR/rules/do/flag-validation.md"        "$rules_dest/do/flag-validation.md"
   cp "$SCRIPT_DIR/rules/do/project-resolution.md"     "$rules_dest/do/project-resolution.md"
   cp "$SCRIPT_DIR/rules/do/extension-skills.md"       "$rules_dest/do/extension-skills.md"
+  cp "$SCRIPT_DIR/rules/do/step-0-resume.md"          "$rules_dest/do/step-0-resume.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"
