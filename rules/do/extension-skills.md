@@ -12,7 +12,7 @@ When the workflow starts, scan these `skills/` directories in priority order (mo
 |---|---|---|
 | 1 (highest) | `{PROJECT_PATH}/.claude/crafter/skills/` | Current project |
 | 2 | First `../.claude/crafter/skills/` found walking up parent directories | Parent project |
-| 3 (lowest) | `~/.claude/crafter/skills/` | Global (user-wide) |
+| 3 (lowest) | `{CRAFTER_HOME}/skills/` | Global (user-wide) |
 
 For each `skills/<skill-name>/SKILL.md` found, read it and check whether it contains a `## Skill Contract` section. If it does, the skill is Crafter-compatible and eligible for consideration. If the same skill name appears at multiple levels, the most specific one wins.
 

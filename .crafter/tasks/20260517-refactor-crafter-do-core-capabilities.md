@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-17
 - **Work branch:** feat/composable-skill-contracts
-- **Status:** active
+- **Status:** complete
 - **Scope:** Large
 
 ## Request
@@ -23,7 +23,7 @@ Expected planning direction:
 
 ## Plan
 
-**Plan status:** draft
+**Plan status:** approved
 
 ### 1. Complete request
 
@@ -101,52 +101,52 @@ The work is three phases. Phase 1 produces design artifacts that make the rest c
 
 After Phase 1 the repo contains a short written design document that (a) lists every section of `crafter-do/SKILL.md` and the named capability module it will eventually map to, (b) fixes the loading convention and naming scheme for the new module files, (c) fixes the runtime-neutral reference convention for installed paths, and (d) marks which modules are in this task's slice vs. deferred to follow-ups. No prompt edits, no extractions yet — Phase 1 is independently valuable as a contract for Phase 2 and any follow-up task.
 
-- [ ] **1.1 — Author the capability taxonomy design note.** Produce a single new doc (location TBD by Implementer — likely `docs/core-capabilities.md` or similar) listing each existing section of `crafter-do/SKILL.md` with a one-line description and the name of its future capability module. Mark every entry as "Slice 1 (this task)", "Deferred — follow-up", or "Stays inline in crafter-do" (the top-of-file frontmatter + loader list is expected to stay inline). The doc explicitly states: this is for core, Crafter-distributed capabilities only — extension-skill compatibility is governed by `docs/skill-contract.md` and is unrelated.
+- [x] **1.1 — Author the capability taxonomy design note.** Produce a single new doc (location TBD by Implementer — likely `docs/core-capabilities.md` or similar) listing each existing section of `crafter-do/SKILL.md` with a one-line description and the name of its future capability module. Mark every entry as "Slice 1 (this task)", "Deferred — follow-up", or "Stays inline in crafter-do" (the top-of-file frontmatter + loader list is expected to stay inline). The doc explicitly states: this is for core, Crafter-distributed capabilities only — extension-skill compatibility is governed by `docs/skill-contract.md` and is unrelated.
   - **Karpathy contract:** outcome = one new design doc that maps the monolith onto named modules; scope = only this doc created; non-goals = no edits to other files, no implementation, no extension-skill discussion; simplicity = single file, single table; drift = expanding into an implementation script, redefining gates, blurring extension vs. core boundary; verification = every existing top-level section heading of `crafter-do/SKILL.md` appears in the table with a target module name and a slice tag; stop conditions = if any section resists naming because it spans gates, stop and surface in risks before forcing a name.
 
-- [ ] **1.2 — Add the runtime-path policy section to the design note.** Append a short policy section to the same doc fixing the convention for referencing installed Crafter paths from inside the new module files. Define the placeholder or phrasing (the Implementer picks the concrete form within the contract), define what stays runtime-specific (the installer), and explicitly note that **existing** hard-coded `~/.claude/...` references in **untouched** files are not normalized by this task. Cross-link to the sibling task `20260421-skills-first-runtime-portability.md` as the broader owner of multi-runtime work.
+- [x] **1.2 — Add the runtime-path policy section to the design note.** Append a short policy section to the same doc fixing the convention for referencing installed Crafter paths from inside the new module files. Define the placeholder or phrasing (the Implementer picks the concrete form within the contract), define what stays runtime-specific (the installer), and explicitly note that **existing** hard-coded `~/.claude/...` references in **untouched** files are not normalized by this task. Cross-link to the sibling task `20260421-skills-first-runtime-portability.md` as the broader owner of multi-runtime work.
   - **Karpathy contract:** outcome = a runtime-path policy section appended to the same design doc; scope = same single doc; non-goals = no edits to existing files, no installer changes yet, no Copilot/OpenCode install logic; simplicity = ≤ ~20 lines; drift = expanding into a multi-runtime adapter design, redefining install layout, contradicting `20260421-skills-first-runtime-portability.md`; verification = the policy names exactly one canonical reference form for new module files, names the installer as the sole runtime-specific surface, and cross-links the sibling task; stop conditions = if specifying the policy concretely requires a new installer feature, stop — that is out of scope for this task.
 
-- [ ] **Phase 1 verification.** The design doc exists, lists every `crafter-do` section with a target module name and a slice tag, contains the runtime-path policy section, and resolves cross-links. No other files modified. A reviewer reading just this doc should be able to predict what Phase 2 will touch.
-- [ ] **Phase 1 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Simplicity / Surgical Changes / Goal-Driven.
+- [x] **Phase 1 verification.** The design doc exists, lists every `crafter-do` section with a target module name and a slice tag, contains the runtime-path policy section, and resolves cross-links. No other files modified. A reviewer reading just this doc should be able to predict what Phase 2 will touch.
+- [x] **Phase 1 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Simplicity / Surgical Changes / Goal-Driven.
 
 #### Phase 2 — First extraction slice (preamble capabilities)
 
 After Phase 2 the preamble of `crafter-do/SKILL.md` (the sections above Step 0, i.e., Flag Validation, Project Resolution, Extension Skills) is reduced to short pointer references to new capability modules under `rules/`. The original prose lives unchanged inside the new module files. Behavior identical. Step 0 onward untouched.
 
-- [ ] **2.1 — Extract Flag Validation.** Move the "Flag Validation (before anything else)" section verbatim into a new capability module file under `rules/` (exact name and subdirectory chosen by Implementer per the taxonomy from 1.1). Replace the section in `crafter-do/SKILL.md` with a short pointer ("Apply the flag-validation procedure in `<path>`."). Verify install.sh deploys the new file — if a new explicit entry or a directory-copy is needed in `install_to()`, add it in this step.
+- [x] **2.1 — Extract Flag Validation.** Move the "Flag Validation (before anything else)" section verbatim into a new capability module file under `rules/` (exact name and subdirectory chosen by Implementer per the taxonomy from 1.1). Replace the section in `crafter-do/SKILL.md` with a short pointer ("Apply the flag-validation procedure in `<path>`."). Verify install.sh deploys the new file — if a new explicit entry or a directory-copy is needed in `install_to()`, add it in this step.
   - **Karpathy contract:** outcome = one moved section + one new module file + (if needed) one mechanical installer edit; scope = exactly this section, this module file, and the installer; non-goals = touching other sections, rewriting prose, adding new gates, normalizing all `~/.claude/...` references repo-wide; simplicity = pure move; drift = reordering content, rewording, "while-we're-here" cleanup, splitting the section across multiple files; verification = `crafter-do/SKILL.md` retains a pointer at the same line range; the new module file contains the full original prose; the mutual-exclusion error message is byte-identical; `tests/test_install.sh` passes; stop = if extraction forces a semantic change to the mutual-exclusion rule, stop.
 
-- [ ] **2.2 — Extract Project Resolution.** Same pattern: move "Project Resolution (before anything else)" into its capability module, leave a pointer in place. The `PROJECT_PATH` / `CRAFTER_DIR` resolution semantics, the `.crafter` → `.planning` legacy fallback, the migration offer, and the `--project` flag handling all stay byte-identical.
+- [x] **2.2 — Extract Project Resolution.** Same pattern: move "Project Resolution (before anything else)" into its capability module, leave a pointer in place. The `PROJECT_PATH` / `CRAFTER_DIR` resolution semantics, the `.crafter` → `.planning` legacy fallback, the migration offer, and the `--project` flag handling all stay byte-identical.
   - **Karpathy contract:** outcome = one moved section + one new module file; scope = exactly this section and module; non-goals = changing resolution order, changing the migration prompt, normalizing all path references repo-wide, touching the legacy `.planning` migration; simplicity = pure move; drift = altering the user-facing strings ("Found project in ...", "Tip: ..."), reordering bullets, splitting; verification = `crafter-do/SKILL.md` retains a pointer; the user-facing strings appear verbatim in the new file; cross-references in the same file (e.g., the line that says "Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base ...") still resolve after the move; stop = if the section cannot be cleanly excised because another step quotes the resolution rule, stop and re-plan.
 
-- [ ] **2.3 — Extract Extension Skills.** Move the "Extension Skills" section into its capability module. This section is the bridge between core and supplemental-only; the module's introductory paragraph must keep the explicit distinction (core capability modules ≠ extension skills) so future readers don't confuse the two. The discovery priority table (project / parent / global) and the supplemental-only invariant stay verbatim.
+- [x] **2.3 — Extract Extension Skills.** Move the "Extension Skills" section into its capability module. This section is the bridge between core and supplemental-only; the module's introductory paragraph must keep the explicit distinction (core capability modules ≠ extension skills) so future readers don't confuse the two. The discovery priority table (project / parent / global) and the supplemental-only invariant stay verbatim.
   - **Karpathy contract:** outcome = one moved section + one new module file; scope = exactly this section and module; non-goals = touching the supplemental-only invariant in `rules/do-workflow.md`, rewriting `docs/skill-contract.md`, changing discovery semantics; simplicity = pure move plus a short opening paragraph distinguishing core vs. extension; drift = redefining what an extension skill is, adding override/replace language, adding new discovery locations; verification = the discovery table reads identically; cross-references in Steps 1, 4, 6 of `crafter-do/SKILL.md` ("see `## Extension Skills`") are updated to point to the new module; stop = if changing the cross-reference style would cascade to other unrelated sections, stop and discuss.
 
-- [ ] **2.4 — Cross-reference sweep.** Read the post-extraction `crafter-do/SKILL.md` end-to-end and verify every remaining reference to the three extracted sections now points to the correct new module file. Verify the rules-loader list at the top of `crafter-do/SKILL.md` includes the new module paths (or the installer's deployment covers them via directory copy — choose one consistent pattern). No other content edits.
+- [x] **2.4 — Cross-reference sweep.** Read the post-extraction `crafter-do/SKILL.md` end-to-end and verify every remaining reference to the three extracted sections now points to the correct new module file. Verify the rules-loader list at the top of `crafter-do/SKILL.md` includes the new module paths (or the installer's deployment covers them via directory copy — choose one consistent pattern). No other content edits.
   - **Karpathy contract:** outcome = consistent cross-references after extractions; scope = wording fixes only; non-goals = adding new content, restructuring, normalizing unrelated paths; simplicity = touch only what is inconsistent; drift = improvements unrelated to consistency, reordering steps, renaming files; verification = a fresh read of `crafter-do/SKILL.md` produces no dangling internal references; stop = if a real semantic gap surfaces (not just wording), record and replan rather than fix silently.
 
-- [ ] **Phase 2 verification.** Re-read `crafter-do/SKILL.md` confirms: the three preamble sections are now pointer references; no other sections were touched; all cross-references resolve; the rules-loader list (or installer deployment) covers the new module files. `tests/test_install.sh` passes. A semantic diff of behavior against the pre-refactor file produces zero behavioral deltas across the four flows (default, `--fast`, `--auto`, resume).
-- [ ] **Phase 2 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Simplicity / Surgical Changes / Goal-Driven. Reviewer must confirm move-and-link discipline (no rewording).
+- [x] **Phase 2 verification.** Re-read `crafter-do/SKILL.md` confirms: the three preamble sections are now pointer references; no other sections were touched; all cross-references resolve; the rules-loader list (or installer deployment) covers the new module files. `tests/test_install.sh` passes. A semantic diff of behavior against the pre-refactor file produces zero behavioral deltas across the four flows (default, `--fast`, `--auto`, resume).
+- [x] **Phase 2 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Simplicity / Surgical Changes / Goal-Driven. Reviewer must confirm move-and-link discipline (no rewording).
 
 #### Phase 3 — Runtime-path hygiene scoped to touched files
 
 After Phase 3, the new capability modules introduced in Phase 2 follow the runtime-path policy from Phase 1.2. Files not touched by Phase 2 are not normalized. This phase is intentionally narrow — it's the proof-of-policy step, not a repo-wide sweep.
 
-- [ ] **3.1 — Apply the runtime-path policy to the new module files.** In the capability modules created in Phase 2, replace any `~/.claude/crafter/...` references (introduced because the original prose used them) with the runtime-neutral reference convention defined in Phase 1.2. Do **not** edit existing files outside the Phase 2 set. If the resulting modules need a one-paragraph "how to resolve the installed rules directory" footnote, add it once in the policy-establishing module rather than repeating it.
+- [x] **3.1 — Apply the runtime-path policy to the new module files.** In the capability modules created in Phase 2, replace any `~/.claude/crafter/...` references (introduced because the original prose used them) with the runtime-neutral reference convention defined in Phase 1.2. Do **not** edit existing files outside the Phase 2 set. If the resulting modules need a one-paragraph "how to resolve the installed rules directory" footnote, add it once in the policy-establishing module rather than repeating it.
   - **Karpathy contract:** outcome = the three new module files conform to the runtime-path policy; scope = only the new module files from Phase 2 + at most a one-paragraph footnote; non-goals = repo-wide normalization, editing `rules/post-change.md` or `rules/delegation.md` or other existing files, adding installer logic for Copilot, modifying `crafter-do/SKILL.md` pointer lines (their paths already point to the new module locations); simplicity = a small set of string substitutions plus optionally one short footnote; drift = expanding to normalize other files, adding install-time path detection logic, introducing new placeholders beyond what 1.2 defined; verification = the new module files contain zero hard-coded `~/.claude/...` references; the footnote (if added) appears exactly once; pointer lines in `crafter-do/SKILL.md` still resolve under the existing Claude install layout; stop = if applying the policy requires installer changes, stop — that escalates scope.
 
-- [ ] **3.2 — Confirm sibling task delineation.** Add a single short note to the design doc from Phase 1 (and optionally a one-line cross-reference inside the active `.crafter/tasks/20260421-skills-first-runtime-portability.md` Outcome section if appropriate) acknowledging that this task established the policy and applied it to N module files, and the sibling task remains the owner of the broader normalization. This is a small administrative edit to keep the two tasks coherent.
+- [x] **3.2 — Confirm sibling task delineation.** Add a single short note to the design doc from Phase 1 (and optionally a one-line cross-reference inside the active `.crafter/tasks/20260421-skills-first-runtime-portability.md` Outcome section if appropriate) acknowledging that this task established the policy and applied it to N module files, and the sibling task remains the owner of the broader normalization. This is a small administrative edit to keep the two tasks coherent.
   - **Karpathy contract:** outcome = clear delineation between this task's scope and the sibling task's scope; scope = at most two files touched (design doc + optionally the sibling task file); non-goals = restructuring either task, restating the sibling task's plan, claiming responsibility for repo-wide normalization; simplicity = ≤ ~5 lines added total; drift = expanding into a meta-task about runtime portability; verification = the cross-reference resolves and both tasks read consistently; stop = if the sibling task file edit would interfere with its active plan, skip the sibling edit and keep only the design-doc note.
 
-- [ ] **Phase 3 verification.** New module files contain zero hard-coded `~/.claude/...` references; design doc reflects what was actually shipped; sibling task delineation is clear. Touched files outside Phase 2's set: at most the design doc (always) and optionally the sibling task file (Outcome section only).
-- [ ] **Phase 3 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy from 1.2 applied exactly once).
+- [x] **Phase 3 verification.** New module files contain zero hard-coded `~/.claude/...` references; design doc reflects what was actually shipped; sibling task delineation is clear. Touched files outside Phase 2's set: at most the design doc (always) and optionally the sibling task file (Outcome section only). — `crafter-verifier` 7/7 PASS.
+- [x] **Phase 3 review.** Standard `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy from 1.2 applied exactly once). — No findings; scorecard all PASS.
 
 #### Post-task housekeeping
 
-- [ ] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
-- [ ] **Task file completion** per `rules/task-lifecycle.md`.
-- [ ] **Follow-up tasks identified** — list the remaining capability modules (Step 0, Steps 1–9b) from the Phase 1 taxonomy that were deferred, as candidates for the next slice. Do not create those task files in this task — just record the list in `## Outcome` so the next planning session can pick them up.
+- [x] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
+- [x] **Task file completion** per `rules/task-lifecycle.md`.
+- [x] **Follow-up tasks identified** — recorded in `## Outcome` below.
 
 ### 6. Karpathy Contract — overall
 
@@ -185,6 +185,33 @@ This contract protects the existing user-visible behavior of `crafter-do` (every
 ## Decisions
 - **Decision:** Continue this planning task on branch `feat/composable-skill-contracts`. **Reason:** The work is a direct follow-up to the composable skill contracts branch and the user explicitly requested continuation on the existing branch.
 - **Decision:** Keep extension-skill packaging/distribution out of scope. **Reason:** Extension skills are expected to live at global or project level and be installed separately; Crafter does not ship default extensions today.
+- **Decision (Tech Debt — resolved):** Phase 2 review Suggestion #2 — loader list in `skills/crafter-do/SKILL.md` had 7 flat entries mixing top-level rules and `do/*` modules. **Resolution:** Applied the deferred grouping comments — `<!-- Core rules -->` before the 4 top-level entries and `<!-- do/* capability modules -->` before the 3 `do/*` entries (HTML comments, behaviorally inert). All 7 paths byte-identical; no reorder/rename/add/remove. Fixed on user request after Phase 2 closed.
+- **Decision (Orchestrator Accepted):** Phase 2 review Minor #1 — removed the redundant carried-over `## … (before anything else)` H2 from the three new modules, keeping a single `# Title` H1. **Reason:** Local, beneficial, content-byte-identical cleanup that strengthens move-and-link readability; no scope or behavior impact.
+- **Decision (User Accepted):** Phase 1 review finding #2 (Minor) — the forward statement in `docs/core-capabilities.md` that Slice 1 includes the mechanical installer edit — accepted without change. **Reason:** Reviewer flagged it as awareness-only ("No change required"); it is consistent with the approved plan (Section 2 installer assumption, Phase 2.1) and is predictive scope-setting the plan explicitly wants the design doc to provide.
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Status:** Complete. All three phases delivered; behavior byte-identical.
+
+**What was done:**
+
+- **Phase 1 (design):** `docs/core-capabilities.md` created — capability taxonomy mapping every `crafter-do/SKILL.md` section to a named future module with slice tags, loading convention, naming scheme, deferred-slice ordering, and the `{CRAFTER_HOME}/rules/...` runtime-path policy. Committed in `8133f12`.
+- **Phase 2 (first extraction slice):** Flag Validation, Project Resolution, Extension Skills extracted verbatim into `rules/do/flag-validation.md`, `rules/do/project-resolution.md`, `rules/do/extension-skills.md`; `skills/crafter-do/SKILL.md` preamble reduced to pointers; cross-references in Steps 1/4/6 updated; installer deploys the new `rules/do/` subdirectory. Committed in `b2d74e8`. Post-close: Phase 2 review Suggestion #2 (loader-list grouping) resolved via `<!-- Core rules -->` / `<!-- do/* capability modules -->` comments.
+- **Phase 3 (runtime-path hygiene):** `{CRAFTER_HOME}` policy applied to the one module with a concrete runtime path — `rules/do/extension-skills.md` priority-3 discovery row (`~/.claude/crafter/skills/` → `{CRAFTER_HOME}/skills/`). The other two modules had no runtime paths. Design doc records "applied to 1 of 3"; sibling task `20260421-skills-first-runtime-portability.md` Outcome cross-referenced as owner of repo-wide normalization.
+
+**Verification/review:** Phase 3 verifier 7/7 PASS; Phase 3 reviewer no findings, Karpathy scorecard all PASS (Surgical Changes + Goal-Driven confirmed).
+
+**Deviations from plan:** None affecting scope. Phase 2's accepted deviations (redundant H2 removal, loader grouping) are recorded in `## Decisions`. Phase 3 added exactly the policy substitution + two short administrative notes; no footnote needed.
+
+**Follow-up tasks (deferred capability modules — next slices, not created here):**
+
+Per the Phase 1 taxonomy, the remaining `crafter-do/SKILL.md` sections tagged "Deferred — follow-up" are candidates for subsequent slice tasks, in the recommended order:
+
+1. `rules/do/step-0-resume.md` — Step 0 Resume Detection (validate `task-lifecycle.md` bindings survive the pointer first).
+2. `rules/do/step-1-scope.md` + `rules/do/step-2-discuss.md` — Steps 1–2 (low cross-ref density; natural pair).
+3. `rules/do/step-3-plan.md` + `rules/do/step-4-execute.md` — Steps 3–4 (agent-delegation prose).
+4. `rules/do/step-5-drift.md` + `rules/do/step-5a-phase-verification.md` — Steps 5, 5a.
+5. `rules/do/step-6-review.md` + `rules/do/step-6b-phase-summary.md` + `rules/do/step-6a-session-break.md` — Steps 6/6b/6a (highest density; extract together — shared flag-state/approval logic).
+6. `rules/do/step-7-9-post-change.md` + `rules/do/step-9b-pr-composition.md` — Steps 7–9, 9b (thin pointer work; already delegated to `post-change.md`).
+
+Sections tagged "Stays inline" (frontmatter + loader list, `## Skill options`, orchestrator identity block, project-context read block) are intentionally not extracted.

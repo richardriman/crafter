@@ -6,10 +6,14 @@ auto: false
 ---
 
 Read and follow these rules:
+
+<!-- Core rules -->
 - `~/.claude/crafter/rules/core.md`
 - `~/.claude/crafter/rules/do-workflow.md`
 - `~/.claude/crafter/rules/delegation.md`
 - `~/.claude/crafter/rules/task-lifecycle.md`
+
+<!-- do/* capability modules -->
 - `~/.claude/crafter/rules/do/flag-validation.md`
 - `~/.claude/crafter/rules/do/project-resolution.md`
 - `~/.claude/crafter/rules/do/extension-skills.md`

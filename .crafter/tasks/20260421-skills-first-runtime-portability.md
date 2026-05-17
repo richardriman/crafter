@@ -29,3 +29,4 @@ Current baseline already in place:
 - Skills-first canonical source is active in repo.
 - Compatibility command wrappers were removed from source and installer deployment.
 - Installer still cleans stale legacy `commands/crafter` artifacts during upgrades.
+- Task `20260517-refactor-crafter-do-core-capabilities.md` established the `{CRAFTER_HOME}` runtime-path convention for new core capability modules and applied it to `rules/do/extension-skills.md`; repo-wide normalization of existing hard-coded references remains this task's responsibility.

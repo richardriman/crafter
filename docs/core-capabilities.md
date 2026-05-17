@@ -110,3 +110,7 @@ Files **not touched by this task** that contain hard-coded `~/.claude/...` refer
 `.crafter/tasks/20260421-skills-first-runtime-portability.md`
 
 This task only commits to (a) the new module files following the `{CRAFTER_HOME}/rules/...` convention and (b) not making the existing situation worse.
+
+### Applied in this task
+
+The runtime-path policy was established here and applied to **1 of the 3** Phase 2 module files: `rules/do/extension-skills.md` contained one hard-coded `~/.claude/crafter/skills/` reference in its discovery table, which was replaced with `{CRAFTER_HOME}/skills/`. The other two modules (`rules/do/flag-validation.md` and `rules/do/project-resolution.md`) contained no runtime install paths and needed no change. Repo-wide normalization of existing hard-coded references remains the responsibility of `.crafter/tasks/20260421-skills-first-runtime-portability.md`.
