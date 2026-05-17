@@ -4,4 +4,4 @@ If the completeness check finds gaps, pause and ask targeted clarifying question
 
 For complex or codebase-dependent uncertainty, delegate to the **`crafter-analyzer`** agent with the user's request, the missing completeness fields, and high-level pointers to relevant areas of the codebase. Do not inject file contents — the Analyzer uses its own Read/Grep/Glob tools to explore the codebase. Present the Analyzer's findings to the user to inform the discussion.
 
-Do not proceed to planning until the request is complete enough to plan. Once it is complete, create the task file per `~/.claude/crafter/rules/task-lifecycle.md` and continue to Step 3.
+Do not proceed to planning until the request is complete enough to plan. Once it is complete, create the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md` and continue to Step 3.
