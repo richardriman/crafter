@@ -331,6 +331,8 @@ install_to() {
   cp "$SCRIPT_DIR/rules/do/step-6-review.md"             "$rules_dest/do/step-6-review.md"
   cp "$SCRIPT_DIR/rules/do/step-6b-phase-summary.md"     "$rules_dest/do/step-6b-phase-summary.md"
   cp "$SCRIPT_DIR/rules/do/step-6a-session-break.md"     "$rules_dest/do/step-6a-session-break.md"
+  cp "$SCRIPT_DIR/rules/do/step-7-9-post-change.md"      "$rules_dest/do/step-7-9-post-change.md"
+  cp "$SCRIPT_DIR/rules/do/step-9b-pr-composition.md"    "$rules_dest/do/step-9b-pr-composition.md"
 
   mkdir -p "$templates_dest"
   cp "$SCRIPT_DIR/templates/PROJECT.md"          "$templates_dest/PROJECT.md"

@@ -305,6 +305,8 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/do/step-6-review.md"
   "crafter/rules/do/step-6b-phase-summary.md"
   "crafter/rules/do/step-6a-session-break.md"
+  "crafter/rules/do/step-7-9-post-change.md"
+  "crafter/rules/do/step-9b-pr-composition.md"
   "crafter/templates/PROJECT.md"
   "crafter/templates/ARCHITECTURE.md"
   "crafter/templates/STATE.md"
