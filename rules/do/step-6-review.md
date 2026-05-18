@@ -1,6 +1,6 @@
 # Step 6 — REVIEW
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `{CRAFTER_HOME}/rules/do/extension-skills.md`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 After phase verification passes, delegate code review to the `crafter-reviewer` agent and handle findings. The review-fix iteration count starts at 0. Run review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
 
@@ -33,4 +33,4 @@ f. Fix loop for Critical/Major issues:
    4. Re-run **Step 5a (PHASE VERIFICATION)** on the newly changed files.
    5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
 
-After review completes, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+After review completes, record any notable decisions in the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md`.

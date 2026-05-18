@@ -11,7 +11,7 @@ When `--auto` is set (`auto: true` in frontmatter): the orchestrator does **not*
 1. Record any Critical/Major findings the auto-fix loop cleared before the review closed clean as `Decision (Auto-Fixed): <severity> — <description>` entries in the task file's `## Decisions` section.
 2. Record any remaining Minor/Suggestion findings from the final review as tech-debt entries in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`).
 3. Record any manual-verification requirements as UAT buffer entries via the `crafter-buffer` skill (see `skills/crafter-buffer/SKILL.md`).
-4. Commit automatically per `~/.claude/crafter/rules/post-change.md`.
+4. Commit automatically per `{CRAFTER_HOME}/rules/post-change.md`.
 
 For the canonical four-retained-gates and green-commit-invariant rules that govern this branch — including what constitutes a commit-blocking condition vs. a record-and-continue condition — see `rules/do-workflow.md` → `### --auto (unattended orchestration)`.
 
@@ -38,13 +38,13 @@ Conditions: zero remaining findings of any severity in the final review state (t
 
 **Exception — manual verification:** If the phase plan or any of its steps explicitly states that verification of this phase requires manual testing (e.g., UI interaction, external integration, non-automatable scenarios), the orchestrator must **wait for explicit user confirmation** even on a fully clean summary. Matching is case-insensitive — "requires", "REQUIRES", "Required", etc., all trigger the wait. Do not introduce a new task-file schema for this flag — treat any plain-text statement that verification requires manual testing as sufficient to trigger the wait; mentions that no manual verification is needed do not trigger it. This exception overrides auto-approve entirely for that phase.
 
-When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `~/.claude/crafter/rules/post-change.md`.
+When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `{CRAFTER_HOME}/rules/post-change.md`.
 
 #### (2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)
 
 Conditions: the crafter-do skill carries the `--fast` flag (declared in Skill options above) AND remaining Minor/Suggestion findings exist.
 
-Present the Phase Summary and wait for the user's next turn; if that turn does not raise concerns about the summary, treat it as implicit approval and commit. Record each remaining Minor/Suggestion finding as a tech-debt entry in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`), then proceed to the commit per `~/.claude/crafter/rules/post-change.md`.
+Present the Phase Summary and wait for the user's next turn; if that turn does not raise concerns about the summary, treat it as implicit approval and commit. Record each remaining Minor/Suggestion finding as a tech-debt entry in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`), then proceed to the commit per `{CRAFTER_HOME}/rules/post-change.md`.
 
 Note: the manual-verification exception in path (1) also applies here — if manual verification is required, `--fast` does not bypass the explicit confirmation wait.
 
@@ -56,6 +56,6 @@ Present the Phase Summary and wait for an affirmative response from the user. **
 
 ### Commit
 
-On approval (any path), run the commit per `~/.claude/crafter/rules/post-change.md`. The commit is automatic — no additional user prompt for the commit command itself.
+On approval (any path), run the commit per `{CRAFTER_HOME}/rules/post-change.md`. The commit is automatic — no additional user prompt for the commit command itself.
 
 After committing, continue to **Step 6a** (session break, Medium/Large scope) or **Steps 7–9** (last phase or Small scope).
