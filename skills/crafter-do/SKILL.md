@@ -24,6 +24,9 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/do/step-4-execute.md`
 - `~/.claude/crafter/rules/do/step-5-drift.md`
 - `~/.claude/crafter/rules/do/step-5a-phase-verification.md`
+- `~/.claude/crafter/rules/do/step-6-review.md`
+- `~/.claude/crafter/rules/do/step-6b-phase-summary.md`
+- `~/.claude/crafter/rules/do/step-6a-session-break.md`
 
 ## Skill options
 
@@ -127,114 +130,15 @@ Apply the phase-verification procedure in `~/.claude/crafter/rules/do/step-5a-ph
 
 ## Step 6 — REVIEW
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current phase. If any match, include their names and capabilities in the context provided to the `crafter-reviewer` agent as supplemental review context, so it can factor in domain-specific review criteria. Extension skill findings are advisory only; they cannot replace the `crafter-reviewer` report or its verdict. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
-
-After phase verification passes, delegate code review to the `crafter-reviewer` agent and handle findings. The review-fix iteration count starts at 0. Run review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
-
-a. Spawn the `crafter-reviewer` agent.
-b. Provide it with: the approved phase contract, accepted deviations, the list of changed files, and a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if available. The Reviewer reads files itself.
-c. Receive the review report.
-d. Present the review results to the user. **Output format is mandatory:**
-   - Reproduce the Reviewer's **Diff summary** and **Issues found** tables directly — copy the markdown tables as-is.
-   - Reproduce the Reviewer's **Karpathy scorecard** table directly — copy the markdown table as-is.
-   - Reproduce the Reviewer's **Contract deviations** section directly.
-   - **Never** convert tables to prose, bullet lists, or any other format.
-   - After the tables, state the recommendation (must-fix vs. optional).
-
-   **STOP — ALWAYS wait for the user's response before proceeding, regardless of severity. Never auto-proceed when findings exist.**
-
-   Only if there are zero findings at all: proceed directly to Step 6b (auto-approve path).
-
-e. After the user responds:
-   - If there are **Critical or Major issues**: on user acknowledgement, enter the fix loop — there is no "Proceed anyway" choice for those severities. Go to sub-step (f).
-   - If there are **no Critical or Major issues** (only Minor/Suggestion): proceed to Step 6b.
-f. Fix loop for Critical/Major issues:
-   1. Check the iteration count. If 5 iterations have already been completed, do not start a 6th. Present all remaining Critical/Major findings to the user and ask them to choose one of:
-      Under `--auto`, the orchestrator does not present the `(a)/(b)/(c)` choice — it exits with state per `rules/do-workflow.md` → `### --auto (unattended orchestration)` (the green-commit cap retained gate; the task file remains the handoff artifact).
-      - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
-      - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
-      - **(c) replan-and-abort** — abandon the current phase and return to planning.
-      Do not continue to sub-step (f.2) until the user has chosen.
-   2. Spawn the `crafter-implementer` agent. Provide it with: the list of Critical/Major issues from the review (severity, file, line, description), the approved phase contract, and accepted deviations for context. The Implementer reads files itself.
-   3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
-   4. Re-run **Step 5a (PHASE VERIFICATION)** on the newly changed files.
-   5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step (a)).
-
-After review completes, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+Apply the review procedure in `~/.claude/crafter/rules/do/step-6-review.md`. This procedure performs the supplemental-only extension-skill check before delegating, delegates code review to the `crafter-reviewer` agent, reproduces the Reviewer's Diff summary, Issues found, Karpathy scorecard, and Contract deviations tables verbatim (never converting tables to prose), **STOPs and always waits for the user's response when any findings exist (never auto-proceeds)**, proceeding directly to Step 6b only when there are zero findings; if Critical or Major issues exist, runs the fix loop — checking the iteration count first and, if 5 iterations have already been completed, presenting all remaining Critical/Major findings and asking the user to choose **(a) manual override**, **(b) accept-without-commit**, or **(c) replan-and-abort** (under `--auto`, the orchestrator exits with state instead of presenting this choice), otherwise re-delegating fixes to the `crafter-implementer` agent, re-running Step 5a (PHASE VERIFICATION) on the newly changed files, incrementing the iteration count, and re-running Step 6 (REVIEW) from the top; then records any notable decisions in the task file.
 
 ## Step 6b — Phase Summary and Auto-Commit
 
-After the review loop closes clean (no Critical or Major findings remain), the orchestrator chooses an approval path based on the active flags.
-
-### Approval paths
-
-#### `--auto` branch (precedes paths 1–3)
-
-When `--auto` is set (`auto: true` in frontmatter): the orchestrator does **not** surface a Phase Summary to the user and does **not** wait for any approval signal. Instead:
-
-1. Record any Critical/Major findings the auto-fix loop cleared before the review closed clean as `Decision (Auto-Fixed): <severity> — <description>` entries in the task file's `## Decisions` section.
-2. Record any remaining Minor/Suggestion findings from the final review as tech-debt entries in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`).
-3. Record any manual-verification requirements as UAT buffer entries via the `crafter-buffer` skill (see `skills/crafter-buffer/SKILL.md`).
-4. Commit automatically per `~/.claude/crafter/rules/post-change.md`.
-
-For the canonical four-retained-gates and green-commit-invariant rules that govern this branch — including what constitutes a commit-blocking condition vs. a record-and-continue condition — see `rules/do-workflow.md` → `### --auto (unattended orchestration)`.
-
-When `--auto` is **not** set, fall through to paths (1)–(3) below.
-
----
-
-**Paths (1)–(3) apply only when `--auto` is not set.**
-
-For non-`--auto` runs, the orchestrator produces and presents a structured **Phase Summary** to the user, then gates the commit on an approval signal. The summary is assembled from context already available to the orchestrator — no new task-file fields or agent invocations are needed:
-
-- **What was implemented** — a brief statement of what the phase delivered (derived from the phase name/description in the task file).
-- **Auto-fixed findings** — any Critical or Major findings that were raised during the fix loop and cleared before the review closed clean. List each by severity and short description.
-- **Remaining Minor/Suggestion findings** — any open Minor or Suggestion items from the final review report.
-- **Accepted Decisions** — any Decision entries recorded during this phase (from Step 5 drift-check handling or the review loop).
-
-If there were no findings of any kind (review was clean on the first pass, fix loop never ran, no Decisions recorded), the summary may be omitted — the orchestrator proceeds directly via the auto-approve path below.
-
-Choose the first path that applies:
-
-#### (1) Auto-approve on clean summary (no user interaction required)
-
-Conditions: zero remaining findings of any severity in the final review state (this covers both the case where the review was clean on the first pass AND the case where the fix loop ran and cleared all Critical/Major with no Minor/Suggestion remaining).
-
-**Exception — manual verification:** If the phase plan or any of its steps explicitly states that verification of this phase requires manual testing (e.g., UI interaction, external integration, non-automatable scenarios), the orchestrator must **wait for explicit user confirmation** even on a fully clean summary. Matching is case-insensitive — "requires", "REQUIRES", "Required", etc., all trigger the wait. Do not introduce a new task-file schema for this flag — treat any plain-text statement that verification requires manual testing as sufficient to trigger the wait; mentions that no manual verification is needed do not trigger it. This exception overrides auto-approve entirely for that phase.
-
-When auto-approve applies: present a one-line notice ("Phase clean — committing automatically.") and proceed directly to the commit per `~/.claude/crafter/rules/post-change.md`.
-
-#### (2) Silence-as-approval — opt-in via `--fast` flag (see Skill options above)
-
-Conditions: the crafter-do skill carries the `--fast` flag (declared in Skill options above) AND remaining Minor/Suggestion findings exist.
-
-Present the Phase Summary and wait for the user's next turn; if that turn does not raise concerns about the summary, treat it as implicit approval and commit. Record each remaining Minor/Suggestion finding as a tech-debt entry in the task file's `## Decisions` section (format: `Decision (Tech Debt — auto-recorded): <severity> — <description>`), then proceed to the commit per `~/.claude/crafter/rules/post-change.md`.
-
-Note: the manual-verification exception in path (1) also applies here — if manual verification is required, `--fast` does not bypass the explicit confirmation wait.
-
-#### (3) Explicit approval — default
-
-Conditions: remaining Minor/Suggestion findings exist AND the `--fast` flag is not set.
-
-Present the Phase Summary and wait for an affirmative response from the user. **Silence does not count as approval.** Do not proceed to the commit until the user explicitly confirms (e.g., "approved", "looks good", "proceed"). If the user raises concerns, resolve them before committing.
-
-### Commit
-
-On approval (any path), run the commit per `~/.claude/crafter/rules/post-change.md`. The commit is automatic — no additional user prompt for the commit command itself.
-
-After committing, continue to **Step 6a** (session break, Medium/Large scope) or **Steps 7–9** (last phase or Small scope).
+Apply the phase-summary and auto-commit procedure in `~/.claude/crafter/rules/do/step-6b-phase-summary.md`. This procedure, after the review loop closes clean, chooses an approval path based on the active flags. Under `--auto`: the orchestrator appends `Decision (Auto-Fixed): <severity> — <description>` entries for any Critical/Major findings the fix loop cleared, appends `Decision (Tech Debt — auto-recorded): <severity> — <description>` entries for any remaining Minor/Suggestion findings, records any manual-verification requirements as UAT buffer entries via the `crafter-buffer` skill, and commits automatically under the green-commit invariant (see `rules/do-workflow.md` → `### --auto (unattended orchestration)`). When `--auto` is not set, the orchestrator chooses the first of three approval paths that applies: **(1) auto-approve on a fully clean summary** — if zero findings remain, presents a one-line notice and commits immediately, **except** when the phase plan explicitly requires manual testing, in which case the orchestrator always waits for explicit user confirmation regardless of finding count (the manual-verification exception overrides auto-approve and is not bypassed by `--fast`); **(2) `--fast` silence-as-approval** — if `--fast` is set and Minor/Suggestion findings remain, presents the Phase Summary and treats the user's next turn as implicit approval, recording each remaining finding as a `Decision (Tech Debt — auto-recorded)` entry, then commits (manual-verification exception still applies); **(3) explicit approval** — if neither condition above applies, presents the Phase Summary and waits for an affirmative response; **silence does not count as approval**; does not proceed to the commit until the user explicitly confirms. On approval (any path), runs the commit; after committing, continues to Step 6a (session break, Medium/Large scope) or Steps 7–9 (last phase or Small scope).
 
 ## Step 6a — Session Break (Medium/Large scope only)
 
-**Skip this step for Small scope** — proceed directly to Steps 7–9.
-
-After a step's Execute → Step Drift Check cycle completes and the step is checked off:
-
-1. If this was the **last step in the current phase**, proceed to Step 5a (Phase Verification) and Step 6 (Review).
-2. If this was the **last step in the entire plan** and phase verification/review are complete, proceed directly to Steps 7–9.
-3. Otherwise, suggest the user run `/clear` and then re-invoke `/crafter-do` to continue with the next step in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next plan step.
-
-The resume detection in Step 0 will pick up the active task file and continue from the next unchecked step or pending phase gate. This keeps each step's Execute → Drift Check cycle in a clean context window.
+Apply the session-break procedure in `~/.claude/crafter/rules/do/step-6a-session-break.md`. **Skip this step for Small scope** — proceed directly to Steps 7–9. This procedure applies three routing rules after a step's Execute → Step Drift Check cycle completes and the step is checked off: (1) if this was the last step in the current phase, proceed to Step 5a (Phase Verification) and Step 6 (Review); (2) if this was the last step in the entire plan and phase verification/review are complete, proceed directly to Steps 7–9; (3) otherwise, suggest the user run `/clear` and re-invoke `/crafter-do` to continue with the next step in a fresh context, or if the user prefers to continue without clearing, go back to Step 4 (EXECUTE) for the next plan step. The resume detection in Step 0 will pick up the active task file and continue from the next unchecked step or pending phase gate.
 
 ## Steps 7–9 — Post-Change
 
