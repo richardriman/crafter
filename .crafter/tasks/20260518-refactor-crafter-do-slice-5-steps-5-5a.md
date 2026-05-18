@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-18
 - **Work branch:** refactor/crafter-do-slice-5-steps-5-5a
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -112,20 +112,20 @@ After Phase 1, `## Step 5 — STEP DRIFT CHECK` and `## Step 5a — PHASE VERIFI
 
 After Phase 2 the new modules are confirmed compliant with the `{CRAFTER_HOME}` runtime-path policy (both zero-substitution) and the design-note ledger reflects what shipped. Narrow, proof-of-policy scope — no repo-wide sweep.
 
-- [ ] **2.1 — Confirm the `{CRAFTER_HOME}` policy on the new modules (both zero-substitution).** In `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md`, confirm there is NO `~/.claude/...` occurrence (expected — Step 5/5a reference the task file conceptually and delegate to bare-named agents; the only nearby runtime paths, `~/.claude/crafter/rules/task-lifecycle.md` and `~/.claude/crafter/rules/do/extension-skills.md`, are in Step 6, which is out of scope and not extracted here). If any `~/.claude/...` is unexpectedly present in either module, normalize it to the `{CRAFTER_HOME}/...` form and flag the deviation. Bare `crafter-verifier`/`crafter-implementer`/Step-number mentions are not runtime install paths and stay unchanged. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
+- [x] **2.1 — Confirm the `{CRAFTER_HOME}` policy on the new modules (both zero-substitution).** In `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md`, confirm there is NO `~/.claude/...` occurrence (expected — Step 5/5a reference the task file conceptually and delegate to bare-named agents; the only nearby runtime paths, `~/.claude/crafter/rules/task-lifecycle.md` and `~/.claude/crafter/rules/do/extension-skills.md`, are in Step 6, which is out of scope and not extracted here). If any `~/.claude/...` is unexpectedly present in either module, normalize it to the `{CRAFTER_HOME}/...` form and flag the deviation. Bare `crafter-verifier`/`crafter-implementer`/Step-number mentions are not runtime install paths and stay unchanged. No other files touched; SKILL.md pointer/loader lines keep `~/.claude/...` (installer-resolved carve-out).
   - **Karpathy contract:** outcome = both new modules confirmed to have zero hard-coded `~/.claude/...` references (no substitution needed); scope = read-only confirmation of `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` (substitution only if an unexpected occurrence is found); non-goals = repo-wide normalization, editing SKILL.md, editing `rules/task-lifecycle.md` / `rules/do-workflow.md` / Step 6 / agents, adding installer path logic, adding a footnote; simplicity = a confirmation, with at most a substitution if a surprise occurrence appears; drift = normalizing other files, introducing new placeholders, rewording surrounding prose, normalizing bare agent/Step mentions; verification = both modules contain zero `~/.claude/...` references; bare agent/Step mentions unchanged; stop = if applying the policy would require installer changes or touching Step 6, stop (scope escalation).
 
-- [ ] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, append a Slice 5 entry to the runtime-path "Applied in this task" ledger (after the existing Slice 4 entry at line 122) recording that Slice 5 created `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` and that the `{CRAFTER_HOME}` policy required ZERO substitutions in either (both contain no runtime install paths; the orchestrator-side `Decision (...)`-append handlers reference the task file conceptually and the `task-lifecycle.md`/`extension-skills.md` runtime paths live in Step 6, out of scope), restating that the bare `crafter-verifier`/`crafter-implementer` mentions are not runtime paths and that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines, consistent in tone and structure with the Slice 1/2/3/4 entries; do not restructure the doc or re-tag taxonomy rows.
+- [x] **2.2 — Update the design-note ledger and confirm sibling delineation.** In `docs/core-capabilities.md`, append a Slice 5 entry to the runtime-path "Applied in this task" ledger (after the existing Slice 4 entry at line 122) recording that Slice 5 created `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` and that the `{CRAFTER_HOME}` policy required ZERO substitutions in either (both contain no runtime install paths; the orchestrator-side `Decision (...)`-append handlers reference the task file conceptually and the `task-lifecycle.md`/`extension-skills.md` runtime paths live in Step 6, out of scope), restating that the bare `crafter-verifier`/`crafter-implementer` mentions are not runtime paths and that repo-wide normalization remains owned by `20260421-skills-first-runtime-portability.md`. Keep it to a few lines, consistent in tone and structure with the Slice 1/2/3/4 entries; do not restructure the doc or re-tag taxonomy rows.
   - **Karpathy contract:** outcome = the design note accurately reflects Slice 5's shipped scope (two new modules, zero substitutions), consistent with the Slice 1/2/3/4 ledger entries; scope = a few lines in `docs/core-capabilities.md` (the runtime-path "Applied in this task" area); non-goals = restructuring the taxonomy, restating the sibling task's plan, claiming repo-wide normalization, re-tagging other taxonomy rows, editing the Slice 1/2/3/4 entries beyond appending; simplicity = ≤ ~5 added lines; drift = expanding into a meta runtime-portability narrative or contradicting prior ledger entries; verification = the ledger names Slice 5, both new modules, the zero-substitution count, and the sibling-task owner, and reads consistently with the Slice 4 entry; stop = if the edit would contradict the existing Slice 1/2/3/4 ledger entries, stop and reconcile explicitly.
 
-- [ ] **Phase 2 verification.** `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` each have zero hard-coded `~/.claude/...` references; bare agent/Step mentions unchanged; `docs/core-capabilities.md` ledger reflects Slice 5 consistently with Slice 1/2/3/4; no files outside this phase's set touched; behavior still byte-identical. Delegate to `crafter-verifier`.
-- [ ] **Phase 2 review.** `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy confirmed; zero substitutions applied exactly as enumerated).
+- [x] **Phase 2 verification.** — crafter-verifier 5/5 PASS. `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` each have zero hard-coded `~/.claude/...` references; bare agent/Step mentions unchanged; `docs/core-capabilities.md` ledger reflects Slice 5 consistently with Slice 1/2/3/4; no files outside this phase's set touched; behavior still byte-identical. Delegate to `crafter-verifier`.
+- [x] **Phase 2 review.** — crafter-reviewer no findings; scorecard all PASS. `crafter-reviewer` pass; Karpathy scorecard PASS on Surgical Changes (no scope creep into untouched files) and Goal-Driven (policy confirmed; zero substitutions applied exactly as enumerated).
 
 #### Post-task housekeeping
 
-- [ ] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
-- [ ] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
-- [ ] **Follow-up note** — record in `## Outcome` that Slice 6 — extract Steps 6 / 6b / 6a (Review + Phase Summary + Session Break) per the deferred-slice order in `docs/core-capabilities.md` (highest density; extract together since they share flag-state and approval-path logic) — is the next candidate. Remaining deferred after that: Steps 7–9 / 9b (Post-Change + PR Composition).
+- [x] **STATE.md and skillbook update** per `rules/post-change.md` — consolidated end-of-task commit.
+- [x] **Task file completion** per `rules/task-lifecycle.md` (Status → completed, `## Outcome` filled, steps checked).
+- [x] **Follow-up note** — recorded in `## Outcome`.
 
 ### 6. Karpathy Contract — overall
 
@@ -160,4 +160,12 @@ This contract protects the byte-identical behavior of `crafter-do`'s step-drift-
 ## Decisions
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Status:** Complete. Both phases delivered; behavior byte-identical.
+
+- **Phase 1** (commit `88601cc`): `## Step 5 — STEP DRIFT CHECK` and `## Step 5a — PHASE VERIFICATION` extracted verbatim into new `rules/do/step-5-drift.md` and `rules/do/step-5a-phase-verification.md` (H2→H1 only); both SKILL.md sections reduced to binding-preserving pointer stubs under retained headings (Step 0/1/2/3/4 convention). The Step 5 stub preserves **both orchestrator-side task-file Edit bindings** (`Decision (Orchestrator Accepted)` / `Decision (User Accepted)` appends) imperatively — the headline R1. +2 loader entries; two mechanical `install.sh` cp lines + two `tests/test_install.sh` entries. Pre-extraction binding gate GO (6/6 clusters); verifier 9/9 PASS; test 45/0.
+- **Phase 2** (this commit): `{CRAFTER_HOME}` policy confirmed — both modules runtime-path-free, ZERO substitutions (the Decision-append handlers reference the task file conceptually; `task-lifecycle.md`/`extension-skills.md` runtime paths live in Step 6, out of scope). `docs/core-capabilities.md` ledger extended with a Slice 5 entry consistent with Slice 1/2/3/4. Verifier 5/5 PASS; reviewer no findings.
+
+**Deviations from plan:** None.
+
+**Follow-up:** Slice 6 — extract Steps 6 / 6b / 6a (Review + Phase Summary + Session Break) per the deferred-slice order in `docs/core-capabilities.md` (highest density; extract together since they share flag-state and approval-path logic) — is the next candidate. Remaining deferred after that: Steps 7–9 / 9b (Post-Change + PR Composition).
