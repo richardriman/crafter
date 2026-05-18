@@ -20,6 +20,8 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/do/step-0-resume.md`
 - `~/.claude/crafter/rules/do/step-1-scope.md`
 - `~/.claude/crafter/rules/do/step-2-discuss.md`
+- `~/.claude/crafter/rules/do/step-3-plan.md`
+- `~/.claude/crafter/rules/do/step-4-execute.md`
 
 ## Skill options
 
@@ -107,39 +109,11 @@ Apply the discuss/research procedure in `~/.claude/crafter/rules/do/step-2-discu
 
 ## Step 3 — PLAN
 
-Delegate planning to the **`crafter-planner`** agent:
-
-1. Spawn the `crafter-planner` agent.
-2. Provide it with: the complete user request, the completeness/refinement notes, the task file path, high-level pointers to relevant modules or areas of code, and a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if it exists (the Planner will read it itself). Do not inject file contents — the Planner uses its own Read/Grep/Glob tools to explore the codebase.
-3. The Planner writes the full plan directly to the task file and returns a structured summary.
-4. Present the Planner's summary to the user. The summary must include:
-   - **Approach** — the overall strategy in 1–2 sentences
-   - **Phases / steps** — every phase and step, with the outcome and relevant areas
-   - **Assumptions** — explicit assumptions or competing interpretations the Planner identified
-   - **Karpathy Contract** — scope boundaries, non-goals, drift checks, and stop conditions
-   - **Verification criteria** — step drift checks and phase verification criteria
-   - **Risks / unknowns** — any flags or open questions from the Planner
-   - A note that the full detailed plan is in the task file (mention the path)
-5. **Wait for explicit user approval before proceeding.**
-
-If the user requests changes, send the revised request back to the Planner (with the same task file path) and repeat until approved.
-
-Once the user approves, use the Edit tool directly to change `**Plan status:** draft` to `**Plan status:** approved` in the task file's `## Plan` section (this is an administrative update, like checking off completed steps).
-
-If the approved plan contains **phases** (groups of steps under phase headings), execute one step at a time. Phase boundaries determine when phase verification and full review run.
+Apply the planning procedure in `~/.claude/crafter/rules/do/step-3-plan.md`. This procedure delegates planning to the `crafter-planner` agent, presents the structured summary (approach, phases/steps, assumptions, Karpathy Contract, verification criteria, risks) to the user, and waits for explicit user approval (revision loop back to `crafter-planner` if changes requested). Once the user approves, the orchestrator uses the Edit tool directly to change `**Plan status:** draft` to `**Plan status:** approved` in the task file's `## Plan` section. If the approved plan contains phases, execute one step at a time (Step 4).
 
 ## Step 4 — EXECUTE
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
-
-Delegate implementation to the **`crafter-implementer`** agent:
-
-1. Spawn the `crafter-implementer` agent.
-2. Provide it with: the current step contract, phase context, relevant areas, non-goals, drift criteria, verification evidence, accepted deviations, and stop conditions. Do not inject file contents — the Implementer uses its own Read/Grep/Glob tools to explore the codebase.
-3. Receive the implementation summary from the agent.
-4. If the agent reports a blocker, stop and discuss it with the user before continuing.
-
-**All scopes** execute one step at a time. For Small scope this is usually one phase with one or a few steps. After each step, run Step 5 (drift check). After all steps in a phase pass drift checks, run Step 5a (phase verification) and Step 6 (phase review).
+Apply the execute procedure in `~/.claude/crafter/rules/do/step-4-execute.md`. This procedure performs the extension-skill supplemental-only check before delegating, delegates implementation to the `crafter-implementer` agent one step at a time, and routes to Step 5 (drift check) after each step and to Step 5a (phase verification) and Step 6 (phase review) after all steps in a phase pass.
 
 ## Step 5 — STEP DRIFT CHECK
 
