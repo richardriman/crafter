@@ -298,6 +298,8 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/do/step-0-resume.md"
   "crafter/rules/do/step-1-scope.md"
   "crafter/rules/do/step-2-discuss.md"
+  "crafter/rules/do/step-3-plan.md"
+  "crafter/rules/do/step-4-execute.md"
   "crafter/templates/PROJECT.md"
   "crafter/templates/ARCHITECTURE.md"
   "crafter/templates/STATE.md"
