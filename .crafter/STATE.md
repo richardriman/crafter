@@ -2,12 +2,13 @@
 
 ## Current Focus
 
-`crafter-do` core-capability decomposition Slice 4 complete on branch `refactor/crafter-do-slice-4-steps-3-4` (Steps 3–4 Plan+Execute extracted; both phases delivered, verified, reviewed). Branch ready for PR. Slices 1–3 already on `main`.
+`crafter-do` core-capability decomposition Slice 5 complete on branch `refactor/crafter-do-slice-5-steps-5-5a` (Steps 5/5a Drift+PhaseVerification extracted; both phases delivered, verified, reviewed). Branch ready for PR. Slices 1–4 already on `main`.
 
 ## Recent Changes
 
 | Date | Change | Commit |
 |---|---|---|
+| 2026-05-18 | `crafter-do` core-capability decomposition Slice 5 — `## Step 5 — STEP DRIFT CHECK` + `## Step 5a — PHASE VERIFICATION` extracted verbatim into `rules/do/step-5-drift.md` + `rules/do/step-5a-phase-verification.md` (move-and-link, H2→H1; binding-preserving stubs; Step 5 stub preserves both orchestrator-side `Decision (Orchestrator/User Accepted)` append instructions imperatively), loader/installer/test wired ×2, `{CRAFTER_HOME}` policy confirmed (both modules zero-substitution), ledger extended. Pre-extraction binding gate GO (6/6); verifier 9/9 + 5/5 PASS; reviewer no findings; test 45/0. | 88601cc + cca9e03 |
 | 2026-05-18 | `crafter-do` core-capability decomposition Slice 4 — `## Step 3 — PLAN` + `## Step 4 — EXECUTE` extracted verbatim into `rules/do/step-3-plan.md` + `rules/do/step-4-execute.md` (move-and-link, H2→H1; binding-preserving stubs; Step 3 stub preserves the sole orchestrator-side `draft→approved` Edit instruction verbatim), loader/installer/test wired ×2, `{CRAFTER_HOME}` policy applied (step-4 ×1; step-3 had none), ledger extended. Pre-extraction binding gate GO (6/6); verifier 8/8 + 5/5 PASS; reviewer no findings; test 45/0. | 2ae54d5 + 3395884 |
 | 2026-05-17 | `crafter-do` core-capability decomposition Slice 3 — `## Step 1 — Completeness and scope` + `## Step 2 — DISCUSS / RESEARCH …` extracted verbatim into `rules/do/step-1-scope.md` + `rules/do/step-2-discuss.md` (move-and-link, H2→H1; binding-preserving stubs matching the Step 0 convention), loader/installer/test wired ×2, `{CRAFTER_HOME}` policy applied (step-1 ×2, step-2 ×1), ledger extended. Pre-extraction binding gate GO (5/5); verifier 7/7 + 6/6 PASS; reviewer 1 Suggestion (fixed); test 45/0. | 9668a3b + 69f4220 |
 | 2026-05-17 | `crafter-do` core-capability decomposition Slice 2 — `## Step 0 — Resume Detection` extracted verbatim into `rules/do/step-0-resume.md` (move-and-link, H2→H1; binding-preserving pointer stub retains heading + states resume state/branch-sanity/main-master guards established before Step 1), loader/installer/test wired, `{CRAFTER_HOME}` policy applied to the module's `task-lifecycle.md` ref, design-note ledger extended. Pre-extraction binding gate GO; verifier 7/7 + 6/6 PASS; reviewer no findings; test 45/0. | 53e6143 + 1319d28 |
