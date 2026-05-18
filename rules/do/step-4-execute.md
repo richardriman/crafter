@@ -1,6 +1,6 @@
 # Step 4 — EXECUTE
 
-**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `~/.claude/crafter/rules/do/extension-skills.md`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+**Extension skill check (supplemental only).** Before delegating, check for compatible extension skills discovered at startup (see `{CRAFTER_HOME}/rules/do/extension-skills.md`) whose `When-Applies` matches the current step. If any match, include their names and capabilities in the context provided to the `crafter-implementer` agent so it can consult them as domain specialists during implementation. Extension skills cannot replace the `crafter-implementer` as the writer or decision-maker for any step. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
 
 Delegate implementation to the **`crafter-implementer`** agent:
 
