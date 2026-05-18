@@ -22,6 +22,8 @@ Read and follow these rules:
 - `~/.claude/crafter/rules/do/step-2-discuss.md`
 - `~/.claude/crafter/rules/do/step-3-plan.md`
 - `~/.claude/crafter/rules/do/step-4-execute.md`
+- `~/.claude/crafter/rules/do/step-5-drift.md`
+- `~/.claude/crafter/rules/do/step-5a-phase-verification.md`
 
 ## Skill options
 
@@ -117,32 +119,11 @@ Apply the execute procedure in `~/.claude/crafter/rules/do/step-4-execute.md`. T
 
 ## Step 5 — STEP DRIFT CHECK
 
-Delegate verification to the **`crafter-verifier`** agent:
-
-1. Spawn the `crafter-verifier` agent.
-2. Provide it with: mode `step drift check`, the current step contract, phase context, non-goals, implementer summary, accepted deviations, changed files, and permission to inspect relevant `git diff` output. The Verifier reads and explores files itself.
-3. Remind the Verifier in the task prompt: "Write your verification report as plain text in your response. Do not create any files."
-4. Receive the verification report.
-5. Present the report to the user clearly.
-
-Handle the Verifier's recommended action:
-
-- **continue:** check off the completed step and continue.
-- **record decision and continue:** if the drift is local, beneficial, and does not affect scope or later steps, append a `Decision (Orchestrator Accepted)` entry to the task file and continue.
-- **fix current step:** re-delegate the current step to the Implementer before continuing.
-- **ask user:** stop and ask the user whether to accept the drift, revise scope, or replan. If accepted, append a `Decision (User Accepted)` entry.
-- **replan:** return to Step 3 with the new discovery.
+Apply the step-drift-check procedure in `~/.claude/crafter/rules/do/step-5-drift.md`. This procedure delegates step drift verification to the `crafter-verifier` agent in mode `step drift check`, with the plain-text-report reminder ("Write your verification report as plain text in your response. Do not create any files."), and handles the Verifier's recommended action: **continue** — check off the step and continue; **record decision and continue** — the orchestrator appends a `Decision (Orchestrator Accepted)` entry to the task file and continues; **fix current step** — re-delegate the current step to the `crafter-implementer` before continuing; **ask user** — stop and ask the user, and if accepted the orchestrator appends a `Decision (User Accepted)` entry; **replan** — return to Step 3 with the new discovery.
 
 ## Step 5a — PHASE VERIFICATION
 
-When all steps in the current phase have passed drift checks, delegate phase verification to the **`crafter-verifier`** agent:
-
-1. Spawn the `crafter-verifier` agent.
-2. Provide it with: mode `phase verification`, the approved phase contract, phase verification criteria, accepted deviations, and the list of changed files. The Verifier reads and explores files itself.
-3. Remind the Verifier in the task prompt: "Write your verification report as plain text in your response. Do not create any files."
-4. Receive and present the verification report.
-
-If phase verification fails, discuss the result with the user and decide whether to re-delegate to the Implementer, adjust the plan, or re-run a specific step drift check.
+Apply the phase-verification procedure in `~/.claude/crafter/rules/do/step-5a-phase-verification.md`. This procedure delegates phase verification to the `crafter-verifier` agent in mode `phase verification`, with the plain-text-report reminder ("Write your verification report as plain text in your response. Do not create any files."). If phase verification fails, the orchestrator discusses the result with the user and decides whether to re-delegate to the Implementer, adjust the plan, or re-run a specific step drift check.
 
 ## Step 6 — REVIEW
 
