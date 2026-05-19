@@ -154,8 +154,8 @@ _download_cli_binary() {
   local dest_dir="$1"
   local dest_bin="$dest_dir/crafter/bin/crafter"
 
-  # install_to may have already copied a local pre-built binary from
-  # SCRIPT_DIR/cli/bin/crafter. If so, avoid network/build work.
+  # Guard for idempotency: if the binary is already present (e.g. this
+  # function is called twice in the same run), skip network/build work.
   if [[ -x "$dest_bin" ]]; then
     return 0
   fi
@@ -348,12 +348,6 @@ install_to() {
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
 
   mkdir -p "$crafter_dest/bin"
-
-  # Local clone install: copy pre-built binary if it exists
-  if [[ -f "$SCRIPT_DIR/cli/bin/crafter" ]]; then
-    cp "$SCRIPT_DIR/cli/bin/crafter" "$crafter_dest/bin/crafter"
-    chmod +x "$crafter_dest/bin/crafter"
-  fi
 }
 
 install_hook() {

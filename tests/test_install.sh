@@ -448,14 +448,16 @@ test_global_creates_bin_directory() {
 
 test_global_copies_local_cli_binary() {
   # When cli/bin/crafter exists in the repo clone, a global install must
-  # copy it to ~/.claude/crafter/bin/crafter.
+  # produce a binary at ~/.claude/crafter/bin/crafter.  In this test the
+  # binary is provided by the fake cli/bin/crafter we create below, which
+  # _download_cli_binary picks up via SCRIPT_DIR (source-build fallback path).
   local tmp home_dir fake_bin output ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
 
-  # Create a fake cli/bin/crafter inside a temporary clone of the repo so
-  # that _run_installer (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
+  # Create a fake cli/bin/crafter inside the repo so that _run_installer
+  # (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
   fake_bin="$REPO_DIR/cli/bin/crafter"
   local fake_bin_created=0
   if [[ ! -f "$fake_bin" ]]; then
@@ -537,7 +539,9 @@ test_global_links_cli_to_home_local_bin() {
 
 test_local_copies_local_cli_binary() {
   # When cli/bin/crafter exists in the repo clone, a local install must
-  # copy it to <proj>/.claude/crafter/bin/crafter.
+  # produce a binary at <proj>/.claude/crafter/bin/crafter.  In this test
+  # the binary is provided by the fake cli/bin/crafter we create below, which
+  # _download_cli_binary picks up via SCRIPT_DIR (source-build fallback path).
   local tmp home_dir proj_dir fake_bin output ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
