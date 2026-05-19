@@ -7,6 +7,15 @@
 - **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
 
+## Jargon Confinement
+
+Agents and the orchestrator MUST describe the user's own project, codebase, and domain using domain-neutral language or the user's own terms. Do not import crafter's internal vocabulary into explanations, plans, summaries, or review prose about the user's unrelated domain.
+
+Reserved crafter-internal terms — `gate`, `drift`, `seam` / `split point`, `surface`, `binding`, `escape hatch` — are confined to crafter's own workflow mechanics. All of these terms remain fully legitimate when describing crafter's own mechanics (e.g., `gate`/`gated` for phase gates, `drift` for step drift check / scope drift / beneficial local drift). The prohibition is solely against exporting them onto the user's unrelated domain or codebase.
+
+- **Bad (jargon bleed):** "Doporučuji gatovat panel se záložkami na všech švech a přidat flag gate pro aktivaci" — crafter-internal terms (`gate`, `seam`) verb-ified and projected onto unrelated Gantt app UI elements.
+- **Good (domain-neutral):** "Doporučuji skrýt záložkový panel za feature flag a aktivovat ho postupně" — the same intent expressed in the user's own product terms.
+
 ## Context File Maintenance
 
 - **PROJECT.md:** Update when the stack, dependencies, or conventions change.

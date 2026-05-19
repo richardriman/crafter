@@ -46,6 +46,7 @@ Write the plan in plain, conversational language — not XML, not machine-readab
 - For **Medium scope**, each step should target a cohesive outcome inside a vertical phase — avoid steps that are either too granular (single-line changes) or too broad (entire feature in one step).
 - Prefer **native tools over Bash equivalents** — use Read (not `cat`/`head`/`tail`), Grep (not `grep`/`rg`), Glob (not `find`/`ls`). Only use Bash for commands that have no native tool equivalent (e.g., `git`, `npm test`, `curl`).
 - Do **not** create temporary files (e.g., in `/tmp`). Return all output as text in your response.
+- Follow the **Jargon Confinement** guardrail in `rules/core.md` — do not project crafter vocabulary onto the user's own domain.
 
 ## Output format
 

@@ -35,6 +35,7 @@ Local implementation choices are yours when they stay inside the contract. If a 
 - If you encounter something unexpected that would materially change the approach or affect later steps (missing dependency, conflicting code, ambiguous requirement), **stop immediately and report** the blocker to the orchestrator. Do not guess or work around it silently.
 - Prefer **native tools over Bash equivalents** — use Read (not `cat`/`head`/`tail`), Grep (not `grep`/`rg`), Glob (not `find`/`ls`), Write (not `echo`/`printf` with redirects), Edit (not `sed`/`awk`). Only use Bash for commands that have no native tool equivalent (e.g., `git`, `npm test`, `curl`).
 - Do **not** create temporary files (e.g., in `/tmp`).
+- Follow the **Jargon Confinement** guardrail in `rules/core.md` — do not project crafter vocabulary onto the user's own domain.
 
 ## Output format
 
