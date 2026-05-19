@@ -11,6 +11,7 @@ build:
 
 release:
 	mkdir -p bin
+	rm -f bin/crafter
 	CGO_ENABLED=0 GOOS=darwin  GOARCH=arm64 go build $(RELEASE_LDFLAGS) -o bin/crafter-darwin-arm64 .
 	CGO_ENABLED=0 GOOS=darwin  GOARCH=amd64 go build $(RELEASE_LDFLAGS) -o bin/crafter-darwin-amd64 .
 	CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build $(RELEASE_LDFLAGS) -o bin/crafter-linux-amd64 .
