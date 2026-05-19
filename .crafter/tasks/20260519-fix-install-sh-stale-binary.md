@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-19
 - **Work branch:** fix/install-sh-stale-binary
-- **Status:** active
+- **Status:** completed
 - **Scope:** Small
 
 ## Request
@@ -127,3 +127,23 @@ This contract protects a small, surgical fix: kill the blind copy that lets a de
 - **Decision (Orchestrator Accepted):** Phase verification verifier flagged a `{CRAFTER_HOME}` substitution regression and two deleted tests. Investigation showed the verifier compared against commit `f898dc9` on the unmerged branch `feat/crafter-do-progressive-loading`, not against `main`. Actual `git diff main` shows the three expected edits only (install.sh ±10/12, cli/Makefile +1, tests/test_install.sh ±35 lines all comment-only, zero deleted test functions). No regression. Proceeding to Step 6 review.
 
 ## Outcome
+
+**Status:** completed on branch `fix/install-sh-stale-binary` (commit `b3efebd`).
+
+**What was done:**
+
+- `install.sh::install_to()` — removed the unconditional `cp "$SCRIPT_DIR/cli/bin/crafter" "$crafter_dest/bin/crafter"` block (and its preceding `# Local clone install: copy pre-built binary if it exists` comment). The `mkdir -p "$crafter_dest/bin"` line is kept so the destination directory exists before `_download_cli_binary` runs.
+- `install.sh::_download_cli_binary()` — refreshed the now-stale comment above the early-return guard. The early-return itself (`if [[ -x "$dest_bin" ]]; then return 0; fi`) is unchanged and remains as an idempotency net.
+- `cli/Makefile` — added `rm -f bin/crafter` to the `release` recipe (after `mkdir -p bin`, before the first `go build`). `build`, `test`, and `clean` targets unchanged.
+- `tests/test_install.sh` — inline-comment-only updates on `test_global_copies_local_cli_binary` and `test_local_copies_local_cli_binary` to describe the new mechanism (binary now produced by `_download_cli_binary`'s source-build fallback path in these tests). Zero assertions modified; test function count unchanged (45 == 45 vs `main`).
+
+**Net effect:** `_download_cli_binary` is now the single source of truth for the installed CLI binary (GitHub release asset → source-build fallback). A stale developer-local `cli/bin/crafter` can no longer silently override it. `make release` cannot leave a misleading unsuffixed `cli/bin/crafter` behind.
+
+**Verification evidence captured during phase verification:**
+
+- `grep -n 'cli/bin/crafter' install.sh` → zero matches.
+- Manual stale-binary repro: fake `crafter version 0.7.1-fake` placed at `cli/bin/crafter`, `HOME=$(mktemp -d) bash install.sh --global` → installed binary reported `crafter version dev` (source-build), never `0.7.1-fake`.
+- `touch cli/bin/crafter && make -C cli release && test ! -f cli/bin/crafter` → printed `CLEANED`; all four `cli/bin/crafter-<os>-<arch>` present.
+- `bash tests/test_install.sh` → 45 passed, 0 failed.
+
+**Deviations from plan:** None on the implementation side. One process note recorded under `## Decisions`: the phase-verification verifier initially flagged a `{CRAFTER_HOME}` regression that turned out to be a false positive (verifier had compared against the unmerged `feat/crafter-do-progressive-loading` branch instead of `main`).
