@@ -758,6 +758,85 @@ test_local_idempotency() {
 }
 
 # ---------------------------------------------------------------------------
+# D1. Placeholder resolution
+# ---------------------------------------------------------------------------
+
+test_global_resolves_crafter_home_placeholder() {
+  local tmp home_dir output ec base leaked_files
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+
+  base="$home_dir/.claude"
+
+  # (a) No literal {CRAFTER_HOME} placeholder must remain under rules or skills
+  leaked_files="$(grep -rl '{CRAFTER_HOME}' "$base/crafter/rules" "$base/skills" 2>/dev/null || true)"
+  if [[ -n "$leaked_files" ]]; then
+    _fail "test_global_resolves_crafter_home_placeholder: literal {CRAFTER_HOME} found in deployed tree: $leaked_files"
+  fi
+
+  # (b) Representative path: post-change.md must contain the resolved rules path
+  local post_change="$base/crafter/rules/post-change.md"
+  local expected_path="$base/crafter/rules/task-lifecycle.md"
+  if ! grep -qF "$expected_path" "$post_change" 2>/dev/null; then
+    _fail "test_global_resolves_crafter_home_placeholder: '$post_change' does not contain resolved path '$expected_path'"
+  fi
+
+  # (c) No wrong-base absolute path: every absolute-path reference to
+  # task-lifecycle.md in the deployed rules+skills tree must use exactly $base
+  # as the prefix — no other absolute .claude/crafter base must appear.
+  # Tilde-form (~/.claude/...) documentation references are excluded since they
+  # are not resolved absolute paths; only lines lacking ~/ are checked.
+  local wrong_base_refs
+  wrong_base_refs="$(grep -rh '/crafter/rules/task-lifecycle\.md' "$base/crafter/rules" "$base/skills" 2>/dev/null \
+    | grep -v '~/' \
+    | grep -vF "$base/crafter/rules/task-lifecycle.md" || true)"
+  if [[ -n "$wrong_base_refs" ]]; then
+    _fail "test_global_resolves_crafter_home_placeholder: absolute-path reference to task-lifecycle.md with wrong base found: $wrong_base_refs"
+  fi
+}
+
+test_local_resolves_crafter_home_placeholder() {
+  local tmp home_dir proj_dir output ec base leaked_files
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+
+  base="$proj_dir/.claude"
+
+  # (a) No literal {CRAFTER_HOME} placeholder must remain under rules or skills
+  leaked_files="$(grep -rl '{CRAFTER_HOME}' "$base/crafter/rules" "$base/skills" 2>/dev/null || true)"
+  if [[ -n "$leaked_files" ]]; then
+    _fail "test_local_resolves_crafter_home_placeholder: literal {CRAFTER_HOME} found in deployed tree: $leaked_files"
+  fi
+
+  # (b) Representative path: post-change.md must contain the resolved rules path
+  local post_change="$base/crafter/rules/post-change.md"
+  local expected_path="$base/crafter/rules/task-lifecycle.md"
+  if ! grep -qF "$expected_path" "$post_change" 2>/dev/null; then
+    _fail "test_local_resolves_crafter_home_placeholder: '$post_change' does not contain resolved path '$expected_path'"
+  fi
+
+  # (c) No wrong-base absolute path: every absolute-path reference to
+  # task-lifecycle.md in the deployed rules+skills tree must use exactly $base
+  # as the prefix — no global $HOME/.claude base must appear.
+  # Tilde-form (~/.claude/...) documentation references are excluded since they
+  # are not resolved absolute paths; only lines lacking ~/ are checked.
+  local wrong_base_refs
+  wrong_base_refs="$(grep -rh '/crafter/rules/task-lifecycle\.md' "$base/crafter/rules" "$base/skills" 2>/dev/null \
+    | grep -v '~/' \
+    | grep -vF "$base/crafter/rules/task-lifecycle.md" || true)"
+  if [[ -n "$wrong_base_refs" ]]; then
+    _fail "test_local_resolves_crafter_home_placeholder: absolute-path reference to task-lifecycle.md with wrong base found: $wrong_base_refs"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # D2. Upgrade cleans stale files
 # ---------------------------------------------------------------------------
 

@@ -30,3 +30,4 @@ Current baseline already in place:
 - Compatibility command wrappers were removed from source and installer deployment.
 - Installer still cleans stale legacy `commands/crafter` artifacts during upgrades.
 - Task `20260517-refactor-crafter-do-core-capabilities.md` established the `{CRAFTER_HOME}` runtime-path convention for new core capability modules and applied it to `rules/do/extension-skills.md`; repo-wide normalization of existing hard-coded references remains this task's responsibility.
+- The repo-wide `~/.claude/...` → `{CRAFTER_HOME}` path-normalization sub-mandate and the minimal install-time substitution were transferred to and completed by `.crafter/tasks/20260518-crafter-do-progressive-loading.md`; this task remains active and continues to own the full build/transform pipeline + multi-runtime adapters (VS Code / Copilot CLI / OpenCode) + test matrix + docs rollout.
