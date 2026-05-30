@@ -447,33 +447,21 @@ test_global_creates_bin_directory() {
 }
 
 test_global_copies_local_cli_binary() {
-  # When cli/bin/crafter exists in the repo clone, a global install must
-  # produce a binary at ~/.claude/crafter/bin/crafter.  In this test the
-  # binary is provided by the fake cli/bin/crafter we create below, which
-  # _download_cli_binary picks up via SCRIPT_DIR (source-build fallback path).
-  local tmp home_dir fake_bin output ec
+  # A global install must produce a binary at ~/.claude/crafter/bin/crafter.
+  # Post-#37 there is no cli/bin/crafter copy path; the binary is produced by
+  # the source-build fallback in _download_cli_binary.  We inject a fast fake
+  # `go` shim so no real compilation is needed.
+  local tmp home_dir output ec fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
 
-  # Create a fake cli/bin/crafter inside the repo so that _run_installer
-  # (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
-  fake_bin="$REPO_DIR/cli/bin/crafter"
-  local fake_bin_created=0
-  if [[ ! -f "$fake_bin" ]]; then
-    mkdir -p "$(dirname "$fake_bin")"
-    printf '#!/usr/bin/env bash\necho fake-crafter\n' > "$fake_bin"
-    chmod +x "$fake_bin"
-    fake_bin_created=1
-  fi
-
+  fake_go_bin="$(_make_fake_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
-  local result_ec=$ec
-
-  # Clean up the fake binary if we created it
-  if [[ $fake_bin_created -eq 1 ]]; then
-    rm -f "$fake_bin"
-  fi
+  result_ec=$ec
+  PATH="$old_path"
 
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/crafter/bin/crafter"
@@ -511,26 +499,21 @@ test_global_builds_cli_from_source_when_local_binary_missing() {
 }
 
 test_global_links_cli_to_home_local_bin() {
-  local tmp home_dir fake_bin output ec
+  # A global install must symlink ~/.local/bin/crafter to the installed binary.
+  # Post-#37 the binary is produced by the source-build fallback in
+  # _download_cli_binary.  We inject a fast fake `go` shim so no real
+  # compilation is needed.
+  local tmp home_dir output ec fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
 
-  fake_bin="$REPO_DIR/cli/bin/crafter"
-  local fake_bin_created=0
-  if [[ ! -f "$fake_bin" ]]; then
-    mkdir -p "$(dirname "$fake_bin")"
-    printf '#!/usr/bin/env bash\necho fake-crafter\n' > "$fake_bin"
-    chmod +x "$fake_bin"
-    fake_bin_created=1
-  fi
-
+  fake_go_bin="$(_make_fake_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
-  local result_ec=$ec
-
-  if [[ $fake_bin_created -eq 1 ]]; then
-    rm -f "$fake_bin"
-  fi
+  result_ec=$ec
+  PATH="$old_path"
 
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.local/bin/crafter"
@@ -538,34 +521,22 @@ test_global_links_cli_to_home_local_bin() {
 }
 
 test_local_copies_local_cli_binary() {
-  # When cli/bin/crafter exists in the repo clone, a local install must
-  # produce a binary at <proj>/.claude/crafter/bin/crafter.  In this test
-  # the binary is provided by the fake cli/bin/crafter we create below, which
-  # _download_cli_binary picks up via SCRIPT_DIR (source-build fallback path).
-  local tmp home_dir proj_dir fake_bin output ec
+  # A local install must produce a binary at <proj>/.claude/crafter/bin/crafter.
+  # Post-#37 the binary is produced by the source-build fallback in
+  # _download_cli_binary.  We inject a fast fake `go` shim so no real
+  # compilation is needed.
+  local tmp home_dir proj_dir output ec fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   proj_dir="$tmp/project"
   mkdir -p "$home_dir" "$proj_dir"
 
-  # Create a fake cli/bin/crafter inside the repo so that _run_installer
-  # (which runs from REPO_DIR) picks it up via SCRIPT_DIR.
-  fake_bin="$REPO_DIR/cli/bin/crafter"
-  local fake_bin_created=0
-  if [[ ! -f "$fake_bin" ]]; then
-    mkdir -p "$(dirname "$fake_bin")"
-    printf '#!/usr/bin/env bash\necho fake-crafter\n' > "$fake_bin"
-    chmod +x "$fake_bin"
-    fake_bin_created=1
-  fi
-
+  fake_go_bin="$(_make_fake_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
   _run_installer "$home_dir" "$proj_dir" output ec --local
-  local result_ec=$ec
-
-  # Clean up the fake binary if we created it
-  if [[ $fake_bin_created -eq 1 ]]; then
-    rm -f "$fake_bin"
-  fi
+  result_ec=$ec
+  PATH="$old_path"
 
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$proj_dir/.claude/crafter/bin/crafter"
