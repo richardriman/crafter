@@ -4,10 +4,10 @@ description: "Systematic debugging workflow with hypothesis-driven approach"
 ---
 
 Read and follow these rules:
-- `~/.claude/crafter/rules/core.md`
-- `~/.claude/crafter/rules/debug-workflow.md`
-- `~/.claude/crafter/rules/delegation.md`
-- `~/.claude/crafter/rules/task-lifecycle.md`
+- `{CRAFTER_HOME}/rules/core.md`
+- `{CRAFTER_HOME}/rules/debug-workflow.md`
+- `{CRAFTER_HOME}/rules/delegation.md`
+- `{CRAFTER_HOME}/rules/task-lifecycle.md`
 
 You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, and verification to agents with fresh context.
 
@@ -32,7 +32,7 @@ The problem to debug: $ARGUMENTS
 
 ## Step 0 — Resume Detection
 
-Follow the resume detection procedure in `~/.claude/crafter/rules/task-lifecycle.md`.
+Follow the resume detection procedure in `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
 If resuming an active task, skip ahead to the appropriate step based on the task file contents.
 If not resuming, continue to Step 1.
@@ -49,7 +49,7 @@ Before jumping to conclusions, gather a complete picture through dialog with the
 
 Do not proceed until you have a clear symptom picture.
 
-After collecting symptoms, create the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+After collecting symptoms, create the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
 ## Step 2 — Formulate a Hypothesis
 
@@ -80,7 +80,7 @@ Present the fix clearly to the user:
 
 **Wait for explicit user approval before making any changes.**
 
-After fix approval, update the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+After fix approval, update the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
 ## Step 5 — Apply Fix
 
@@ -101,8 +101,8 @@ Delegate verification to the **Verifier** agent:
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
 
-After verification, record any notable decisions in the task file per `~/.claude/crafter/rules/task-lifecycle.md`.
+After verification, record any notable decisions in the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
 ## Steps 7–9 — Post-Change
 
-Follow the post-change steps in `~/.claude/crafter/rules/post-change.md`.
+Follow the post-change steps in `{CRAFTER_HOME}/rules/post-change.md`.

@@ -4,8 +4,8 @@ description: "Analyze codebase and generate/update .crafter/ context files"
 ---
 
 Read and follow these rules:
-- `~/.claude/crafter/rules/core.md`
-- `~/.claude/crafter/rules/delegation.md`
+- `{CRAFTER_HOME}/rules/core.md`
+- `{CRAFTER_HOME}/rules/delegation.md`
 
 You are the **orchestrator**. Your job is to manage the mapping workflow and communicate with the user. You delegate codebase analysis to the Analyzer agent and present its results for approval before writing any files.
 

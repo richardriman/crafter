@@ -17,7 +17,7 @@ The orchestrator commits **automatically** — no user prompt for the commit its
 
 1. **Phase verification passed** — the Verifier has signed off on the phase.
 2. **Clean review** — the review fix loop has closed with no Critical or Major findings remaining.
-3. **Approval signal received** — the orchestrator has received an approval signal via one of the three paths defined in the phase summary approval gate in `~/.claude/crafter/skills/crafter-do/SKILL.md` (auto-approve on clean summary | silence-approve when the `--fast` flag is set | explicit user approval as default).
+3. **Approval signal received** — the orchestrator has received an approval signal via one of the three paths defined in the phase summary approval gate in `{CRAFTER_HOME}/skills/crafter-do/SKILL.md` (auto-approve on clean summary | silence-approve when the `--fast` flag is set | explicit user approval as default).
 
 Use conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`
 
@@ -38,11 +38,11 @@ Show the user what was updated.
 
 ## Complete Task File
 
-If a task file exists for the current workflow (in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`), complete it per `~/.claude/crafter/rules/task-lifecycle.md`.
+If a task file exists for the current workflow (in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`), complete it per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
 ## Update Skillbook
 
-After completing the task file, reflect on the task and extract observations for the project's skillbook. Only do this if the `crafter` CLI binary is available at `~/.claude/crafter/bin/crafter`.
+After completing the task file, reflect on the task and extract observations for the project's skillbook. Only do this if the `crafter` CLI binary is available at `{CRAFTER_HOME}/bin/crafter`.
 
 1. Review what happened during the task: Did the implementer struggle with something project-specific? Did the reviewer flag a recurring pattern? Did the planner miss something about the project structure?
 2. Formulate 0-3 observations (only if genuinely useful — do not force observations for trivial tasks). Each observation needs:
@@ -54,7 +54,7 @@ After completing the task file, reflect on the task and extract observations for
    ```
    # Resolve SKILLBOOK_FILE with .crafter preferred and .planning as legacy fallback
    # (or use {PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json when CRAFTER_DIR is available)
-   ~/.claude/crafter/bin/crafter skillbook add \
+   {CRAFTER_HOME}/bin/crafter skillbook add \
      --agent "<agent>" \
      --rule "<rule text>" \
      --rationale "<rationale text>" \

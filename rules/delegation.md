@@ -38,12 +38,12 @@ Agent files also include a fallback `model` for direct invocation (`/agents` wit
 
 ## Skillbook — Learned Guidelines
 
-Before spawning any agent via the Task tool, check if the `crafter` CLI binary is available at `~/.claude/crafter/bin/crafter` (or `.claude/crafter/bin/crafter` for local installs). If available:
+Before spawning any agent via the Task tool, check if the `crafter` CLI binary is available at `{CRAFTER_HOME}/bin/crafter` (or `.claude/crafter/bin/crafter` for local installs). If available:
 
 1. Resolve `SKILLBOOK_FILE`:
    - Prefer `{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json` when `CRAFTER_DIR` is available.
    - Fallback for older contexts: if `CRAFTER_DIR` is not resolved, use `{PROJECT_PATH}/.crafter/skillbook.json` if that directory exists; otherwise use `{PROJECT_PATH}/.planning/skillbook.json`.
-2. Run via Bash: `~/.claude/crafter/bin/crafter skillbook get --agent <agent-short-name> --file <SKILLBOOK_FILE>`
+2. Run via Bash: `{CRAFTER_HOME}/bin/crafter skillbook get --agent <agent-short-name> --file <SKILLBOOK_FILE>`
 3. Agent name mapping: strip the `crafter-` prefix (e.g., `crafter-implementer` -> `implementer`, `crafter-planner` -> `planner`).
 4. If the command produces output (non-empty stdout), append it verbatim to the agent's task prompt. The output is already formatted as a "Learned Guidelines" markdown section.
 5. If the command produces no output, the agent has no learned guidelines — proceed normally without mentioning it.

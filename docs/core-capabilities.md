@@ -99,17 +99,17 @@ This is the single, unambiguous canonical form. Do **not** hard-code any concret
 
 ### Installer as the sole runtime-specific surface
 
-The installer (`install.sh`) is the only place in the codebase that knows the concrete installed-path layout for a given runtime. Today it deploys to `~/.claude/crafter/` (Claude Code surface). Copilot CLI and OpenCode are forward-looking aspirations referenced in task descriptions but not yet implemented in `install.sh`. The `{CRAFTER_HOME}` placeholder used in module content is intentionally runtime-neutral: each runtime's install target becomes the concrete expansion of `{CRAFTER_HOME}` at the point of deployment. The concrete expansion semantics of `{CRAFTER_HOME}` — how and where it resolves at install time, and whether that implies any substitution mechanism — are deliberately not defined here and are deferred to the sibling task `.crafter/tasks/20260421-skills-first-runtime-portability.md`.
+The installer (`install.sh`) is the only place in the codebase that knows the concrete installed-path layout for a given runtime. Today it deploys to `~/.claude/crafter/` (Claude Code surface). Copilot CLI and OpenCode are forward-looking aspirations referenced in task descriptions but not yet implemented in `install.sh`. The `{CRAFTER_HOME}` placeholder used in module content is intentionally runtime-neutral: each runtime's install target becomes the concrete expansion of `{CRAFTER_HOME}` at the point of deployment.
+
+The `{CRAFTER_HOME}` install-time expansion mechanism and the repo-wide normalization of existing hard-coded `~/.claude/...` references were completed by task `.crafter/tasks/20260518-crafter-do-progressive-loading.md` (centralized install-time `sed` substitution in `install.sh`'s `install_to()`, resolving `{CRAFTER_HOME}` → the concrete install path for `--global` and `--local`). The full multi-runtime build/transform pipeline + runtime adapters remain owned by `.crafter/tasks/20260421-skills-first-runtime-portability.md`.
 
 No module file, skill file, or rules fragment (other than `install.sh`) should resolve or reference a concrete runtime install path.
 
-### Existing hard-coded references are out of scope here
+### Existing hard-coded references are out of scope for the original task; normalization is complete
 
-Files **not touched by this task** that contain hard-coded `~/.claude/...` references are deliberately **not** normalized here. Broader, repo-wide normalization of those references is the responsibility of the sibling task:
+Files **not touched by the original core-capabilities task** that contain hard-coded `~/.claude/...` references were deliberately **not** normalized there. The repo-wide normalization of those references was subsequently completed by task `.crafter/tasks/20260518-crafter-do-progressive-loading.md`, which absorbed the normalization sub-mandate from sibling task `.crafter/tasks/20260421-skills-first-runtime-portability.md`.
 
-`.crafter/tasks/20260421-skills-first-runtime-portability.md`
-
-This task only commits to (a) the new module files following the `{CRAFTER_HOME}/rules/...` convention and (b) not making the existing situation worse.
+The original core-capabilities task only committed to (a) the new module files following the `{CRAFTER_HOME}/rules/...` convention and (b) not making the existing situation worse.
 
 ### Applied in this task
 
@@ -126,6 +126,8 @@ The runtime-path policy was established here and applied to **1 of the 3** Phase
 **Slice 6** (task `.crafter/tasks/20260518-refactor-crafter-do-slice-6-steps-6-6b-6a.md`) created `rules/do/step-6-review.md`, `rules/do/step-6b-phase-summary.md`, and `rules/do/step-6a-session-break.md` and applied the `{CRAFTER_HOME}` policy: `step-6-review.md` had two substitutions (`~/.claude/crafter/rules/do/extension-skills.md` → `{CRAFTER_HOME}/rules/do/extension-skills.md` and `~/.claude/crafter/rules/task-lifecycle.md` → `{CRAFTER_HOME}/rules/task-lifecycle.md`); `step-6b-phase-summary.md` had four substitutions (all four `~/.claude/crafter/rules/post-change.md` occurrences → `{CRAFTER_HOME}/rules/post-change.md`), with `skills/crafter-buffer/SKILL.md` left unchanged as a bare cross-skill mention (not a `~/.claude/crafter/...` install path); `step-6a-session-break.md` had zero substitutions. The bare `crafter-reviewer`, `crafter-implementer`, and `crafter-buffer` mentions and `rules/do-workflow.md → ###` anchors are not runtime install paths and were left unchanged. Repo-wide normalization remains owned by `.crafter/tasks/20260421-skills-first-runtime-portability.md`.
 
 **Slice 7 (FINAL)** (task `.crafter/tasks/20260518-refactor-crafter-do-slice-7-steps-7-9-9b.md`) created `rules/do/step-7-9-post-change.md` and `rules/do/step-9b-pr-composition.md` and applied the `{CRAFTER_HOME}` policy: `step-7-9-post-change.md` had two substitutions (both `~/.claude/crafter/rules/post-change.md` occurrences — lead-in and checklist item 2 — → `{CRAFTER_HOME}/rules/post-change.md`); `step-9b-pr-composition.md` had zero substitutions (its `.crafter/run/<task-id>/` and `{PROJECT_PATH}/{CRAFTER_DIR}/…` references are project-relative placeholders, `crafter pr-body`/`gh pr create`/`git log` are commands, and `rules/do-workflow.md → ###`/`####` anchors and the bare `rules/post-change.md` mention are not `~/.claude/crafter/...` install paths). Repo-wide normalization remains owned by `.crafter/tasks/20260421-skills-first-runtime-portability.md`. With this slice, the crafter-do core-capability decomposition is complete — every workflow step (Steps 0–9b) is now a `rules/do/*` module and `skills/crafter-do/SKILL.md` is a thin manifest of pointer stubs.
+
+**Progressive-loading task** (task `.crafter/tasks/20260518-crafter-do-progressive-loading.md`) absorbed the repo-wide `~/.claude/...` → `{CRAFTER_HOME}` normalization mandate from `.crafter/tasks/20260421-skills-first-runtime-portability.md`, added the centralized install-time `sed` substitution to `install.sh`'s `install_to()`, and normalized all normalize-classified source files (`skills/crafter-debug/SKILL.md` ×9, `skills/crafter-map-project/SKILL.md` ×2, `rules/post-change.md` ×4, `rules/delegation.md` ×2). Repo-wide normalization is COMPLETE; only the multi-runtime build/transform pipeline + runtime adapters (VS Code / Copilot CLI / OpenCode) remain with `.crafter/tasks/20260421-skills-first-runtime-portability.md`. (crafter-do SKILL.md hybrid-delegation conversion is the same task's Phase 2.)
 
 ---
 

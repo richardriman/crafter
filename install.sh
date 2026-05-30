@@ -347,6 +347,13 @@ install_to() {
   cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
 
+  # Resolve the {CRAFTER_HOME} placeholder to the concrete install path
+  local crafter_dest_escaped
+  crafter_dest_escaped="$(printf '%s' "$crafter_dest" | sed 's/[&|\\]/\\&/g')"
+  find "$rules_dest" "$skills_dest" -type f -name '*.md' -exec \
+    sed -i.bak "s|{CRAFTER_HOME}|$crafter_dest_escaped|g" {} +
+  find "$rules_dest" "$skills_dest" -name '*.md.bak' -delete
+
   mkdir -p "$crafter_dest/bin"
 }
 
