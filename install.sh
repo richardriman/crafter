@@ -17,6 +17,7 @@ REPO="richardriman/crafter"
 VERSION=""         # empty = use main branch
 TEMP_DIR=""
 REMOTE_MODE=0      # set to 1 when running from downloaded source (curl|bash path)
+WITH_STATUSLINE="" # set to 1 when --with-statusline is passed
 
 # ---------------------------------------------------------------------------
 # Detect whether we are running locally (from a cloned repo) or remotely
@@ -53,12 +54,14 @@ trap _cleanup EXIT
 # ---------------------------------------------------------------------------
 usage() {
   cat <<EOF
-Usage: ./install.sh [--global | --local] [--version VERSION]
+Usage: ./install.sh [--global | --local] [--version VERSION] [--with-statusline]
 
   --global           Install Crafter globally to ~/.claude/ (default)
   --local            Install Crafter locally to .claude/ in the current project
   --version VERSION  Pin a specific release version (e.g. 0.1.0)
                      Defaults to the latest main branch
+  --with-statusline  Register the crafter statusline hook in Claude Code
+                     settings.json (opt-in; off by default)
 
 When run via curl | bash, the installer automatically downloads the required
 files from GitHub — no git dependency needed.
@@ -452,6 +455,77 @@ install_hook() {
   '
 }
 
+install_statusline() {
+  local settings_file="$1"
+  local crafter_bin="$2"
+  local statusline_cmd="\"${crafter_bin}\" statusline"
+
+  if ! command -v node &>/dev/null; then
+    echo "Warning: node not found, skipping statusline hook registration"
+    return 0
+  fi
+
+  SETTINGS_FILE="$settings_file" STATUSLINE_CMD="$statusline_cmd" node -e '
+    (function() {
+      const fs = require("fs");
+      const settingsFile = process.env.SETTINGS_FILE;
+      const statuslineCmd = process.env.STATUSLINE_CMD;
+
+      let settings = {};
+      try {
+        settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
+      } catch (e) {}
+
+      if (settings.statusLine !== undefined) {
+        // Collision: a statusLine key already exists — print composite wrapper guidance.
+        const existingStatusLine = settings.statusLine;
+        const existingCmd = (existingStatusLine && typeof existingStatusLine.command === "string")
+          ? existingStatusLine.command
+          : null;
+        console.log("");
+        console.log("Note: statusLine already set in " + settingsFile);
+        console.log("");
+        if (existingCmd === null) {
+          // Non-command type or malformed — cannot build a runnable composite.
+          console.log("An existing statusLine of a non-command type was found; merge manually:");
+          console.log(JSON.stringify(existingStatusLine, null, 2));
+        } else {
+          // Build the composite tee-wrapper command as a plain JS string, then
+          // let JSON.stringify handle all quoting/escaping when we serialize it.
+          // Use \x27 for the single-quote character to avoid breaking the outer
+          // bash single-quoted node -e string.
+          //
+          // Apply POSIX single-quote escaping before interpolating any value
+          // into the bash -c \x27...\x27 wrapper: replace each \x27 with \x27\\\x27\x27
+          // so that existing commands containing single quotes do not prematurely
+          // close the outer quote (e.g. awk \x27{print $1}\x27, date \x27+%H:%M\x27).
+          function shSingleQuoteEscape(s) {
+            return s.split("\x27").join("\x27\\\x27\x27");
+          }
+          var sq = "\x27";
+          var safeExistingCmd = shSingleQuoteEscape(existingCmd);
+          var safeStatuslineCmd = shSingleQuoteEscape(statuslineCmd);
+          var compositeCmd = "bash -c " + sq + "in=$(cat); printf \"%s %s\" \"$(printf \"%s\" \"$in\" | " + safeExistingCmd + ")\" \"$(printf \"%s\" \"$in\" | " + safeStatuslineCmd + ")\"" + sq;
+          var guidance = { statusLine: { type: "command", command: compositeCmd } };
+          console.log("Existing command: " + existingCmd);
+          console.log("");
+          console.log("To combine both statuslines, paste this into your settings.json:");
+          console.log("");
+          console.log(JSON.stringify(guidance, null, 2));
+          console.log("");
+          console.log("The wrapper reads stdin once and feeds the same payload to both commands.");
+        }
+        return;
+      }
+
+      settings.statusLine = { type: "command", command: statuslineCmd };
+
+      fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
+      console.log("statusLine registered in " + settingsFile);
+    })();
+  '
+}
+
 install_global() {
   install_to "$HOME/.claude" "globally"
   # Allow binary build to fail without aborting the rest of the install;
@@ -459,6 +533,9 @@ install_global() {
   _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
   install_hook
+  if [[ -n "$WITH_STATUSLINE" ]]; then
+    install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
+  fi
   echo ""
   echo "Crafter installed globally."
   echo ""
@@ -467,11 +544,16 @@ install_global() {
 }
 
 install_local() {
-  install_to "$(pwd)/.claude" "locally in $(pwd)"
+  local local_base
+  local_base="$(pwd)/.claude"
+  install_to "$local_base" "locally in $(pwd)"
   # Allow binary build to fail without aborting the rest of the install;
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
-  _download_cli_binary "$(pwd)/.claude" || true
+  _download_cli_binary "$local_base" || true
   install_hook
+  if [[ -n "$WITH_STATUSLINE" ]]; then
+    install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
+  fi
   echo ""
   echo "Crafter installed locally in this project."
   echo ""
@@ -506,6 +588,10 @@ while [[ $# -gt 0 ]]; do
       fi
       VERSION="${VERSION#v}"
       shift 2
+      ;;
+    --with-statusline)
+      WITH_STATUSLINE=1
+      shift
       ;;
     --help|-h)
       usage

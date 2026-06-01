@@ -1178,6 +1178,406 @@ test_error_no_tar_exits_with_message() {
 }
 
 # ---------------------------------------------------------------------------
+# G. Statusline installation (--with-statusline)
+# ---------------------------------------------------------------------------
+
+# G1. Default install (no flag) does NOT add statusLine key — global.
+test_global_default_install_no_statusline() {
+  local tmp home_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  assert_exit_code 0 "$ec"
+  # settings.json is created by the hook registration; statusLine must be absent.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  if [[ "$settings" == *'"statusLine"'* ]]; then
+    _fail "test_global_default_install_no_statusline: settings.json contains statusLine but flag was not passed"
+  fi
+}
+
+# G1. Default install (no flag) does NOT add statusLine key — local.
+test_local_default_install_no_statusline() {
+  local tmp home_dir proj_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+  # Local statusline writes to the project .claude/settings.json.
+  # That file is only created by install_statusline (hook uses HOME's settings.json).
+  # When the flag is absent, the project settings.json must not exist OR lack statusLine.
+  local proj_settings="$proj_dir/.claude/settings.json"
+  if [[ -f "$proj_settings" ]]; then
+    settings="$(cat "$proj_settings")"
+    if [[ "$settings" == *'"statusLine"'* ]]; then
+      _fail "test_local_default_install_no_statusline: project settings.json contains statusLine but flag was not passed"
+    fi
+  fi
+}
+
+# G2. --with-statusline on a clean settings.json SETS the statusLine key — global.
+test_global_with_statusline_sets_statusline() {
+  local tmp home_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" '"type": "command"'
+  # Assert the exact command value: the written JSON must contain the quoted binary path
+  # followed by " statusline". In raw JSON the inner double quotes are escaped as \",
+  # so the raw file contains: crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter\" statusline'
+}
+
+# G2. --with-statusline on a clean settings.json SETS the statusLine key — local.
+test_local_with_statusline_sets_statusline() {
+  local tmp home_dir proj_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  assert_exit_code 0 "$ec"
+  local proj_settings="$proj_dir/.claude/settings.json"
+  assert_file_exists "$proj_settings"
+  settings="$(cat "$proj_settings")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" '"type": "command"'
+  # Assert the exact command value: the written JSON must contain the quoted binary path
+  # followed by " statusline". In raw JSON the inner double quotes are escaped as \",
+  # so the raw file contains: crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter\" statusline'
+}
+
+# G3. --with-statusline when statusLine already exists does NOT overwrite — global.
+test_global_with_statusline_no_overwrite_on_collision() {
+  local tmp home_dir output ec settings sentinel parsed_type parsed_cmd
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-existing-statusline-sentinel"
+  # Pre-seed settings.json with an existing statusLine value.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # Collision guidance should appear in stdout/stderr output.
+  assert_contains "$output" "statusLine already set"
+  # JSON structural integrity: settings.json must still be valid JSON with
+  # the original type and command preserved (not just the sentinel substring).
+  local settings_file="$home_dir/.claude/settings.json"
+  parsed_type="$(node -e "
+    var s=require('fs').readFileSync('$settings_file','utf8');
+    var j=JSON.parse(s);
+    process.stdout.write(j.statusLine.type);
+  " 2>/dev/null)" || true
+  parsed_cmd="$(node -e "
+    var s=require('fs').readFileSync('$settings_file','utf8');
+    var j=JSON.parse(s);
+    process.stdout.write(j.statusLine.command);
+  " 2>/dev/null)" || true
+  if [[ "$parsed_type" != "command" ]]; then
+    _fail "test_global_with_statusline_no_overwrite_on_collision: statusLine.type is '$parsed_type', expected 'command'"
+  fi
+  if [[ "$parsed_cmd" != "$sentinel" ]]; then
+    _fail "test_global_with_statusline_no_overwrite_on_collision: statusLine.command is '$parsed_cmd', expected '$sentinel'"
+  fi
+}
+
+# G3. --with-statusline when statusLine already exists does NOT overwrite — local.
+test_local_with_statusline_no_overwrite_on_collision() {
+  local tmp home_dir proj_dir output ec settings sentinel parsed_type parsed_cmd
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir/.claude"
+  sentinel="my-existing-statusline-sentinel"
+  # Pre-seed the project settings.json with an existing statusLine value.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$proj_dir/.claude/settings.json"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  assert_exit_code 0 "$ec"
+  settings="$(cat "$proj_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # Collision guidance should appear in stdout/stderr output.
+  assert_contains "$output" "statusLine already set"
+  # JSON structural integrity: settings.json must still be valid JSON with
+  # the original type and command preserved (not just the sentinel substring).
+  local settings_file="$proj_dir/.claude/settings.json"
+  parsed_type="$(node -e "
+    var s=require('fs').readFileSync('$settings_file','utf8');
+    var j=JSON.parse(s);
+    process.stdout.write(j.statusLine.type);
+  " 2>/dev/null)" || true
+  parsed_cmd="$(node -e "
+    var s=require('fs').readFileSync('$settings_file','utf8');
+    var j=JSON.parse(s);
+    process.stdout.write(j.statusLine.command);
+  " 2>/dev/null)" || true
+  if [[ "$parsed_type" != "command" ]]; then
+    _fail "test_local_with_statusline_no_overwrite_on_collision: statusLine.type is '$parsed_type', expected 'command'"
+  fi
+  if [[ "$parsed_cmd" != "$sentinel" ]]; then
+    _fail "test_local_with_statusline_no_overwrite_on_collision: statusLine.command is '$parsed_cmd', expected '$sentinel'"
+  fi
+}
+
+# G4. --with-statusline is idempotent — second run does not corrupt settings — global.
+test_global_with_statusline_is_idempotent() {
+  local tmp home_dir output ec settings count
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+  # Second run: statusLine already set → collision path → no overwrite.
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  # Exactly one statusLine key must exist.
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_global_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+  fi
+  assert_contains "$settings" 'crafter'
+  assert_contains "$settings" 'statusline'
+}
+
+# G4. --with-statusline is idempotent — second run does not corrupt settings — local.
+test_local_with_statusline_is_idempotent() {
+  local tmp home_dir proj_dir output ec settings count
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  assert_exit_code 0 "$ec"
+  # Second run: statusLine already set → collision path → no overwrite.
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  assert_exit_code 0 "$ec"
+  local proj_settings="$proj_dir/.claude/settings.json"
+  settings="$(cat "$proj_settings")"
+  # Exactly one statusLine key must exist.
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_local_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+  fi
+  assert_contains "$settings" 'crafter'
+  assert_contains "$settings" 'statusline'
+}
+
+# G5. Collision guidance stdout is valid JSON whose .statusLine.command contains
+#     both the existing command and the crafter statusline invocation.
+test_collision_guidance_is_valid_json() {
+  local tmp home_dir output ec sentinel guidance_json
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="some-existing-statusline-tool"
+  # Pre-seed settings.json with an existing statusLine so a collision is triggered.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+
+  # Extract the JSON block from the printed output using brace-depth counting so
+  # that command values containing literal braces (e.g. awk '{print $1}') do not
+  # cause premature termination.  We scan character-by-character, starting from
+  # the first '{' that appears on a line after the "paste this" prompt line.
+  guidance_json="$(printf '%s\n' "$output" | node -e '
+    var chunks = [];
+    process.stdin.on("data", function(d) { chunks.push(d); });
+    process.stdin.on("end", function() {
+      var text = chunks.join("");
+      // Locate the opening brace that begins the guidance JSON object.
+      // It appears after the "paste this into your settings.json:" marker line.
+      var markerIdx = text.indexOf("paste this into your settings.json:");
+      if (markerIdx === -1) { return; }
+      var start = text.indexOf("{", markerIdx);
+      if (start === -1) { return; }
+      // Walk forward counting brace depth to find the matching closing brace.
+      var depth = 0;
+      var end = -1;
+      for (var i = start; i < text.length; i++) {
+        if (text[i] === "{") { depth++; }
+        else if (text[i] === "}") {
+          depth--;
+          if (depth === 0) { end = i; break; }
+        }
+      }
+      if (end !== -1) { process.stdout.write(text.slice(start, end + 1)); }
+    });
+  ' 2>/dev/null)" || true
+
+  if [[ -z "$guidance_json" ]]; then
+    _fail "test_collision_guidance_is_valid_json: could not extract statusLine JSON block from installer output"
+    return
+  fi
+
+  # Assert the extracted block is valid JSON.
+  local parse_ok
+  parse_ok="$(printf '%s' "$guidance_json" | node -e '
+    var chunks = [];
+    process.stdin.on("data", function(d) { chunks.push(d); });
+    process.stdin.on("end", function() {
+      try {
+        var obj = JSON.parse(chunks.join(""));
+        var cmd = obj.statusLine && obj.statusLine.command;
+        process.stdout.write(cmd ? "ok:" + cmd : "no-command");
+      } catch (e) {
+        process.stdout.write("parse-error:" + e.message);
+      }
+    });
+  ' 2>/dev/null)" || true
+
+  if [[ "$parse_ok" != ok:* ]]; then
+    _fail "test_collision_guidance_is_valid_json: guidance block is not valid JSON or missing .command: $parse_ok"
+    return
+  fi
+
+  local cmd_value="${parse_ok#ok:}"
+  # The composite command must reference the existing tool.
+  if [[ "$cmd_value" != *"$sentinel"* ]]; then
+    _fail "test_collision_guidance_is_valid_json: .command does not contain existing command '$sentinel': $cmd_value"
+  fi
+  # The composite command must reference the crafter statusline invocation.
+  if [[ "$cmd_value" != *"statusline"* ]]; then
+    _fail "test_collision_guidance_is_valid_json: .command does not contain 'statusline': $cmd_value"
+  fi
+}
+
+# G6. Collision guidance: existing command containing a single quote produces
+#     a syntactically valid composite bash command (regression for #1).
+test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell() {
+  local tmp home_dir output ec guidance_json cmd_value
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+
+  # Seed an existing statusLine.command that contains single quotes — the
+  # exact pattern that breaks an unescaped bash -c '...' wrapper.
+  # We JSON-encode the value (single quote has no special meaning in JSON).
+  printf '{"statusLine":{"type":"command","command":"awk '"'"'{print $1}'"'"'"}}\n' \
+    > "$home_dir/.claude/settings.json"
+
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+
+  # Extract the guidance JSON block using the same brace-counting method as G5.
+  guidance_json="$(printf '%s\n' "$output" | node -e '
+    var chunks = [];
+    process.stdin.on("data", function(d) { chunks.push(d); });
+    process.stdin.on("end", function() {
+      var text = chunks.join("");
+      var markerIdx = text.indexOf("paste this into your settings.json:");
+      if (markerIdx === -1) { return; }
+      var start = text.indexOf("{", markerIdx);
+      if (start === -1) { return; }
+      var depth = 0; var end = -1;
+      for (var i = start; i < text.length; i++) {
+        if (text[i] === "{") { depth++; }
+        else if (text[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
+      }
+      if (end !== -1) { process.stdout.write(text.slice(start, end + 1)); }
+    });
+  ' 2>/dev/null)" || true
+
+  if [[ -z "$guidance_json" ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: could not extract guidance JSON"
+    return
+  fi
+
+  # Parse the guidance JSON and extract the .command value.
+  cmd_value="$(printf '%s' "$guidance_json" | node -e '
+    var chunks = [];
+    process.stdin.on("data", function(d) { chunks.push(d); });
+    process.stdin.on("end", function() {
+      try {
+        var obj = JSON.parse(chunks.join(""));
+        process.stdout.write(obj.statusLine.command);
+      } catch (e) {
+        process.stdout.write("PARSE-ERROR:" + e.message);
+      }
+    });
+  ' 2>/dev/null)" || true
+
+  if [[ "$cmd_value" == PARSE-ERROR* ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: guidance is not valid JSON: $cmd_value"
+    return
+  fi
+
+  # The extracted .command must be syntactically valid bash — no unexpected EOF.
+  #
+  # WHY we EXECUTE rather than use `bash -n -c`:
+  # bash -n -c "$cmd_value" only parses the OUTER level of the command — it sees
+  # the tokens `bash`, `-c`, and a string argument, and returns 0 without ever
+  # parsing the INNER single-quoted pipeline.  A pre-fix unescaped single quote
+  # inside that pipeline (e.g. `awk '{print $1}'`) would make bash -n exit 0
+  # for both the broken and the correct command, giving false confidence.
+  #
+  # By actually EXECUTING with `bash -c "$cmd_value"`, bash parses and runs the
+  # inner single-quoted pipeline.  A broken inner quote (pre-fix) causes bash to
+  # abort with "unexpected EOF while looking for matching" / "syntax error" and
+  # exit 2.  A correct (post-fix, '\''…'\''-escaped) command runs normally and
+  # exits 0 even if the crafter binary is absent (a missing-binary error is exit
+  # 127 caught inside the inner $(...) substitution, NOT a syntax error).
+  #
+  # Discrimination proof (verified manually):
+  #   pre-fix  (awk '{print $1}' embedded raw) → exit 2, stderr contains "syntax error"
+  #   post-fix (awk '\''{ print $1 }'\''  escaped) → exit 0, no syntax error in stderr
+  local exec_output="" exec_ec=0
+  exec_output="$(printf 'hello world\n' | bash -c "$cmd_value" 2>&1)" || exec_ec=$?
+
+  # A shell SYNTAX error from a broken inner quote exits with code 2 and prints
+  # "syntax error" / "unexpected" in stderr.  Any other non-zero exit (e.g. 127
+  # for a missing crafter binary) is acceptable — it is a runtime error, not a
+  # syntax error.
+  if [[ "$exec_ec" -eq 2 ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: composite .command has shell syntax error (exit $exec_ec): $cmd_value"
+    return
+  fi
+  if [[ "$exec_output" == *"syntax error"* || "$exec_output" == *"unexpected EOF"* || "$exec_output" == *"unexpected token"* ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: composite .command produced syntax-error output: $exec_output"
+  fi
+}
+
+# G7. --with-statusline with node absent warns and exits 0; settings NOT modified.
+test_with_statusline_node_missing_warns_and_skips() {
+  local tmp home_dir output ec settings safe_bin
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  safe_bin="$(_make_safe_bin_without "node")"
+  local _ec=0 _output=""
+  if [[ -f "$HOME/.tool-versions" && ! -f "$home_dir/.tool-versions" ]]; then
+    cp "$HOME/.tool-versions" "$home_dir/.tool-versions"
+  fi
+  _output="$(cd "$tmp" && HOME="$home_dir" PATH="$safe_bin" bash "$INSTALL_SH" --global --with-statusline 2>&1)" \
+    && _ec=$? || _ec=$?
+  output="$_output"
+  ec="$_ec"
+  assert_exit_code 0 "$ec"
+  assert_contains "$output" "node not found"
+  # settings.json should not contain a statusLine key (node-missing → skip).
+  local settings_file="$home_dir/.claude/settings.json"
+  if [[ -f "$settings_file" ]]; then
+    settings="$(cat "$settings_file")"
+    if [[ "$settings" == *'"statusLine"'* ]]; then
+      _fail "test_with_statusline_node_missing_warns_and_skips: settings.json contains statusLine but node was absent"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Syntax check
 # ---------------------------------------------------------------------------
 test_install_sh_passes_bash_syntax_check() {
