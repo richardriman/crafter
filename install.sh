@@ -147,6 +147,41 @@ _download_release() {
 }
 
 # ---------------------------------------------------------------------------
+# Resolve the command prefix needed to run `go`.
+#
+# Priority:
+#   1. `go` is directly on PATH  → prints "go"
+#   2. `mise` is available and manages Go  → prints "mise exec -- go"
+#   3. `asdf` is available and manages Go  → prints "asdf exec go"
+#   4. Nothing found  → prints nothing and returns 1
+#
+# Usage:
+#   IFS=' ' read -r -a go_cmd <<< "$(_resolve_go)" && "${go_cmd[@]}" build ...
+# ---------------------------------------------------------------------------
+_resolve_go() {
+  # Direct PATH hit — fast path, no version-manager overhead.
+  if command -v go &>/dev/null; then
+    echo "go"
+    return 0
+  fi
+
+  # mise: present and has Go shim available.
+  if command -v mise &>/dev/null && mise which go &>/dev/null 2>&1; then
+    echo "mise exec -- go"
+    return 0
+  fi
+
+  # asdf: present and has a Go version installed.
+  if command -v asdf &>/dev/null && asdf which go &>/dev/null 2>&1; then
+    echo "asdf exec go"
+    return 0
+  fi
+
+  # Nothing found.
+  return 1
+}
+
+# ---------------------------------------------------------------------------
 # Install CLI binary for the current platform/arch.
 # Prefers release assets in remote mode and falls back to source build.
 # ---------------------------------------------------------------------------
@@ -209,10 +244,25 @@ _download_cli_binary() {
   fi
 
   if [[ -f "$SCRIPT_DIR/cli/go.mod" ]]; then
-    if ! command -v go &>/dev/null; then
-      echo "Warning: go not found; skipping CLI source build fallback." >&2
-      return 0
+    # Resolve the go command prefix (direct PATH, mise, or asdf).
+    local go_prefix
+    if ! go_prefix="$(_resolve_go)"; then
+      echo "" >&2
+      echo "ERROR: Go toolchain not found." >&2
+      echo "  Crafter needs Go to build its CLI binary from source, but Go was not" >&2
+      echo "  detected on PATH, via mise, or via asdf." >&2
+      echo "  Install Go (https://go.dev/dl/) or make it available in your shell," >&2
+      echo "  then re-run install.sh." >&2
+      echo "  The rest of Crafter has been installed, but the 'crafter' binary is MISSING." >&2
+      echo "" >&2
+      # Do not return 0 — signal failure so the caller can surface it.
+      return 1
     fi
+    # Split the prefix into an array so it works as a command prefix correctly
+    # whether it is a single word ("go") or multiple ("mise exec -- go").
+    local -a go_cmd
+    IFS=' ' read -r -a go_cmd <<< "$go_prefix"
+
     local temp_tool_versions_created=0
     if [[ "$REMOTE_MODE" -eq 1 && -f "$HOME/.tool-versions" && ! -f "$SCRIPT_DIR/cli/.tool-versions" ]]; then
       cp "$HOME/.tool-versions" "$SCRIPT_DIR/cli/.tool-versions"
@@ -220,6 +270,8 @@ _download_cli_binary() {
     fi
     local go_version=""
     go_version="$(awk '/^go[[:space:]]+/ { print $2; exit }' "$SCRIPT_DIR/cli/go.mod" 2>/dev/null || true)"
+    # When asdf manages Go versions, pin the exact version that matches
+    # the one declared in go.mod so ASDF_GOLANG_VERSION picks the right shim.
     if [[ -n "$go_version" ]] && command -v asdf &>/dev/null; then
       local asdf_go_version=""
       asdf_go_version="$(
@@ -231,8 +283,8 @@ _download_cli_binary() {
         go_version="$asdf_go_version"
       fi
     fi
-    echo "Building CLI binary from source..."
-    if (cd "$SCRIPT_DIR/cli" && ASDF_GOLANG_VERSION="$go_version" go build -o "$dest_bin" .); then
+    echo "Building CLI binary from source (using: ${go_cmd[*]})..."
+    if (cd "$SCRIPT_DIR/cli" && ASDF_GOLANG_VERSION="$go_version" "${go_cmd[@]}" build -o "$dest_bin" .); then
       chmod +x "$dest_bin"
       echo "CLI binary installed to $dest_bin"
     else
@@ -402,7 +454,9 @@ install_hook() {
 
 install_global() {
   install_to "$HOME/.claude" "globally"
-  _download_cli_binary "$HOME/.claude"
+  # Allow binary build to fail without aborting the rest of the install;
+  # _download_cli_binary already prints a clear error to stderr when Go is missing.
+  _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
   install_hook
   echo ""
@@ -414,7 +468,9 @@ install_global() {
 
 install_local() {
   install_to "$(pwd)/.claude" "locally in $(pwd)"
-  _download_cli_binary "$(pwd)/.claude"
+  # Allow binary build to fail without aborting the rest of the install;
+  # _download_cli_binary already prints a clear error to stderr when Go is missing.
+  _download_cli_binary "$(pwd)/.claude" || true
   install_hook
   echo ""
   echo "Crafter installed locally in this project."
