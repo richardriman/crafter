@@ -11,45 +11,41 @@ import (
 
 const maxScannerBytes = 1 << 20 // 1 MB — task files can reach 50–80 KB
 
-// taskMatch holds the result of a successful active-task resolution.
-// It is the internal contract that Render (and Step 1.3) consume.
-type taskMatch struct {
-	// Path is the absolute path to the matching task file.
-	Path string
+// taskClassification holds the three signals produced by a single scan of the
+// tasks directory.  It is the output of classifyTasks.
+type taskClassification struct {
+	// ActiveCurrent is the absolute path of the lexicographically-largest
+	// active task whose work branch matches the current branch, or "" if none.
+	// This is the rung-1 winner.
+	ActiveCurrent string
+
+	// CompletedCurrent is the absolute path of the lexicographically-largest
+	// completed task (status == "completed") whose work branch matches the
+	// current branch, or "" if none.  This is the rung-2 winner.
+	CompletedCurrent string
+
+	// ActiveOtherCount is the number of active tasks whose work branch differs
+	// from the current branch.  This is the rung-3 signal.
+	ActiveOtherCount int
 }
 
-// resolveActiveTask locates the active Crafter task file for the given working
-// directory.  It:
-//  1. Walks up from workdir to find a .crafter/ context directory (bounded by
-//     the filesystem root and the user's home directory).
-//  2. Reads the current git branch from the nearest .git/HEAD (walking up from
-//     workdir); returns nil if there is no repo or the HEAD is detached.
-//  3. Scans <ctxdir>/.crafter/tasks/*.md for a file whose ## Metadata section
-//     contains BOTH "- **Status:** active" and "- **Work branch:** <branch>".
-//  4. When multiple files match, returns the one with the lexicographically
-//     largest filename (i.e. the most-recent date prefix).
-//
-// Returns nil (never an error) on any failure so the caller can silently
-// produce no output — preserving the silent-fail posture of the statusline
-// contract.
-func resolveActiveTask(workdir string) *taskMatch {
-	ctxDir := findCrafterDir(workdir)
-	if ctxDir == "" {
-		return nil
-	}
-
-	branch := readGitBranch(workdir)
-	if branch == "" {
-		return nil
-	}
-
+// classifyTasks performs a single os.ReadDir of the tasks directory and opens
+// each .md file once via extractTaskMeta to classify it into one of the three
+// rung buckets.  It returns a zero taskClassification on any setup failure
+// (no dir, unreadable dir) so the caller silently produces no output.
+func classifyTasks(ctxDir, branch string) taskClassification {
 	tasksDir := filepath.Join(ctxDir, ".crafter", "tasks")
 	entries, err := os.ReadDir(tasksDir)
 	if err != nil {
-		return nil
+		return taskClassification{}
 	}
 
-	var matches []string
+	var (
+		activeCurrent    []string
+		completedCurrent []string
+		activeOtherCount int
+	)
+
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
@@ -59,18 +55,31 @@ func resolveActiveTask(workdir string) *taskMatch {
 			continue
 		}
 		path := filepath.Join(tasksDir, name)
-		if isActiveTaskForBranch(path, branch) {
-			matches = append(matches, path)
+		meta := extractTaskMeta(path)
+
+		switch {
+		case meta.status == "active" && meta.workBranch == branch:
+			activeCurrent = append(activeCurrent, path)
+		case meta.status == "completed" && meta.workBranch == branch:
+			completedCurrent = append(completedCurrent, path)
+		case meta.status == "active" && meta.workBranch != branch && meta.workBranch != "":
+			activeOtherCount++
 		}
 	}
 
-	if len(matches) == 0 {
-		return nil
+	var result taskClassification
+	result.ActiveOtherCount = activeOtherCount
+
+	if len(activeCurrent) > 0 {
+		sort.Strings(activeCurrent)
+		result.ActiveCurrent = activeCurrent[len(activeCurrent)-1]
+	}
+	if len(completedCurrent) > 0 {
+		sort.Strings(completedCurrent)
+		result.CompletedCurrent = completedCurrent[len(completedCurrent)-1]
 	}
 
-	// Tie-break: most recent by filename (date-prefix sort is lexicographic).
-	sort.Strings(matches)
-	return &taskMatch{Path: matches[len(matches)-1]}
+	return result
 }
 
 // findCrafterDir walks up from dir looking for a .crafter/ subdirectory.
@@ -142,27 +151,37 @@ func findGitDir(dir string) string {
 	}
 }
 
-// isActiveTaskForBranch reports whether the task file at path has both
-// "- **Status:** active" and "- **Work branch:** <branch>" in its ## Metadata
-// section.
+// taskMeta holds the status and work-branch strings extracted from a task
+// file's ## Metadata section.  Both fields are empty if the file cannot be
+// read or has no ## Metadata section.
+type taskMeta struct {
+	status     string // e.g. "active", "completed", "abandoned"
+	workBranch string // value of "- **Work branch:** <branch>"
+}
+
+// extractTaskMeta opens path once, scans its ## Metadata section, and returns
+// the raw status and work-branch strings found there.  Scanning stops at the
+// first ## heading after ## Metadata, or at EOF, whichever comes first —
+// exactly the same section-boundary semantics as the previous
+// isActiveTaskForBranch implementation.
 //
-// Scanning is limited to the ## Metadata section only (stops at the next ## or
-// EOF) to avoid false matches deeper in the file.  The scanner buffer is sized
+// On any open or read error the function returns a zero taskMeta (both fields
+// empty) so the caller silently treats the file as "no match", preserving the
+// silent-fail posture of the statusline contract.  The scanner buffer is sized
 // to 1 MB to handle large task files.
-func isActiveTaskForBranch(path, branch string) bool {
+func extractTaskMeta(path string) taskMeta {
 	f, err := os.Open(path)
 	if err != nil {
-		return false
+		return taskMeta{}
 	}
 	defer f.Close()
 
-	wantBranch := "- **Work branch:** " + branch
-	wantStatus := "- **Status:** active"
+	const statusPrefix = "- **Status:** "
+	const branchPrefix = "- **Work branch:** "
 
 	var (
-		inMeta      bool
-		foundStatus bool
-		foundBranch bool
+		inMeta bool
+		meta   taskMeta
 	)
 
 	scanner := bufio.NewScanner(f)
@@ -186,22 +205,24 @@ func isActiveTaskForBranch(path, branch string) bool {
 			continue
 		}
 
-		if line == wantStatus {
-			foundStatus = true
+		if meta.status == "" && strings.HasPrefix(line, statusPrefix) {
+			meta.status = strings.TrimPrefix(line, statusPrefix)
 		}
-		if line == wantBranch {
-			foundBranch = true
+		if meta.workBranch == "" && strings.HasPrefix(line, branchPrefix) {
+			meta.workBranch = strings.TrimPrefix(line, branchPrefix)
 		}
 
-		if foundStatus && foundBranch {
-			return true
+		if meta.status != "" && meta.workBranch != "" {
+			// Both fields found; no need to read further.
+			break
 		}
 	}
 
 	if err := scanner.Err(); err != nil && !errors.Is(err, bufio.ErrTooLong) {
-		// ErrTooLong means the file is unusual; still return false rather than panic.
+		// ErrTooLong means the file is unusual; still return partial/zero meta
+		// rather than panic.
 		_ = err
 	}
 
-	return foundStatus && foundBranch
+	return meta
 }

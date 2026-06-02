@@ -485,7 +485,7 @@ func TestParsePlan_PhasesNoSteps(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// resolveActiveTask edge cases (hermetic, using t.TempDir)
+// classifyTasks edge cases (hermetic, using t.TempDir)
 // ---------------------------------------------------------------------------
 
 // makeRepo writes a minimal .git/HEAD file under root, recording the given branch.
@@ -505,91 +505,134 @@ func makeTaskFile(t *testing.T, root, name, status, branch string) string {
 	return path
 }
 
-func TestResolveActiveTask_Match(t *testing.T) {
+// classifyFromRoot is a convenience helper that resolves the crafter context
+// directory and git branch from root (identical to what Render does), then
+// calls classifyTasks.  Returns a zero taskClassification if either lookup
+// fails, mirroring the silent-fail behaviour of the production path.
+func classifyFromRoot(root string) taskClassification {
+	ctxDir := findCrafterDir(root)
+	if ctxDir == "" {
+		return taskClassification{}
+	}
+	branch := readGitBranch(root)
+	if branch == "" {
+		return taskClassification{}
+	}
+	return classifyTasks(ctxDir, branch)
+}
+
+// TestClassifyTasks_Match verifies that an active task whose work branch
+// matches the current branch is selected as ActiveCurrent.
+func TestClassifyTasks_Match(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "feat/my-feature")
 	makeTaskFile(t, root, "20260601-my-task.md", "active", "feat/my-feature")
 
-	m := resolveActiveTask(root)
-	if m == nil {
-		t.Fatal("expected a match, got nil")
-	}
-	if !strings.HasSuffix(m.Path, "20260601-my-task.md") {
-		t.Errorf("unexpected match path: %s", m.Path)
+	cls := classifyFromRoot(root)
+	if !strings.HasSuffix(cls.ActiveCurrent, "20260601-my-task.md") {
+		t.Errorf("unexpected ActiveCurrent path: %s", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_NoCrafterDir(t *testing.T) {
+// TestClassifyTasks_NoCrafterDir verifies that a workdir with no .crafter/
+// directory produces a zero classification (ActiveCurrent == "").
+func TestClassifyTasks_NoCrafterDir(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "feat/my-feature")
 	// No .crafter/ directory created.
 
-	m := resolveActiveTask(root)
-	if m != nil {
-		t.Errorf("expected nil when no .crafter/ dir, got %v", m)
+	cls := classifyFromRoot(root)
+	if cls.ActiveCurrent != "" {
+		t.Errorf("expected empty ActiveCurrent when no .crafter/ dir, got %q", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_BranchMismatch(t *testing.T) {
+// TestClassifyTasks_BranchMismatch verifies that a task whose work branch does
+// not match the current branch is NOT selected as ActiveCurrent.
+func TestClassifyTasks_BranchMismatch(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "main")
 	makeTaskFile(t, root, "20260601-my-task.md", "active", "feat/other-branch")
 
-	m := resolveActiveTask(root)
-	if m != nil {
-		t.Errorf("expected nil when work branch doesn't match current branch, got %v", m)
+	cls := classifyFromRoot(root)
+	if cls.ActiveCurrent != "" {
+		t.Errorf("expected empty ActiveCurrent when work branch doesn't match, got %q", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_StatusNotActive(t *testing.T) {
+// TestClassifyTasks_StatusNotActive verifies that a task with a non-active
+// status is not selected as ActiveCurrent.
+func TestClassifyTasks_StatusNotActive(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "feat/my-feature")
 	makeTaskFile(t, root, "20260601-my-task.md", "done", "feat/my-feature")
 
-	m := resolveActiveTask(root)
-	if m != nil {
-		t.Errorf("expected nil for non-active task, got %v", m)
+	cls := classifyFromRoot(root)
+	if cls.ActiveCurrent != "" {
+		t.Errorf("expected empty ActiveCurrent for non-active task, got %q", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_MultipleMatchesMostRecentWins(t *testing.T) {
+// TestClassifyTasks_MultipleMatchesMostRecentWins verifies that when multiple
+// active tasks match the current branch, the lexicographically-largest filename
+// (most-recent date prefix) is selected as ActiveCurrent.
+func TestClassifyTasks_MultipleMatchesMostRecentWins(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "feat/my-feature")
 	// Two active files matching the same branch; lexicographically larger (later date) wins.
 	makeTaskFile(t, root, "20260501-older-task.md", "active", "feat/my-feature")
 	makeTaskFile(t, root, "20260601-newer-task.md", "active", "feat/my-feature")
 
-	m := resolveActiveTask(root)
-	if m == nil {
-		t.Fatal("expected a match, got nil")
-	}
-	if !strings.HasSuffix(m.Path, "20260601-newer-task.md") {
-		t.Errorf("expected newer task to win tie-break, got %s", m.Path)
+	cls := classifyFromRoot(root)
+	if !strings.HasSuffix(cls.ActiveCurrent, "20260601-newer-task.md") {
+		t.Errorf("expected newer task to win tie-break, got %s", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_DetachedHead(t *testing.T) {
+// TestClassifyTasks_DetachedHead verifies that a detached HEAD (bare SHA in
+// .git/HEAD) produces a zero classification (ActiveCurrent == "").
+func TestClassifyTasks_DetachedHead(t *testing.T) {
 	root := t.TempDir()
 	// Detached HEAD: no "ref: refs/heads/" prefix.
 	writeFile(t, filepath.Join(root, ".git", "HEAD"), "abc1234def5678\n")
 	makeTaskFile(t, root, "20260601-my-task.md", "active", "feat/my-feature")
 
-	m := resolveActiveTask(root)
-	if m != nil {
-		t.Errorf("expected nil for detached HEAD, got %v", m)
+	cls := classifyFromRoot(root)
+	if cls.ActiveCurrent != "" {
+		t.Errorf("expected empty ActiveCurrent for detached HEAD, got %q", cls.ActiveCurrent)
 	}
 }
 
-func TestResolveActiveTask_NoGitRepo(t *testing.T) {
+// TestClassifyTasks_NoGitRepo verifies that a workdir with a .crafter/
+// directory but no .git repo produces a zero classification (ActiveCurrent == "").
+func TestClassifyTasks_NoGitRepo(t *testing.T) {
 	root := t.TempDir()
 	// Create .crafter dir but no .git.
 	if err := os.MkdirAll(filepath.Join(root, ".crafter", "tasks"), 0o755); err != nil {
 		t.Fatalf("creating .crafter/tasks: %v", err)
 	}
 
-	m := resolveActiveTask(root)
-	if m != nil {
-		t.Errorf("expected nil when no git repo, got %v", m)
+	cls := classifyFromRoot(root)
+	if cls.ActiveCurrent != "" {
+		t.Errorf("expected empty ActiveCurrent when no git repo, got %q", cls.ActiveCurrent)
+	}
+}
+
+// TestClassifyTasks_CompletedTieBreak directly asserts that when multiple
+// completed tasks match the current branch, CompletedCurrent is set to the
+// lexicographically-largest (most-recent-by-filename) path.
+func TestClassifyTasks_CompletedTieBreak(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/done-branch")
+	makeTaskFile(t, root, "20260401-older-done.md", "completed", "feat/done-branch")
+	makeTaskFile(t, root, "20260601-newer-done.md", "completed", "feat/done-branch")
+
+	ctxDir := findCrafterDir(root)
+	branch := readGitBranch(root)
+	cls := classifyTasks(ctxDir, branch)
+
+	if !strings.HasSuffix(cls.CompletedCurrent, "20260601-newer-done.md") {
+		t.Errorf("completed tie-break: expected newer file as CompletedCurrent, got %q", cls.CompletedCurrent)
 	}
 }
 
@@ -713,6 +756,204 @@ func TestParsePlan_LiveFixture(t *testing.T) {
 		}
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Render cascade — rung 2, 3, 4 and edge cases
+// ---------------------------------------------------------------------------
+
+// TestRender_Rung2_CompletedCurrentBranch verifies that a completed task on
+// the current branch (no active task) produces the "crafter · ✓ done" segment.
+func TestRender_Rung2_CompletedCurrentBranch(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/done-branch")
+	makeTaskFile(t, root, "20260601-finished.md", "completed", "feat/done-branch")
+
+	got := Render(root)
+	if got != segDone {
+		t.Errorf("rung 2: got %q, want %q", got, segDone)
+	}
+}
+
+// TestRender_Rung2_TieBreakMostRecentWins verifies that when multiple completed
+// tasks on the current branch exist, the lexicographically-largest filename wins.
+func TestRender_Rung2_TieBreakMostRecentWins(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/done-branch")
+	makeTaskFile(t, root, "20260401-older-done.md", "completed", "feat/done-branch")
+	makeTaskFile(t, root, "20260601-newer-done.md", "completed", "feat/done-branch")
+
+	got := Render(root)
+	// Both completed tasks match; the lexicographically-larger (newer) one wins.
+	// The result is still segDone regardless of which file was selected, but the
+	// rung-2 path must be taken (not rung 3 or 4).
+	if got != segDone {
+		t.Errorf("rung 2 tie-break: got %q, want %q", got, segDone)
+	}
+}
+
+// TestRender_Rung1_BeatsRung2 verifies that when both an active and a completed
+// task exist on the current branch, rung 1 (active) wins over rung 2 (completed).
+func TestRender_Rung1_BeatsRung2(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/mixed-branch")
+
+	// Write a completed task.
+	makeTaskFile(t, root, "20260501-done-task.md", "completed", "feat/mixed-branch")
+
+	// Write a full active task with an approved plan so rung 1 produces a non-empty
+	// segment distinct from segDone.
+	activeContent := `## Metadata
+- **Status:** active
+- **Work branch:** feat/mixed-branch
+
+## Plan
+**Plan status:** approved
+
+#### Phase 1 — work
+- [x] Step one
+- [ ] Step two
+`
+	activeTaskPath := filepath.Join(root, ".crafter", "tasks", "20260601-active-task.md")
+	writeFile(t, activeTaskPath, activeContent)
+
+	got := Render(root)
+	// Rung 1 must win: result must NOT be segDone and must contain plan-progress markers.
+	if got == segDone {
+		t.Errorf("rung 1 must beat rung 2: got segDone %q but expected active plan segment", got)
+	}
+	if got == "" {
+		t.Error("rung 1 must beat rung 2: got empty string but expected active plan segment")
+	}
+	if !strings.Contains(got, "Phase") {
+		t.Errorf("rung 1 must beat rung 2: expected 'Phase' in segment, got %q", got)
+	}
+}
+
+// TestRender_Rung3_Singular verifies that one active task on a different branch
+// produces "crafter · 1 active elsewhere".
+func TestRender_Rung3_Singular(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+	makeTaskFile(t, root, "20260601-other-task.md", "active", "feat/other-branch")
+
+	got := Render(root)
+	want := "crafter · 1 active elsewhere"
+	if got != want {
+		t.Errorf("rung 3 singular: got %q, want %q", got, want)
+	}
+}
+
+// TestRender_Rung3_Plural verifies that multiple active tasks on other branches
+// produce "crafter · N active elsewhere" with the correct count.
+func TestRender_Rung3_Plural(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+	makeTaskFile(t, root, "20260601-task-a.md", "active", "feat/branch-a")
+	makeTaskFile(t, root, "20260602-task-b.md", "active", "feat/branch-b")
+	makeTaskFile(t, root, "20260603-task-c.md", "active", "feat/branch-c")
+
+	got := Render(root)
+	want := "crafter · 3 active elsewhere"
+	if got != want {
+		t.Errorf("rung 3 plural: got %q, want %q", got, want)
+	}
+}
+
+// TestRender_Rung4_ZeroActiveOther verifies that when there are no active tasks
+// anywhere, Render returns "" (not "crafter · 0 active elsewhere").
+func TestRender_Rung4_Zero(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+	// A completed task on a different branch — no active tasks anywhere.
+	makeTaskFile(t, root, "20260601-old-task.md", "completed", "feat/other-branch")
+
+	got := Render(root)
+	if got != "" {
+		t.Errorf("rung 4: expected empty string, got %q (must not be 'crafter · 0 active elsewhere')", got)
+	}
+}
+
+// TestRender_Guard_NoCrafterDir verifies that a workdir with no .crafter/ directory
+// returns "".
+func TestRender_Guard_NoCrafterDir(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+	// No .crafter/ directory created.
+
+	got := Render(root)
+	if got != "" {
+		t.Errorf("no .crafter dir: expected %q, got %q", "", got)
+	}
+}
+
+// TestRender_Guard_DetachedHead verifies that a detached HEAD returns "".
+func TestRender_Guard_DetachedHead(t *testing.T) {
+	root := t.TempDir()
+	// Detached HEAD: write a bare SHA instead of "ref: refs/heads/…".
+	writeFile(t, filepath.Join(root, ".git", "HEAD"), "abc1234def5678\n")
+	makeTaskFile(t, root, "20260601-task.md", "active", "feat/some-branch")
+
+	got := Render(root)
+	if got != "" {
+		t.Errorf("detached HEAD: expected %q, got %q", "", got)
+	}
+}
+
+// TestRender_Guard_TasksDirMissingOrEmpty verifies that a .crafter/ with no tasks
+// returns "".
+func TestRender_Guard_TasksDirMissingOrEmpty(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+	// Create .crafter/ but no tasks/ subdirectory.
+	if err := os.MkdirAll(filepath.Join(root, ".crafter"), 0o755); err != nil {
+		t.Fatalf("creating .crafter: %v", err)
+	}
+
+	got := Render(root)
+	if got != "" {
+		t.Errorf("tasks dir missing: expected %q, got %q", "", got)
+	}
+}
+
+// TestRender_KnownLimitation_NonStandardBranchField verifies the settled scope
+// decision: a task file that uses only the non-standard "- **Branch:** <value>"
+// field (without "- **Work branch:** ") is NOT counted by rung 3.  This pins the
+// strict-match behaviour documented in the task spec as a known limitation.
+func TestRender_KnownLimitation_NonStandardBranchField(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+
+	// Write the task file directly (not via makeTaskFile, which emits the standard
+	// "- **Work branch:** " field) to reproduce the non-standard alias pattern.
+	nonStandardContent := "## Metadata\n- **Status:** active\n- **Branch:** feat/other-branch\n"
+	writeFile(t, filepath.Join(root, ".crafter", "tasks", "20260421-nonstandard-branch.md"), nonStandardContent)
+
+	// There are no tasks with the standard "- **Work branch:** " field, so the
+	// active-other count must be 0 and Render must return "".
+	got := Render(root)
+	if got != "" {
+		t.Errorf("non-standard branch field: expected %q (count 0), got %q — non-standard '- **Branch:** ' must NOT be counted by rung 3", "", got)
+	}
+}
+
+// TestRender_Rung2_BeatsRung3 verifies rung precedence: when both a completed
+// task on the current branch AND active tasks on other branches exist, rung 2
+// (completed-current) wins over rung 3 (active-elsewhere).
+func TestRender_Rung2_BeatsRung3(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/done-branch")
+	// Completed task on current branch (rung 2 candidate).
+	makeTaskFile(t, root, "20260601-finished.md", "completed", "feat/done-branch")
+	// Active task on a different branch (rung 3 candidate).
+	makeTaskFile(t, root, "20260602-other-active.md", "active", "feat/other-branch")
+
+	got := Render(root)
+	if got != segDone {
+		t.Errorf("rung 2 beats rung 3: got %q, want %q", got, segDone)
+	}
+}
+
+// ---------------------------------------------------------------------------
 
 // findRepoRoot walks up from the process working directory until it finds
 // a directory containing both ".git" and ".crafter". Returns "" if not found.
