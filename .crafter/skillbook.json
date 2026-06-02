@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-19T21:10:43Z",
+  "updatedAt": "2026-06-02T13:11:33Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 17,
+      "appliedCount": 19,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 8,
+      "appliedCount": 10,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 14,
+      "appliedCount": 16,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 13,
+      "appliedCount": 15,
       "deprecated": false
     },
     {
@@ -65,7 +65,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:32Z",
-      "appliedCount": 7,
+      "appliedCount": 9,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 13,
+      "appliedCount": 15,
       "deprecated": false
     },
     {
@@ -87,7 +87,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
-      "appliedCount": 13,
+      "appliedCount": 15,
       "deprecated": false
     },
     {
@@ -98,7 +98,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:38Z",
-      "appliedCount": 6,
+      "appliedCount": 8,
       "deprecated": false
     },
     {
@@ -109,7 +109,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:45Z",
-      "appliedCount": 12,
+      "appliedCount": 14,
       "deprecated": false
     },
     {
@@ -120,6 +120,39 @@
       "sourceTask": "20260519-chore-crafter-jargon-context-bleed.md",
       "confidence": "low",
       "addedAt": "2026-05-19T21:10:43Z",
+      "appliedCount": 1,
+      "deprecated": false
+    },
+    {
+      "id": "1baec7758ead97c6",
+      "agent": "implementer",
+      "rule": "When adding or mirroring an install.sh 'node -e' settings.json edit (like install_hook()/install_statusline()), wrap the script body in an IIFE — Node v26 runs '-e' scripts in module context where a top-level 'return' is a SyntaxError, so an early-return pattern silently breaks every invocation with exit 1.",
+      "rationale": "install_statusline() used a top-level return inside node -e; it passed bash -n but failed at runtime on Node v26 until wrapped in (function(){...})(). Caught only by an install test, not syntax check.",
+      "sourceTask": "20260601-plan-progress-statusline.md",
+      "confidence": "low",
+      "addedAt": "2026-06-02T13:11:33Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "dcf23111e8c65ece",
+      "agent": "implementer",
+      "rule": "When emitting JSON for a user to paste that embeds a shell command, apply TWO escaping layers: build a JS object and serialize with JSON.stringify (JSON layer), AND POSIX single-quote-escape (' -\u003e '\\''') any value embedded inside an outer bash -c '...' (shell layer). Hand-concatenating JSON breaks on quoted paths; skipping the shell escape breaks for commands containing single quotes (awk/jq/sed).",
+      "rationale": "The statusline collision guidance failed twice in review: first the printed block was invalid JSON (quoted binary path concatenated raw), then valid-JSON-but-invalid-shell when the existing command contained single quotes.",
+      "sourceTask": "20260601-plan-progress-statusline.md",
+      "confidence": "low",
+      "addedAt": "2026-06-02T13:11:33Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "721cca4ba8dcd1c7",
+      "agent": "implementer",
+      "rule": "Documentation examples that show computed/rendered output (progress bars, percentages, formatted strings) must be verified against the actual renderer's math, and any correction must be applied to ALL mirrored occurrences across docs (README + ARCHITECTURE.md), not just the first one found.",
+      "rationale": "The bar example '[#######...] 58%' was inconsistent with filled=pct/10 (should be 5 filled, not 7); the first fix updated only README and phase verification caught the same stale example still in ARCHITECTURE.md.",
+      "sourceTask": "20260601-plan-progress-statusline.md",
+      "confidence": "low",
+      "addedAt": "2026-06-02T13:11:33Z",
       "appliedCount": 0,
       "deprecated": false
     }
