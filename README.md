@@ -70,7 +70,9 @@ crafter update --local
 
 ### Statusline
 
-`crafter statusline` renders the active task's plan position as a single composable segment for Claude Code's native status bar:
+`crafter statusline` renders Crafter state as a single composable segment for Claude Code's native status bar. It applies a four-rung priority cascade and reports the best available truth:
+
+**Rung 1 — active task on the current branch** → full plan-progress segment:
 
 ```
 crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%
@@ -83,7 +85,23 @@ crafter · planning              # plan not written yet
 crafter · plan: awaiting approval  # plan written but not approved
 ```
 
-The command produces no output when not inside a Crafter project or when no task is active on the current branch — it never breaks the status bar.
+**Rung 2 — completed task on the current branch, no active task** → persists as long as you stay on that branch:
+
+```
+crafter · ✓ done
+```
+
+**Rung 3 — active tasks exist, but on other branches** → count only (the count is not pluralized, so a single task renders `crafter · 1 active elsewhere`):
+
+```
+crafter · 2 active elsewhere
+```
+
+**Rung 4 — nothing to report** → empty output (no segment shown).
+
+The command never breaks the status bar: it always exits 0 and produces no output on any error (no `.crafter/` directory, detached HEAD, unreadable files). The segment is silent when there is genuinely nothing to report.
+
+**Known limitation:** the resolver matches only the standard `- **Work branch:**` metadata field. A task file using a non-standard field (e.g. `- **Branch:**`) is not counted by rung 3. This is intentional — the resolver is strict to the single documented field.
 
 To wire it up, pass `--with-statusline` to the installer:
 
