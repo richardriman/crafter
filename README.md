@@ -68,6 +68,31 @@ crafter update --version 0.8.1
 crafter update --local
 ```
 
+### Statusline
+
+`crafter statusline` renders the active task's plan position as a single composable segment for Claude Code's native status bar:
+
+```
+crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%
+```
+
+Edge states (active task but no approved plan yet):
+
+```
+crafter · planning              # plan not written yet
+crafter · plan: awaiting approval  # plan written but not approved
+```
+
+The command produces no output when not inside a Crafter project or when no task is active on the current branch — it never breaks the status bar.
+
+To wire it up, pass `--with-statusline` to the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --with-statusline
+```
+
+The installer sets the top-level `statusLine` key in your `settings.json` to `{ "type": "command", "command": "<crafter-bin> statusline" }` **only when no `statusLine` is already present**. On collision it leaves your existing value untouched and prints a ready-to-paste composite wrapper (`bash -c '...'`) that feeds stdin to both commands and joins their outputs — so you never lose an existing statusline.
+
 ## Skills
 
 | Command | Description |

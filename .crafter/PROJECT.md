@@ -27,3 +27,4 @@
 | 2026-02-19 | Adaptive scope detection in /crafter:do | One command handles everything from one-line fixes to cross-cutting refactors |
 | 2026-03-24 | Go CLI binary for deterministic utilities | LLMs do JSON CRUD, Jaccard similarity, and atomic writes poorly — a static binary with zero runtime deps handles these reliably |
 | 2026-05-10 | PR composer rendered as Go CLI subcommand (`crafter pr-body`) | Mirrors GH#16 buffer pattern — deterministic NDJSON→markdown rendering belongs in the binary, not in LLM prose |
+| 2026-06-01 | Plan-progress statusline via `crafter statusline` + opt-in `--with-statusline` installer flag | Claude Code's native status bar integration; silent-fail posture and set-if-absent wiring avoids breaking existing setups |

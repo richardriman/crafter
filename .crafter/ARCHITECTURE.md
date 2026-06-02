@@ -30,10 +30,12 @@ crafter/
 │   │   ├── skillbook_add.go     # `crafter skillbook add`
 │   │   ├── skillbook_get.go     # `crafter skillbook get`
 │   │   ├── skillbook_init.go    # `crafter skillbook init`
+│   │   ├── statusline.go        # `crafter statusline` — render plan position as a status-bar segment
 │   │   └── update.go            # `crafter update`
 │   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
 │   ├── internal/prbody/         # PR body renderer (reads NDJSON buffers + task file, emits markdown sections)
 │   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
+│   ├── internal/statusline/     # Statusline logic (task resolve, plan parse, segment render)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
 │   └── go.sum                   # Dependency checksums
@@ -124,6 +126,7 @@ Current subcommands:
 - `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
 - `crafter pr-body` — read per-run NDJSON buffers and task file, render `## Manual QA Plan`, `## Known Gaps`, and `## Decisions` sections for the PR body
+- `crafter statusline` — read Claude Code's stdin JSON payload and render the active task's plan position as a single composable status-bar segment (e.g. `crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%`); silent when not a Crafter project or no active task
 
 Run-directory lifecycle (`.crafter/run/<task-id>/`) — canonical wording in `rules/do-workflow.md → ### Run directory lifecycle`.
 
