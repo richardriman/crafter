@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -145,5 +147,93 @@ func TestStatuslineInput_DecodeTotalCostPositiveZeroAbsent(t *testing.T) {
 	}
 	if absent.Cost.TotalCostUSD != nil {
 		t.Errorf("absent total_cost_usd: got %v, want nil", *absent.Cost.TotalCostUSD)
+	}
+}
+
+// withStdin redirects os.Stdin to a temp file pre-loaded with content for the
+// duration of fn, then restores it. A nil pointer is restored even if fn panics
+// so a failing case cannot corrupt sibling tests.
+func withStdin(t *testing.T, content string, fn func()) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "stdin")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("writing stdin fixture: %v", err)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("opening stdin fixture: %v", err)
+	}
+	defer f.Close()
+
+	orig := os.Stdin
+	os.Stdin = f
+	defer func() { os.Stdin = orig }()
+
+	fn()
+}
+
+// TestRunStatusline_NeverBreaksStatusBar is the durable guard for Step 3.2: the
+// statusline command must never break the status bar. It drives the command's
+// inner run function (runStatusline) — the exact boundary whose return value
+// decides the process exit code (cmd.Execute calls os.Exit(1) only on a non-nil
+// error) — across the three degraded inputs and asserts that none returns an
+// error (→ exit 0) and none panics. Output degrades to whatever data exists,
+// possibly the empty string.
+func TestRunStatusline_NeverBreaksStatusBar(t *testing.T) {
+	// nonGitDir is a workspace with neither a .git repo nor a .crafter context,
+	// used for the non-Crafter / non-git directory case.
+	nonGitDir := t.TempDir()
+
+	tests := []struct {
+		name string
+		// stdin is the payload fed to runStatusline.
+		stdin string
+		// chdir, when true, points the process working directory at a fresh
+		// non-git, non-Crafter temp dir for the subtest. The malformed-JSON and
+		// empty-stdin payloads carry no workspace.current_dir, so runStatusline
+		// falls back to os.Getwd(); without this the fallback would resolve to
+		// the live Crafter repo and render a full panel instead of exercising
+		// the degraded path these cases name.
+		chdir bool
+	}{
+		{
+			name:  "malformed JSON",
+			stdin: "garbage",
+			chdir: true,
+		},
+		{
+			name:  "empty stdin",
+			stdin: "",
+			chdir: true,
+		},
+		{
+			name: "non-Crafter / non-git directory",
+			// Valid JSON pointing current_dir at a directory with no .git and no
+			// .crafter — the renderer must degrade rather than error.
+			stdin: `{"workspace": {"current_dir": "` + nonGitDir + `"}}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.chdir {
+				// t.Chdir (Go 1.24+) switches the process cwd and auto-restores it
+				// when the subtest ends, so the os.Getwd() fallback degrades to a
+				// non-git, non-Crafter dir regardless of where the suite runs.
+				t.Chdir(t.TempDir())
+			}
+			withStdin(t, tc.stdin, func() {
+				defer func() {
+					if r := recover(); r != nil {
+						t.Fatalf("runStatusline panicked: %v", r)
+					}
+				}()
+				// A nil error propagates up through rootCmd.Execute, so cmd.Execute
+				// never reaches os.Exit(1): the process exits 0.
+				if err := runStatusline(statuslineCmd, nil); err != nil {
+					t.Errorf("runStatusline returned a non-nil error (would break the status bar): %v", err)
+				}
+			})
+		})
 	}
 }

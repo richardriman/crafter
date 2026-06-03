@@ -30,12 +30,12 @@ crafter/
 │   │   ├── skillbook_add.go     # `crafter skillbook add`
 │   │   ├── skillbook_get.go     # `crafter skillbook get`
 │   │   ├── skillbook_init.go    # `crafter skillbook init`
-│   │   ├── statusline.go        # `crafter statusline` — render Crafter state as a status-bar segment (four-rung cascade)
+│   │   ├── statusline.go        # `crafter statusline` — render the full status panel (plan │ model │ vcs │ ctx │ cost)
 │   │   └── update.go            # `crafter update`
 │   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
 │   ├── internal/prbody/         # PR body renderer (reads NDJSON buffers + task file, emits markdown sections)
 │   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
-│   ├── internal/statusline/     # Statusline logic (task resolve, plan parse, segment render)
+│   ├── internal/statusline/     # Statusline logic (task resolve, plan parse, per-section panel render)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
 │   └── go.sum                   # Dependency checksums
@@ -126,7 +126,7 @@ Current subcommands:
 - `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
 - `crafter pr-body` — read per-run NDJSON buffers and task file, render `## Manual QA Plan`, `## Known Gaps`, and `## Decisions` sections for the PR body
-- `crafter statusline` — render Crafter state as a single composable status-bar segment using a four-rung priority cascade: (1) active task on current branch → full plan-progress segment (e.g. `crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%`); (2) completed task on current branch, no active task → `crafter · ✓ done`; (3) active tasks on other branches → `crafter · N active elsewhere`; (4) nothing to report → empty output; always exits 0 and is silent when not a Crafter project or on any error
+- `crafter statusline` — render the full status panel for Claude Code's status bar: up to five sections joined by ` │ ` in the order `plan │ model │ vcs │ ctx │ cost`. **plan** is the plan position (active task on the current branch → full plan-progress segment e.g. `Phase 2/3 · 7/12 [█████░░░░░] 58%`, else the cascade `✓ done` / `N active elsewhere`, else dropped); **model** is `display_name` + capacity + `(effort)` e.g. `Opus 4.8 1M (high)`; **vcs** is the group `<project> ⎇ <branch> +N/-N` (branch icon configurable via `CRAFTER_STATUSLINE_BRANCH_ICON`, default `⎇`); **ctx** is a progress bar + `%` from `context_window.used_percentage`; **cost** is `$X.XX` from `cost.total_cost_usd`. Each section degrades independently and is omitted when it has no data; always exits 0 and never collapses to empty merely because no task is active
 
 Run-directory lifecycle (`.crafter/run/<task-id>/`) — canonical wording in `rules/do-workflow.md → ### Run directory lifecycle`.
 

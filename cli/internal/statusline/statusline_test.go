@@ -1254,6 +1254,266 @@ func TestRenderBar_PlanBarUnchanged(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// RenderPanel — full panel assembly degradation matrix
+// ---------------------------------------------------------------------------
+
+// makePlanRepo sets up a workspace root with a .git/HEAD on the given branch and
+// a single active+approved task whose plan renders the fixed segment
+// "Phase 1/1 · 1/2 [█████░░░░░] 50%". It is used by the panel-assembly matrix
+// rows that need a non-empty plan section.
+func makePlanRepo(t *testing.T, root, branch string) {
+	t.Helper()
+	makeRepo(t, root, branch)
+	taskContent := `## Metadata
+- **Status:** active
+- **Work branch:** ` + branch + `
+
+## Plan
+**Plan status:** approved
+
+#### Phase 1 — setup
+- [x] Step one
+- [ ] Step two
+`
+	writeFile(t, filepath.Join(root, ".crafter", "tasks", "20260601-panel-task.md"), taskContent)
+}
+
+// planSeg is the fixed plan segment produced by makePlanRepo (1/2 steps = 50%).
+const planSeg = "Phase 1/1 · 1/2 [█████░░░░░] 50%"
+
+// TestRenderPanel_DegradationMatrix pins the panel assembler's join/filter
+// behaviour AND the vcs group's intra-degradation, asserting the EXACT full
+// joined panel string for every combination that matters. Sections join with
+// " │ " (space U+2502 space) in the order plan │ model │ vcs │ ctx │ cost.
+//
+// Each row builds its payload, runs the real RenderPanel entry point, asserts
+// the exact expected string, and checks the no-double-separator property
+// (no "│ │", no leading/trailing " │ ").
+func TestRenderPanel_DegradationMatrix(t *testing.T) {
+	// Each row gets its own temp root so git/crafter state is hermetic. A row
+	// supplies a setup func that prepares the root (repo/plan/no-git) and a
+	// build func that produces the payload (the setup func receives the root so
+	// the build func can set Workdir = root).
+	type row struct {
+		name  string
+		setup func(t *testing.T, root string)
+		build func(root string) Payload
+		want  string
+	}
+
+	// Common payload fragments reused across rows.
+	const (
+		modelStr = "Opus 4.8 1M (high)"
+		ctxStr   = "[████░░░░░░] 42%"
+		costStr  = "$0.42"
+	)
+	projTok := ansiDim + "crafter" + ansiReset
+	diffTok := ansiGreen + "+120" + ansiReset + "/" + ansiRed + "-30" + ansiReset
+
+	rows := []row{
+		{
+			// 1. All five sections present.
+			name:  "all_five_present",
+			setup: func(t *testing.T, root string) { makePlanRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ModelDisplayName:  "Opus 4.8",
+					ContextWindowSize: 1_000_000,
+					EffortLevel:       "high",
+					UsedPercentage:    floatPtr(42),
+					TotalCostUSD:      floatPtr(0.42),
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: planSeg + " │ " + modelStr + " │ " + projTok + " ⎇ feat/panel " + diffTok + " │ " + ctxStr + " │ " + costStr,
+		},
+		{
+			// 2. Plan absent (no active task) — rest renders.
+			name:  "plan_absent",
+			setup: func(t *testing.T, root string) { makeRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ModelDisplayName:  "Opus 4.8",
+					ContextWindowSize: 1_000_000,
+					EffortLevel:       "high",
+					UsedPercentage:    floatPtr(42),
+					TotalCostUSD:      floatPtr(0.42),
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: modelStr + " │ " + projTok + " ⎇ feat/panel " + diffTok + " │ " + ctxStr + " │ " + costStr,
+		},
+		{
+			// 3. Model absent (empty display_name) — model section dropped.
+			name:  "model_absent",
+			setup: func(t *testing.T, root string) { makePlanRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ContextWindowSize: 1_000_000,
+					EffortLevel:       "high",
+					UsedPercentage:    floatPtr(42),
+					TotalCostUSD:      floatPtr(0.42),
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: planSeg + " │ " + projTok + " ⎇ feat/panel " + diffTok + " │ " + ctxStr + " │ " + costStr,
+		},
+		{
+			// 4. Ctx absent (null used_percentage) — ctx section dropped.
+			name:  "ctx_absent",
+			setup: func(t *testing.T, root string) { makePlanRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ModelDisplayName:  "Opus 4.8",
+					ContextWindowSize: 1_000_000,
+					EffortLevel:       "high",
+					UsedPercentage:    nil,
+					TotalCostUSD:      floatPtr(0.42),
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: planSeg + " │ " + modelStr + " │ " + projTok + " ⎇ feat/panel " + diffTok + " │ " + costStr,
+		},
+		{
+			// 5. Cost absent (zero/absent total_cost_usd) — cost section dropped.
+			name:  "cost_absent",
+			setup: func(t *testing.T, root string) { makePlanRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ModelDisplayName:  "Opus 4.8",
+					ContextWindowSize: 1_000_000,
+					EffortLevel:       "high",
+					UsedPercentage:    floatPtr(42),
+					TotalCostUSD:      nil,
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: planSeg + " │ " + modelStr + " │ " + projTok + " ⎇ feat/panel " + diffTok + " │ " + ctxStr,
+		},
+		{
+			// 6. VCS group: project + branch + diff present.
+			name:  "vcs_project_branch_diff",
+			setup: func(t *testing.T, root string) { makeRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: projTok + " ⎇ feat/panel " + diffTok,
+		},
+		{
+			// 7. VCS group: project absent → no leading space before ⎇.
+			name:  "vcs_project_absent",
+			setup: func(t *testing.T, root string) { makeRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ProjectDir:        "",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: "⎇ feat/panel " + diffTok,
+		},
+		{
+			// 8. VCS group: branch absent (no git). The branch token — and the diff
+			// that attaches to it — is omitted; only the project token renders. The
+			// diff does NOT render without a branch (verified against the assembler).
+			name:  "vcs_branch_absent",
+			setup: func(t *testing.T, root string) { /* no .git */ },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   120,
+					TotalLinesRemoved: 30,
+				}
+			},
+			want: projTok,
+		},
+		{
+			// 9. VCS group: diff zero (both counts 0) → no +N/-N suffix.
+			name:  "vcs_diff_zero",
+			setup: func(t *testing.T, root string) { makeRepo(t, root, "feat/panel") },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ProjectDir:        "/some/path/crafter",
+					TotalLinesAdded:   0,
+					TotalLinesRemoved: 0,
+				}
+			},
+			want: projTok + " ⎇ feat/panel",
+		},
+		{
+			// 10. Whole VCS group absent (no project, no branch) → group dropped.
+			name:  "vcs_group_absent",
+			setup: func(t *testing.T, root string) { /* no .git */ },
+			build: func(root string) Payload {
+				return Payload{
+					Workdir:           root,
+					ProjectDir:        "",
+					TotalLinesAdded:   5,
+					TotalLinesRemoved: 2,
+				}
+			},
+			want: "",
+		},
+		{
+			// 11. All-absent: no task, empty payload, no git → panel == "".
+			name:  "all_absent_empty_panel",
+			setup: func(t *testing.T, root string) { /* no .git, no .crafter */ },
+			build: func(root string) Payload {
+				return Payload{Workdir: root}
+			},
+			want: "",
+		},
+	}
+
+	for _, tc := range rows {
+		t.Run(tc.name, func(t *testing.T) {
+			root := t.TempDir()
+			tc.setup(t, root)
+			got := RenderPanel(tc.build(root))
+
+			if got != tc.want {
+				t.Errorf("RenderPanel mismatch:\n  got  %q\n  want %q", got, tc.want)
+			}
+
+			// No-double-separator property: no "│ │", and no leading/trailing
+			// " │ " around the assembled panel.
+			if strings.Contains(got, "│ │") {
+				t.Errorf("panel contains a doubled separator %q in %q", "│ │", got)
+			}
+			if strings.HasPrefix(got, " │ ") {
+				t.Errorf("panel has a leading separator: %q", got)
+			}
+			if strings.HasSuffix(got, " │ ") {
+				t.Errorf("panel has a trailing separator: %q", got)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
 
 // findRepoRoot walks up from the process working directory until it finds
 // a directory containing both ".git" and ".crafter". Returns "" if not found.

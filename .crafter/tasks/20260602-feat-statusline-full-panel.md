@@ -179,7 +179,7 @@ Spec requires the branch glyph configurable, default `⎇` (U+2387), kept simple
 
 **Outcome:** The assembled panel is verified end-to-end across the full degradation matrix (every section present, each section individually absent, all-absent → empty), the "always render something" invariant holds whenever any payload data exists, and the user-facing docs describing `crafter statusline` are updated to the panel behavior. Always-exit-0 / silent-fail confirmed.
 
-- [ ] **Step 3.1 — Panel-assembly degradation matrix tests.** One test (or table) exercising: all five sections present (vcs group = project + branch + diff); plan absent; model absent (empty display_name); ctx absent (null `used_percentage`); cost absent (zero/absent `total_cost_usd`); and the vcs-group intra-degradation rows — project present + branch present + diff present; project absent (group = `⎇ branch +N/-N`); branch absent (group = `<project> +N/-N`? per A10 the branch token alone is omitted, so group = `<project>` then diff only if changes — assert the exact A10 outcome); diff zero (group = `<project> ⎇ branch`); whole vcs group absent (no project, no branch); and the all-absent case → `""`. Assert exact joined strings (separators, order, no stray spaces in the group) and the no-double-separator property.
+- [x] **Step 3.1 — Panel-assembly degradation matrix tests.** One test (or table) exercising: all five sections present (vcs group = project + branch + diff); plan absent; model absent (empty display_name); ctx absent (null `used_percentage`); cost absent (zero/absent `total_cost_usd`); and the vcs-group intra-degradation rows — project present + branch present + diff present; project absent (group = `⎇ branch +N/-N`); branch absent (group = `<project> +N/-N`? per A10 the branch token alone is omitted, so group = `<project>` then diff only if changes — assert the exact A10 outcome); diff zero (group = `<project> ⎇ branch`); whole vcs group absent (no project, no branch); and the all-absent case → `""`. Assert exact joined strings (separators, order, no stray spaces in the group) and the no-double-separator property.
   - *Outcome:* the assembler's join/filter behavior AND the vcs group's intra-degradation are pinned for every combination that matters.
   - *Scope boundary:* tests only (plus any tiny assembler/group fix the matrix reveals).
   - *Non-goals:* no new sections; no behavior change unless a real bug surfaces.
@@ -187,7 +187,7 @@ Spec requires the branch glyph configurable, default `⎇` (U+2387), kept simple
   - *Drift criteria:* if a "fix" the matrix prompts touches section semantics rather than the join/group assembly, re-scope it to Phase 2.
   - *Verification evidence:* `mise exec -- go test ./cli/internal/statusline/ -run Panel` green; matrix cases (including project present/absent and the vcs-group rows) enumerated in test names.
   - *Stop conditions:* every matrix row — including all project/branch/diff combinations inside the vcs group — asserts the exact expected panel string.
-- [ ] **Step 3.2 — Confirm always-exit-0 / silent-fail at the command boundary.** Verify (test or scripted invocation) that malformed JSON, empty stdin, and a non-Crafter / non-git directory all exit 0 and never panic, with the panel degrading to whatever data exists (possibly `""`).
+- [x] **Step 3.2 — Confirm always-exit-0 / silent-fail at the command boundary.** Verify (test or scripted invocation) that malformed JSON, empty stdin, and a non-Crafter / non-git directory all exit 0 and never panic, with the panel degrading to whatever data exists (possibly `""`).
   - *Outcome:* the command never breaks the status bar; exit code is always 0.
   - *Scope boundary:* `cmd/statusline.go` posture + a guard test; no rendering changes.
   - *Non-goals:* don't add new error reporting.
@@ -195,7 +195,7 @@ Spec requires the branch glyph configurable, default `⎇` (U+2387), kept simple
   - *Drift criteria:* if you add any `os.Exit(1)` or error return that escapes, stop.
   - *Verification evidence:* `printf 'garbage' | crafter statusline; echo "exit=$?"` → `exit=0`; `echo '' | crafter statusline; echo "exit=$?"` → `exit=0`. Paste both.
   - *Stop conditions:* all three inputs exit 0 with no panic.
-- [ ] **Step 3.3 — Update docs to describe the full panel.** Update the `crafter statusline` description in `.crafter/ARCHITECTURE.md` (CLI subcommands list) and `README.md` (and `PROJECT.md` if it documents the subcommand) from "single composable segment / four-rung cascade" to the full-panel behavior: the five sections `plan │ model │ vcs │ ctx │ cost`, the vcs group `<project> ⎇ <branch> +N/-N` (dim project name from `project_dir`, green/red diff, configurable icon), per-section degradation (effort/ctx/cost/project all optional), env-var icon, and always-renders-something. Keep install/settings wiring out (still a follow-up).
+- [x] **Step 3.3 — Update docs to describe the full panel.** Update the `crafter statusline` description in `.crafter/ARCHITECTURE.md` (CLI subcommands list) and `README.md` (and `PROJECT.md` if it documents the subcommand) from "single composable segment / four-rung cascade" to the full-panel behavior: the five sections `plan │ model │ vcs │ ctx │ cost`, the vcs group `<project> ⎇ <branch> +N/-N` (dim project name from `project_dir`, green/red diff, configurable icon), per-section degradation (effort/ctx/cost/project all optional), env-var icon, and always-renders-something. Keep install/settings wiring out (still a follow-up).
   - *Outcome:* docs match the shipped behavior; no stale "segment" framing.
   - *Scope boundary:* doc prose only; the subcommand bullet(s).
   - *Non-goals:* don't document install rewiring; don't invent config beyond the env var.
@@ -203,8 +203,8 @@ Spec requires the branch glyph configurable, default `⎇` (U+2387), kept simple
   - *Drift criteria:* if doc edits imply behavior not implemented, stop and align.
   - *Verification evidence:* grep for the old "four-rung cascade / single composable segment" wording shows it updated; quote the new bullet.
   - *Stop conditions:* docs describe the panel accurately, install wiring still excluded.
-- [ ] **Phase 3 verification** — `mise exec -- go test ./cli/...` fully green; degradation matrix + exit-0 evidence pasted; docs grep shows updated wording. Confirm the full-panel manual example and a degraded example one more time.
-- [ ] **Phase 3 review** — no scope creep into install/settings; silent-fail/exit-0 intact; docs/code consistent; no AI signature in any commit (CLAUDE.md).
+- [x] **Phase 3 verification** — `mise exec -- go test ./cli/...` fully green; degradation matrix + exit-0 evidence pasted; docs grep shows updated wording. Confirm the full-panel manual example and a degraded example one more time.
+- [x] **Phase 3 review** — no scope creep into install/settings; silent-fail/exit-0 intact; docs/code consistent; no AI signature in any commit (CLAUDE.md).
 
 ### Alternatives considered (summary)
 

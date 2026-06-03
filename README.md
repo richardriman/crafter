@@ -70,38 +70,25 @@ crafter update --local
 
 ### Statusline
 
-`crafter statusline` renders Crafter state as a single composable segment for Claude Code's native status bar. It applies a four-rung priority cascade and reports the best available truth:
-
-**Rung 1 — active task on the current branch** → full plan-progress segment:
+`crafter statusline` renders Crafter state as a full status panel for Claude Code's native status bar. The panel is a single line of up to five sections joined by ` │ ` (a space-padded `│`), in the order `plan │ model │ vcs │ ctx │ cost`. Each section degrades independently and is simply omitted when it has no data, so the panel always renders whatever it can:
 
 ```
-crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%
+Phase 2/3 · 7/12 [█████░░░░░] 58% │ Opus 4.8 1M (high) │ crafter ⎇ feat/statusline +18/-4 │ [████░░░░░░] 43% │ $0.42
 ```
 
-Edge states (active task but no approved plan yet):
+**plan** — the plan position. When an active task is on the current branch it shows the full plan-progress segment (`Phase 2/3 · 7/12 [█████░░░░░] 58%`); before an approved plan exists it shows the edge states `planning` (plan not written yet) or `plan: awaiting approval` (written but not approved). When no task is active on the current branch the section falls back through `✓ done` (a completed task on this branch) and `N active elsewhere` (active tasks on other branches; the count is not pluralized, so a single task renders `1 active elsewhere`). The section is dropped when none of these apply.
 
-```
-crafter · planning              # plan not written yet
-crafter · plan: awaiting approval  # plan written but not approved
-```
+**model** — `display_name` + the abbreviated context-window capacity (`1M`, `200k`) + the effort level in parentheses, e.g. `Opus 4.8 1M (high)`. The capacity is dropped when unknown and the `(level)` suffix is dropped when there is no effort level.
 
-**Rung 2 — completed task on the current branch, no active task** → persists as long as you stay on that branch:
+**vcs** — a group of `<project> ⎇ <branch> +N/-N`: the project name (basename of `workspace.project_dir`, dim grey), the branch icon and branch name, and the green/red added/removed line counts. Each part appears only when its data is present. The branch icon defaults to `⎇` (U+2387) and is configurable via the `CRAFTER_STATUSLINE_BRANCH_ICON` environment variable.
 
-```
-crafter · ✓ done
-```
+**ctx** — a progress bar plus percentage from `context_window.used_percentage` (e.g. `[████░░░░░░] 43%`), using the same bar style as the plan section. Omitted when the percentage is null.
 
-**Rung 3 — active tasks exist, but on other branches** → count only (the count is not pluralized, so a single task renders `crafter · 1 active elsewhere`):
+**cost** — the session cost from `cost.total_cost_usd`, formatted `$X.XX`. Omitted when zero or absent.
 
-```
-crafter · 2 active elsewhere
-```
+The command never breaks the status bar: it always exits 0 and produces no output on any error (no `.crafter/` directory, detached HEAD, unreadable files). It does not collapse to empty just because there is no task — any section with data still renders.
 
-**Rung 4 — nothing to report** → empty output (no segment shown).
-
-The command never breaks the status bar: it always exits 0 and produces no output on any error (no `.crafter/` directory, detached HEAD, unreadable files). The segment is silent when there is genuinely nothing to report.
-
-**Known limitation:** the resolver matches only the standard `- **Work branch:**` metadata field. A task file using a non-standard field (e.g. `- **Branch:**`) is not counted by rung 3. This is intentional — the resolver is strict to the single documented field.
+**Known limitation:** the resolver matches only the standard `- **Work branch:**` metadata field. A task file using a non-standard field (e.g. `- **Branch:**`) is not counted toward `N active elsewhere`. This is intentional — the resolver is strict to the single documented field.
 
 To wire it up, pass `--with-statusline` to the installer:
 
