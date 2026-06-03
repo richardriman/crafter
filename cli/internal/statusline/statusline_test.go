@@ -46,17 +46,17 @@ func TestRenderSegment_States(t *testing.T) {
 		{
 			name: "draft → awaiting approval",
 			info: planInfo{state: planStateDraft},
-			want: "crafter · plan: awaiting approval",
+			want: "plan: awaiting approval",
 		},
 		{
 			name: "none (pending) → planning",
 			info: planInfo{state: planStateNone},
-			want: "crafter · planning",
+			want: "planning",
 		},
 		{
-			name: "approved no phases no steps → crafter only",
+			name: "approved no phases no steps → empty string",
 			info: planInfo{state: planStateApproved},
-			want: "crafter",
+			want: "",
 		},
 		{
 			name: "approved with phases and steps executing",
@@ -68,7 +68,7 @@ func TestRenderSegment_States(t *testing.T) {
 				totalSteps:   12,
 			},
 			// 7/12 = 58.3% → round → 58%; floor(58/10) = 5 filled glyphs.
-			want: "crafter · Phase 2/3 · 7/12 [█████░░░░░] 58%",
+			want: "Phase 2/3 · 7/12 [█████░░░░░] 58%",
 		},
 		{
 			name: "approved all done → 100% full bar",
@@ -79,7 +79,7 @@ func TestRenderSegment_States(t *testing.T) {
 				doneSteps:    4,
 				totalSteps:   4,
 			},
-			want: "crafter · Phase 2/2 · 4/4 [██████████] 100%",
+			want: "Phase 2/2 · 4/4 [██████████] 100%",
 		},
 		{
 			name: "approved 0 done → empty bar",
@@ -90,7 +90,7 @@ func TestRenderSegment_States(t *testing.T) {
 				doneSteps:    0,
 				totalSteps:   5,
 			},
-			want: "crafter · Phase 1/2 · 0/5 [░░░░░░░░░░] 0%",
+			want: "Phase 1/2 · 0/5 [░░░░░░░░░░] 0%",
 		},
 	}
 
@@ -122,7 +122,7 @@ func TestPercentAndBar(t *testing.T) {
 			total:       12,
 			wantPct:     58,
 			wantFilled:  5,
-			wantSegment: "crafter · Phase 1/1 · 7/12 [█████░░░░░] 58%",
+			wantSegment: "Phase 1/1 · 7/12 [█████░░░░░] 58%",
 		},
 		{
 			name:        "1/3 → 33% 3 filled",
@@ -130,7 +130,7 @@ func TestPercentAndBar(t *testing.T) {
 			total:       3,
 			wantPct:     33,
 			wantFilled:  3,
-			wantSegment: "crafter · Phase 1/1 · 1/3 [███░░░░░░░] 33%",
+			wantSegment: "Phase 1/1 · 1/3 [███░░░░░░░] 33%",
 		},
 		{
 			name:        "all done → 100% 10 filled",
@@ -138,7 +138,7 @@ func TestPercentAndBar(t *testing.T) {
 			total:       3,
 			wantPct:     100,
 			wantFilled:  10,
-			wantSegment: "crafter · Phase 1/1 · 3/3 [██████████] 100%",
+			wantSegment: "Phase 1/1 · 3/3 [██████████] 100%",
 		},
 		{
 			name:        "0 done → 0% 0 filled",
@@ -146,7 +146,7 @@ func TestPercentAndBar(t *testing.T) {
 			total:       6,
 			wantPct:     0,
 			wantFilled:  0,
-			wantSegment: "crafter · Phase 1/1 · 0/6 [░░░░░░░░░░] 0%",
+			wantSegment: "Phase 1/1 · 0/6 [░░░░░░░░░░] 0%",
 		},
 	}
 
@@ -336,13 +336,16 @@ func TestRenderExecuting_MalformedPlan_CurrentPhaseZero(t *testing.T) {
 	if strings.Contains(got, "Phase 0") {
 		t.Errorf("malformed-plan segment must not contain 'Phase 0', got %q", got)
 	}
-	// Must start with "crafter".
-	if !strings.HasPrefix(got, "crafter") {
-		t.Errorf("expected segment to start with 'crafter', got %q", got)
-	}
 	// Step count + bar must still be present (totalSteps > 0).
 	if !strings.Contains(got, "[") {
 		t.Errorf("expected progress bar in segment, got %q", got)
+	}
+	// hasPhase gate: with no phase segment preceding it, the step/bar segment
+	// must NOT be prefixed by the " · " separator. This pins the renderExecuting
+	// hasPhase flag against regression (a leading separator would appear if the
+	// separator were emitted unconditionally).
+	if strings.HasPrefix(got, " · ") {
+		t.Errorf("phaseless segment must not start with a leading separator, got %q", got)
 	}
 }
 
@@ -368,9 +371,6 @@ func TestParsePlan_MalformedPlan_StepBeforePhaseHeading(t *testing.T) {
 	got := renderSegment(info)
 	if strings.Contains(got, "Phase 0") {
 		t.Errorf("segment must not contain 'Phase 0', got %q", got)
-	}
-	if !strings.HasPrefix(got, "crafter") {
-		t.Errorf("expected segment to start with 'crafter', got %q", got)
 	}
 }
 
@@ -470,11 +470,8 @@ func TestParsePlan_PhasesNoSteps(t *testing.T) {
 	if info.totalSteps != 0 {
 		t.Errorf("totalSteps: got %d, want 0", info.totalSteps)
 	}
-	// Should not panic. renderSegment must produce something sensible.
+	// Should not panic. renderSegment must produce something sensible (no bar/percent).
 	got := renderSegment(info)
-	if !strings.HasPrefix(got, "crafter") {
-		t.Errorf("expected segment to start with 'crafter', got %q", got)
-	}
 	// No bar or percent should appear since there are no steps.
 	if strings.Contains(got, "[") {
 		t.Errorf("expected no bar when totalSteps=0, got %q", got)
@@ -672,9 +669,6 @@ func TestRender_ActiveApprovedTask(t *testing.T) {
 	if got == "" {
 		t.Error("expected non-empty segment for active approved task, got empty string")
 	}
-	if !strings.HasPrefix(got, "crafter") {
-		t.Errorf("expected segment to start with 'crafter', got %q", got)
-	}
 	// Verify executing state elements are present.
 	if !strings.Contains(got, "Phase") {
 		t.Errorf("expected 'Phase' in segment, got %q", got)
@@ -699,8 +693,8 @@ func TestRender_ActiveDraftTask(t *testing.T) {
 	writeFile(t, taskPath, taskContent)
 
 	got := Render(root)
-	if got != "crafter · plan: awaiting approval" {
-		t.Errorf("got %q, want %q", got, "crafter · plan: awaiting approval")
+	if got != "plan: awaiting approval" {
+		t.Errorf("got %q, want %q", got, "plan: awaiting approval")
 	}
 }
 
@@ -739,10 +733,16 @@ func TestParsePlan_LiveFixture(t *testing.T) {
 	info := parsePlan(latestFile)
 	seg := renderSegment(info)
 
-	// The segment must either be empty (state-independent) or start with "crafter".
-	// We only assert it starts with "crafter" when it is non-empty.
-	if seg != "" && !strings.HasPrefix(seg, "crafter") {
-		t.Errorf("live-fixture segment does not start with 'crafter': %q", seg)
+	// Prefix-free invariant: whatever state the live fixture is in, a non-empty
+	// rendered segment must never begin with a stray separator nor leak the
+	// degraded "Phase 0" indicator. (Empty segments are valid for unknown states.)
+	if seg != "" {
+		if strings.HasPrefix(seg, " · ") {
+			t.Errorf("live-fixture segment must not start with a leading separator, got %q", seg)
+		}
+		if strings.Contains(seg, "Phase 0") {
+			t.Errorf("live-fixture segment must not contain 'Phase 0', got %q", seg)
+		}
 	}
 
 	// For the known active statusline task file, we expect an executing state.
@@ -762,7 +762,7 @@ func TestParsePlan_LiveFixture(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 // TestRender_Rung2_CompletedCurrentBranch verifies that a completed task on
-// the current branch (no active task) produces the "crafter · ✓ done" segment.
+// the current branch (no active task) produces the "✓ done" segment.
 func TestRender_Rung2_CompletedCurrentBranch(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "feat/done-branch")
@@ -830,21 +830,21 @@ func TestRender_Rung1_BeatsRung2(t *testing.T) {
 }
 
 // TestRender_Rung3_Singular verifies that one active task on a different branch
-// produces "crafter · 1 active elsewhere".
+// produces "1 active elsewhere".
 func TestRender_Rung3_Singular(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "main")
 	makeTaskFile(t, root, "20260601-other-task.md", "active", "feat/other-branch")
 
 	got := Render(root)
-	want := "crafter · 1 active elsewhere"
+	want := "1 active elsewhere"
 	if got != want {
 		t.Errorf("rung 3 singular: got %q, want %q", got, want)
 	}
 }
 
 // TestRender_Rung3_Plural verifies that multiple active tasks on other branches
-// produce "crafter · N active elsewhere" with the correct count.
+// produce "N active elsewhere" with the correct count.
 func TestRender_Rung3_Plural(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "main")
@@ -853,14 +853,14 @@ func TestRender_Rung3_Plural(t *testing.T) {
 	makeTaskFile(t, root, "20260603-task-c.md", "active", "feat/branch-c")
 
 	got := Render(root)
-	want := "crafter · 3 active elsewhere"
+	want := "3 active elsewhere"
 	if got != want {
 		t.Errorf("rung 3 plural: got %q, want %q", got, want)
 	}
 }
 
 // TestRender_Rung4_ZeroActiveOther verifies that when there are no active tasks
-// anywhere, Render returns "" (not "crafter · 0 active elsewhere").
+// anywhere, Render returns "" (not "0 active elsewhere").
 func TestRender_Rung4_Zero(t *testing.T) {
 	root := t.TempDir()
 	makeRepo(t, root, "main")
@@ -869,7 +869,7 @@ func TestRender_Rung4_Zero(t *testing.T) {
 
 	got := Render(root)
 	if got != "" {
-		t.Errorf("rung 4: expected empty string, got %q (must not be 'crafter · 0 active elsewhere')", got)
+		t.Errorf("rung 4: expected empty string, got %q (must not be '0 active elsewhere')", got)
 	}
 }
 

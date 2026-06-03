@@ -1,21 +1,21 @@
-// Package statusline renders the current Crafter plan position as a single
-// composable segment for Claude Code's native statusLine bar.
+// Package statusline renders the Crafter plan position as a section of the
+// Claude Code native statusLine bar.
 //
-// Render is the entry point. Given the working directory of the current
-// Claude Code session, it:
-//  1. Resolves the active task file (Step 1.2 — git branch → task file lookup).
-//  2. Parses the task Markdown and extracts the current phase/step position
-//     from the Plan section (Step 1.3 — plan parsing and segment rendering).
-//  3. Returns a short, display-ready string such as
-//     "crafter · Phase 1/3 · 2/4 [██░░░░░░░░] 50%" that the statusline bar
-//     can embed directly.
+// Render is the panel-assembly entry point. Given the working directory of the
+// current Claude Code session, it assembles the full status panel by collecting
+// non-empty sections and joining them with " │ ". Currently the only section is
+// the plan section (produced by the four-rung cascade); additional sections
+// (model, vcs, ctx, cost) will be added in Phase 2.
 //
-// On any error (no active task, unreadable file, malformed plan) Render
-// returns "" so the caller can silently produce no output, preserving the
+// On any error (no active task, unreadable file, malformed plan) the plan
+// section degrades to "" and the assembled panel returns "", preserving the
 // silent-fail posture required by the statusline contract.
 package statusline
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Segment strings for rungs 2 and 3.  The rung-1 segment is built dynamically
 // by renderSegment / renderExecuting in parse.go, but these two are fixed
@@ -23,28 +23,24 @@ import "fmt"
 const (
 	// segDone is returned when the current branch has a completed task and no
 	// active task (rung 2).
-	segDone = "crafter · ✓ done"
+	segDone = "✓ done"
 
 	// segActiveElsewhereFmt is a fmt format string for the rung-3 segment.
 	// Substitute with the integer count of active tasks on other branches.
-	// e.g. fmt.Sprintf(segActiveElsewhereFmt, 2) → "crafter · 2 active elsewhere"
-	segActiveElsewhereFmt = "crafter · %d active elsewhere"
+	// e.g. fmt.Sprintf(segActiveElsewhereFmt, 2) → "2 active elsewhere"
+	segActiveElsewhereFmt = "%d active elsewhere"
 )
 
-// Render returns the plan-position segment for the Claude Code status bar.
-// workdir is the workspace root resolved from the Claude Code JSON payload
-// (workspace.current_dir) or os.Getwd() as a fallback.
+// planSection returns the plan-position section string for the given workdir.
+// It applies the four-rung cascade with strict priority:
+//  1. Active task on current branch  → full plan-progress segment.
+//  2. Completed task on current branch, no active task → "✓ done".
+//  3. Active tasks on other branches → "N active elsewhere".
+//  4. Otherwise → "" (empty section).
 //
-// Precedence (strict short-circuit):
-//  1. Active task on current branch  → full plan-progress segment (parsePlan + renderSegment).
-//  2. Completed task on current branch, no active task → "crafter · ✓ done".
-//  3. Active tasks on other branches → "crafter · N active elsewhere".
-//  4. Otherwise → "" (no output).
-//
-// Returns "" on any setup failure (no .crafter dir, no git repo, detached HEAD)
-// so the caller can silently produce no output, preserving the silent-fail
-// posture required by the statusline contract.
-func Render(workdir string) string {
+// Returns "" when .crafter dir or git branch are unavailable — those guards
+// suppress the plan section only, not the whole panel.
+func planSection(workdir string) string {
 	ctxDir := findCrafterDir(workdir)
 	if ctxDir == "" {
 		return ""
@@ -75,4 +71,21 @@ func Render(workdir string) string {
 
 	// Rung 4 — nothing relevant found.
 	return ""
+}
+
+// Render assembles and returns the full status panel for the Claude Code status
+// bar. workdir is the workspace root resolved from the Claude Code JSON payload
+// (workspace.current_dir) or os.Getwd() as a fallback.
+//
+// The panel is the non-empty sections joined by " │ ". Currently the only
+// section is the plan section; additional sections will be added in Phase 2.
+// Returns "" when all sections are empty.
+func Render(workdir string) string {
+	var sections []string
+
+	if s := planSection(workdir); s != "" {
+		sections = append(sections, s)
+	}
+
+	return strings.Join(sections, " │ ")
 }

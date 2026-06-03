@@ -231,10 +231,10 @@ func parsePlan(path string) planInfo {
 func renderSegment(info planInfo) string {
 	switch info.state {
 	case planStateDraft:
-		return "crafter · plan: awaiting approval"
+		return "plan: awaiting approval"
 
 	case planStateNone:
-		return "crafter · planning"
+		return "planning"
 
 	case planStateApproved:
 		return renderExecuting(info)
@@ -247,14 +247,14 @@ func renderSegment(info planInfo) string {
 // renderExecuting renders the full executing segment for an approved plan.
 func renderExecuting(info planInfo) string {
 	var sb strings.Builder
-	sb.WriteString("crafter")
 
 	// Phase segment — only when both currentPhase and totalPhases are positive.
 	// A malformed plan (e.g. a work-step checkbox before the first Phase heading)
 	// can leave currentPhase as 0; in that case we degrade silently by omitting
 	// the phase indicator rather than emitting a confusing "Phase 0/N" string.
-	if info.totalPhases > 0 && info.currentPhase > 0 {
-		sb.WriteString(" · Phase ")
+	hasPhase := info.totalPhases > 0 && info.currentPhase > 0
+	if hasPhase {
+		sb.WriteString("Phase ")
 		sb.WriteString(strconv.Itoa(info.currentPhase))
 		sb.WriteByte('/')
 		sb.WriteString(strconv.Itoa(info.totalPhases))
@@ -268,7 +268,9 @@ func renderExecuting(info planInfo) string {
 			filled = barSegments
 		}
 
-		sb.WriteString(" · ")
+		if hasPhase {
+			sb.WriteString(" · ")
+		}
 		sb.WriteString(strconv.Itoa(info.doneSteps))
 		sb.WriteByte('/')
 		sb.WriteString(strconv.Itoa(info.totalSteps))
