@@ -1,11 +1,12 @@
 // Package statusline renders the Crafter plan position as a section of the
 // Claude Code native statusLine bar.
 //
-// Render is the panel-assembly entry point. Given the working directory of the
-// current Claude Code session, it assembles the full status panel by collecting
-// non-empty sections and joining them with " │ ". Currently the only section is
-// the plan section (produced by the four-rung cascade); additional sections
-// (model, vcs, ctx, cost) will be added in Phase 2.
+// RenderPanel is the panel-assembly entry point. Given the decoded Claude Code
+// statusLine payload, it assembles the full status panel by collecting non-empty
+// sections and joining them with " │ ". Render is a thin wrapper that takes only
+// the working directory. The sections are the plan section (produced by the
+// four-rung cascade), the model section, the vcs section, the ctx section and
+// the cost section.
 //
 // On any error (no active task, unreadable file, malformed plan) the plan
 // section degrades to "" and the assembled panel returns "", preserving the
@@ -14,6 +15,10 @@ package statusline
 
 import (
 	"fmt"
+	"math"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -73,17 +78,194 @@ func planSection(workdir string) string {
 	return ""
 }
 
-// Render assembles and returns the full status panel for the Claude Code status
-// bar. workdir is the workspace root resolved from the Claude Code JSON payload
-// (workspace.current_dir) or os.Getwd() as a fallback.
+// abbrevCapacity abbreviates a context-window size using a general k/M rule:
 //
-// The panel is the non-empty sections joined by " │ ". Currently the only
-// section is the plan section; additional sections will be added in Phase 2.
-// Returns "" when all sections are empty.
+//	size >= 1_000_000 → "<size/1_000_000>M" (e.g. 1000000 → "1M")
+//	size >= 1_000     → "<size/1_000>k"     (e.g. 200000 → "200k", 128000 → "128k")
+//	otherwise         → the raw integer.
+//
+// Division is integer-clean for the pinned values (1M, 200k). Callers omit the
+// capacity token entirely when size is 0 (this returns "0" in that case).
+func abbrevCapacity(size int) string {
+	switch {
+	case size >= 1_000_000:
+		return strconv.Itoa(size/1_000_000) + "M"
+	case size >= 1_000:
+		return strconv.Itoa(size/1_000) + "k"
+	default:
+		return strconv.Itoa(size)
+	}
+}
+
+// modelSection renders the model section, e.g. "Opus 4.8 1M (high)".
+//
+// It concatenates ModelDisplayName, the abbreviated ContextWindowSize, and the
+// EffortLevel in parentheses. Degradation:
+//   - empty ModelDisplayName → "" (omit the whole section).
+//   - ContextWindowSize == 0 → omit the capacity token (no "0"/"0k").
+//   - empty EffortLevel → omit the " (...)" suffix.
+//
+// So the possible forms are "Opus 4.8 1M (high)", "Opus 4.8 1M",
+// "Opus 4.8 (high)", and "Opus 4.8".
+func modelSection(p Payload) string {
+	if p.ModelDisplayName == "" {
+		return ""
+	}
+
+	s := p.ModelDisplayName
+	if p.ContextWindowSize > 0 {
+		s += " " + abbrevCapacity(p.ContextWindowSize)
+	}
+	if p.EffortLevel != "" {
+		s += " (" + p.EffortLevel + ")"
+	}
+	return s
+}
+
+// costSection renders the cost section, e.g. "$0.42", from TotalCostUSD.
+//
+// It is omitted (returns "") when TotalCostUSD is nil or zero; only a positive
+// value renders, formatted as "$%.2f".
+func costSection(p Payload) string {
+	if p.TotalCostUSD == nil || *p.TotalCostUSD == 0 {
+		return ""
+	}
+	return fmt.Sprintf("$%.2f", *p.TotalCostUSD)
+}
+
+// Raw ANSI escape sequences emitted by the vcs section. Claude Code's statusLine
+// renders them: dim grey for the project name, green for the added-lines count,
+// red for the removed-lines count. ansiReset terminates each styled run.
+const (
+	ansiDim   = "\033[2m"
+	ansiGreen = "\033[32m"
+	ansiRed   = "\033[31m"
+	ansiReset = "\033[0m"
+)
+
+// envBranchIcon is the environment variable that overrides the branch icon.
+// Empty or unset falls back to defaultBranchIcon.
+const envBranchIcon = "CRAFTER_STATUSLINE_BRANCH_ICON"
+
+// defaultBranchIcon is the branch glyph used when envBranchIcon is unset/empty.
+// U+2387 (ALTERNATIVE KEY SYMBOL) — chosen over a Nerd-font glyph so it renders
+// without a special font installed.
+const defaultBranchIcon = "⎇"
+
+// branchIcon reads the configured branch icon from the environment at render
+// time (so tests can override it via t.Setenv), falling back to the default.
+func branchIcon() string {
+	if v := os.Getenv(envBranchIcon); v != "" {
+		return v
+	}
+	return defaultBranchIcon
+}
+
+// vcsSection renders the grouped vcs section: "<project> ⎇ <branch> +N/-N".
+//
+// It is built from up to three independent tokens, each degrading on its own:
+//   - project token: basename of ProjectDir, dim grey; omitted when ProjectDir
+//     is empty.
+//   - branch token: the configured icon + the git branch (normal style);
+//     omitted when readGitBranch returns "" (no repo / detached HEAD).
+//   - diff token: "+N" (green) "/" "-N" (red) from TotalLinesAdded/Removed;
+//     appended to the branch token only when there are changes (added>0 OR
+//     removed>0). The diff attaches to the branch token, so when the branch is
+//     absent the diff suffix is dropped too — it has nothing to attach to.
+//
+// Present tokens are joined with single spaces so a missing token never leaves a
+// stray, leading, or doubled space. When no token is present the whole section
+// is "" and the panel assembler drops it.
+func vcsSection(p Payload) string {
+	var tokens []string
+
+	if p.ProjectDir != "" {
+		tokens = append(tokens, ansiDim+filepath.Base(p.ProjectDir)+ansiReset)
+	}
+
+	branch := readGitBranch(p.Workdir)
+	if branch != "" {
+		token := branchIcon() + " " + branch
+		if p.TotalLinesAdded > 0 || p.TotalLinesRemoved > 0 {
+			diff := ansiGreen + "+" + strconv.Itoa(p.TotalLinesAdded) + ansiReset +
+				"/" + ansiRed + "-" + strconv.Itoa(p.TotalLinesRemoved) + ansiReset
+			token += " " + diff
+		}
+		tokens = append(tokens, token)
+	}
+
+	return strings.Join(tokens, " ")
+}
+
+// ctxSection renders the context-window section, e.g. "[████░░░░░░] 42%", from
+// UsedPercentage.
+//
+// It reuses the plan bar via renderBar so the ctx bar and the plan bar are
+// visually identical. UsedPercentage (a float, e.g. 42.5) is rounded to the
+// nearest integer with math.Round — matching how the plan bar derives its
+// integer percentage — and that integer drives both the bar fill (pct/10) and
+// the displayed number. The section is omitted (returns "") when
+// UsedPercentage is nil (context_window.used_percentage null/absent).
+func ctxSection(p Payload) string {
+	if p.UsedPercentage == nil {
+		return ""
+	}
+	pct := int(math.Round(*p.UsedPercentage))
+	return renderBar(pct) + " " + strconv.Itoa(pct) + "%"
+}
+
+// Payload carries the data the panel assembler needs to render every section.
+// Workdir is the workspace root resolved from the Claude Code JSON payload
+// (workspace.current_dir) or os.Getwd() as a fallback; the remaining fields are
+// decoded from the rest of the Claude Code statusLine payload by the cmd layer.
+//
+// Pointer fields make "absent/null" distinguishable from a real zero value:
+//   - UsedPercentage is nil when context_window.used_percentage is null/absent.
+//   - TotalCostUSD is nil when cost.total_cost_usd is absent; a present zero is
+//     *0, distinct from a positive value.
+type Payload struct {
+	Workdir string
+
+	ModelDisplayName  string
+	EffortLevel       string
+	UsedPercentage    *float64
+	ContextWindowSize int
+	TotalCostUSD      *float64
+	TotalLinesAdded   int
+	TotalLinesRemoved int
+	ProjectDir        string
+}
+
+// Render assembles and returns the full status panel from just a workdir. It is
+// a thin wrapper over RenderPanel for callers that only have the workspace root
+// (and for the existing plan-section tests). Additional payload-derived sections
+// are rendered via RenderPanel.
 func Render(workdir string) string {
+	return RenderPanel(Payload{Workdir: workdir})
+}
+
+// RenderPanel assembles and returns the full status panel for the Claude Code
+// status bar from the decoded payload.
+//
+// The panel is the non-empty sections joined by " │ ", in the order
+// plan │ model │ vcs │ ctx │ cost. Returns "" when all sections are empty.
+func RenderPanel(p Payload) string {
 	var sections []string
 
-	if s := planSection(workdir); s != "" {
+	// Panel order: plan │ model │ vcs │ ctx │ cost.
+	if s := planSection(p.Workdir); s != "" {
+		sections = append(sections, s)
+	}
+	if s := modelSection(p); s != "" {
+		sections = append(sections, s)
+	}
+	if s := vcsSection(p); s != "" {
+		sections = append(sections, s)
+	}
+	if s := ctxSection(p); s != "" {
+		sections = append(sections, s)
+	}
+	if s := costSection(p); s != "" {
 		sections = append(sections, s)
 	}
 

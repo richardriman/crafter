@@ -693,8 +693,9 @@ func TestRender_ActiveDraftTask(t *testing.T) {
 	writeFile(t, taskPath, taskContent)
 
 	got := Render(root)
-	if got != "plan: awaiting approval" {
-		t.Errorf("got %q, want %q", got, "plan: awaiting approval")
+	want := "plan: awaiting approval │ ⎇ feat/draft-branch"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
@@ -769,8 +770,9 @@ func TestRender_Rung2_CompletedCurrentBranch(t *testing.T) {
 	makeTaskFile(t, root, "20260601-finished.md", "completed", "feat/done-branch")
 
 	got := Render(root)
-	if got != segDone {
-		t.Errorf("rung 2: got %q, want %q", got, segDone)
+	want := segDone + " │ ⎇ feat/done-branch"
+	if got != want {
+		t.Errorf("rung 2: got %q, want %q", got, want)
 	}
 }
 
@@ -786,8 +788,9 @@ func TestRender_Rung2_TieBreakMostRecentWins(t *testing.T) {
 	// Both completed tasks match; the lexicographically-larger (newer) one wins.
 	// The result is still segDone regardless of which file was selected, but the
 	// rung-2 path must be taken (not rung 3 or 4).
-	if got != segDone {
-		t.Errorf("rung 2 tie-break: got %q, want %q", got, segDone)
+	want := segDone + " │ ⎇ feat/done-branch"
+	if got != want {
+		t.Errorf("rung 2 tie-break: got %q, want %q", got, want)
 	}
 }
 
@@ -837,7 +840,7 @@ func TestRender_Rung3_Singular(t *testing.T) {
 	makeTaskFile(t, root, "20260601-other-task.md", "active", "feat/other-branch")
 
 	got := Render(root)
-	want := "1 active elsewhere"
+	want := "1 active elsewhere │ ⎇ main"
 	if got != want {
 		t.Errorf("rung 3 singular: got %q, want %q", got, want)
 	}
@@ -853,7 +856,7 @@ func TestRender_Rung3_Plural(t *testing.T) {
 	makeTaskFile(t, root, "20260603-task-c.md", "active", "feat/branch-c")
 
 	got := Render(root)
-	want := "3 active elsewhere"
+	want := "3 active elsewhere │ ⎇ main"
 	if got != want {
 		t.Errorf("rung 3 plural: got %q, want %q", got, want)
 	}
@@ -868,8 +871,11 @@ func TestRender_Rung4_Zero(t *testing.T) {
 	makeTaskFile(t, root, "20260601-old-task.md", "completed", "feat/other-branch")
 
 	got := Render(root)
-	if got != "" {
-		t.Errorf("rung 4: expected empty string, got %q (must not be '0 active elsewhere')", got)
+	// Plan section is empty (rung 4), so the panel is just the vcs branch token.
+	// It must NOT be "0 active elsewhere".
+	want := "⎇ main"
+	if got != want {
+		t.Errorf("rung 4: expected %q, got %q (must not be '0 active elsewhere')", want, got)
 	}
 }
 
@@ -881,8 +887,11 @@ func TestRender_Guard_NoCrafterDir(t *testing.T) {
 	// No .crafter/ directory created.
 
 	got := Render(root)
-	if got != "" {
-		t.Errorf("no .crafter dir: expected %q, got %q", "", got)
+	// No .crafter → plan section suppressed; the panel still renders the vcs
+	// branch token (the guard only suppresses the plan section, not the panel).
+	want := "⎇ main"
+	if got != want {
+		t.Errorf("no .crafter dir: expected %q, got %q", want, got)
 	}
 }
 
@@ -910,8 +919,11 @@ func TestRender_Guard_TasksDirMissingOrEmpty(t *testing.T) {
 	}
 
 	got := Render(root)
-	if got != "" {
-		t.Errorf("tasks dir missing: expected %q, got %q", "", got)
+	// Tasks dir missing → plan section suppressed; the panel still renders the
+	// vcs branch token.
+	want := "⎇ main"
+	if got != want {
+		t.Errorf("tasks dir missing: expected %q, got %q", want, got)
 	}
 }
 
@@ -931,8 +943,11 @@ func TestRender_KnownLimitation_NonStandardBranchField(t *testing.T) {
 	// There are no tasks with the standard "- **Work branch:** " field, so the
 	// active-other count must be 0 and Render must return "".
 	got := Render(root)
-	if got != "" {
-		t.Errorf("non-standard branch field: expected %q (count 0), got %q — non-standard '- **Branch:** ' must NOT be counted by rung 3", "", got)
+	// Rung 3 must not count the non-standard field, so the plan section is empty;
+	// the panel is just the vcs branch token (not "1 active elsewhere").
+	want := "⎇ main"
+	if got != want {
+		t.Errorf("non-standard branch field: expected %q (count 0), got %q — non-standard '- **Branch:** ' must NOT be counted by rung 3", want, got)
 	}
 }
 
@@ -948,8 +963,293 @@ func TestRender_Rung2_BeatsRung3(t *testing.T) {
 	makeTaskFile(t, root, "20260602-other-active.md", "active", "feat/other-branch")
 
 	got := Render(root)
-	if got != segDone {
-		t.Errorf("rung 2 beats rung 3: got %q, want %q", got, segDone)
+	want := segDone + " │ ⎇ feat/done-branch"
+	if got != want {
+		t.Errorf("rung 2 beats rung 3: got %q, want %q", got, want)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// modelSection — render and degradation
+// ---------------------------------------------------------------------------
+
+// TestModelSection covers the model-section string and every degradation path:
+// effort present/absent, the k/M capacity abbreviation (1M / 200k / 128k /
+// sub-1000), capacity 0 (token omitted), and empty display_name (whole section
+// omitted).
+func TestModelSection(t *testing.T) {
+	tests := []struct {
+		name string
+		p    Payload
+		want string
+	}{
+		{
+			name: "full: display + 1M + effort",
+			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000, EffortLevel: "high"},
+			want: "Opus 4.8 1M (high)",
+		},
+		{
+			name: "effort absent → no parens",
+			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000},
+			want: "Opus 4.8 1M",
+		},
+		{
+			name: "200k capacity",
+			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 200_000, EffortLevel: "medium"},
+			want: "Opus 4.8 200k (medium)",
+		},
+		{
+			name: "128k capacity",
+			p:    Payload{ModelDisplayName: "Sonnet 4.8", ContextWindowSize: 128_000},
+			want: "Sonnet 4.8 128k",
+		},
+		{
+			name: "sub-1000 capacity → raw integer",
+			p:    Payload{ModelDisplayName: "Tiny", ContextWindowSize: 512},
+			want: "Tiny 512",
+		},
+		{
+			name: "capacity 0 → capacity token omitted, effort kept",
+			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 0, EffortLevel: "high"},
+			want: "Opus 4.8 (high)",
+		},
+		{
+			name: "capacity 0 and no effort → display only",
+			p:    Payload{ModelDisplayName: "Opus 4.8"},
+			want: "Opus 4.8",
+		},
+		{
+			name: "empty display_name → whole section omitted",
+			p:    Payload{ContextWindowSize: 1_000_000, EffortLevel: "high"},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := modelSection(tt.p); got != tt.want {
+				t.Errorf("modelSection() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// costSection — render and degradation
+// ---------------------------------------------------------------------------
+
+// floatPtr returns a pointer to the given float64, for building cost payloads.
+func floatPtr(v float64) *float64 { return &v }
+
+// TestCostSection covers the cost-section string: a positive value renders as
+// "$X.XX" (2 decimals); zero and absent (nil) both omit the section.
+func TestCostSection(t *testing.T) {
+	tests := []struct {
+		name string
+		p    Payload
+		want string
+	}{
+		{
+			name: "positive → $X.XX",
+			p:    Payload{TotalCostUSD: floatPtr(0.42)},
+			want: "$0.42",
+		},
+		{
+			name: "positive rounds/pads to 2 decimals",
+			p:    Payload{TotalCostUSD: floatPtr(1.5)},
+			want: "$1.50",
+		},
+		{
+			name: "zero (*0) → omitted",
+			p:    Payload{TotalCostUSD: floatPtr(0)},
+			want: "",
+		},
+		{
+			name: "absent (nil) → omitted",
+			p:    Payload{TotalCostUSD: nil},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := costSection(tt.p); got != tt.want {
+				t.Errorf("costSection() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// vcsSection — grouped project + branch + diff, ANSI colors, configurable icon
+// ---------------------------------------------------------------------------
+
+// TestVcsSection_Full verifies the full grouped string with the default icon and
+// the raw escape sequences: dim project name, normal branch token, and the
+// green/red diff suffix.
+func TestVcsSection_Full(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "feat/plan-progress")
+
+	p := Payload{
+		Workdir:           root,
+		ProjectDir:        "/some/path/crafter",
+		TotalLinesAdded:   120,
+		TotalLinesRemoved: 30,
+	}
+
+	want := "\033[2mcrafter\033[0m ⎇ feat/plan-progress " +
+		"\033[32m+120\033[0m/\033[31m-30\033[0m"
+
+	if got := vcsSection(p); got != want {
+		t.Errorf("vcsSection() = %q, want %q", got, want)
+	}
+}
+
+// TestVcsSection_CustomIconOverride verifies the branch icon is read from
+// CRAFTER_STATUSLINE_BRANCH_ICON at render time, and that an empty override falls
+// back to the default glyph.
+func TestVcsSection_CustomIconOverride(t *testing.T) {
+	root := t.TempDir()
+	makeRepo(t, root, "main")
+
+	p := Payload{Workdir: root, ProjectDir: "/x/crafter"}
+
+	t.Run("custom icon", func(t *testing.T) {
+		t.Setenv("CRAFTER_STATUSLINE_BRANCH_ICON", "★")
+		want := "\033[2mcrafter\033[0m ★ main"
+		if got := vcsSection(p); got != want {
+			t.Errorf("vcsSection() = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("empty override falls back to default", func(t *testing.T) {
+		t.Setenv("CRAFTER_STATUSLINE_BRANCH_ICON", "")
+		want := "\033[2mcrafter\033[0m ⎇ main"
+		if got := vcsSection(p); got != want {
+			t.Errorf("vcsSection() = %q, want %q", got, want)
+		}
+	})
+}
+
+// TestVcsSection_Degradation covers the four intra-group degradation paths, each
+// asserting there is no stray, leading, doubled, or trailing space.
+func TestVcsSection_Degradation(t *testing.T) {
+	t.Run("diff omitted when both line counts zero", func(t *testing.T) {
+		root := t.TempDir()
+		makeRepo(t, root, "main")
+		p := Payload{Workdir: root, ProjectDir: "/x/crafter", TotalLinesAdded: 0, TotalLinesRemoved: 0}
+		want := "\033[2mcrafter\033[0m ⎇ main"
+		if got := vcsSection(p); got != want {
+			t.Errorf("vcsSection() = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("project omitted when project_dir empty — no leading space", func(t *testing.T) {
+		root := t.TempDir()
+		makeRepo(t, root, "main")
+		p := Payload{Workdir: root, ProjectDir: "", TotalLinesAdded: 5, TotalLinesRemoved: 2}
+		want := "⎇ main \033[32m+5\033[0m/\033[31m-2\033[0m"
+		got := vcsSection(p)
+		if got != want {
+			t.Errorf("vcsSection() = %q, want %q", got, want)
+		}
+		if strings.HasPrefix(got, " ") {
+			t.Errorf("vcsSection() has a leading space: %q", got)
+		}
+	})
+
+	t.Run("branch omitted when no git — only project renders", func(t *testing.T) {
+		root := t.TempDir() // no .git
+		p := Payload{Workdir: root, ProjectDir: "/x/crafter", TotalLinesAdded: 5, TotalLinesRemoved: 2}
+		// Branch absent → branch token (and the diff that attaches to it) dropped.
+		want := "\033[2mcrafter\033[0m"
+		got := vcsSection(p)
+		if got != want {
+			t.Errorf("vcsSection() = %q, want %q", got, want)
+		}
+		if strings.HasSuffix(got, " ") {
+			t.Errorf("vcsSection() has a trailing space: %q", got)
+		}
+	})
+
+	t.Run("whole group omitted when project and branch both absent", func(t *testing.T) {
+		root := t.TempDir() // no .git
+		p := Payload{Workdir: root, ProjectDir: "", TotalLinesAdded: 5, TotalLinesRemoved: 2}
+		if got := vcsSection(p); got != "" {
+			t.Errorf("vcsSection() = %q, want empty string", got)
+		}
+	})
+}
+
+// ---------------------------------------------------------------------------
+// ctxSection — context-window bar, reuses the plan bar; null → omitted
+// ---------------------------------------------------------------------------
+
+// TestCtxSection covers the ctx-section string at several percentages (0/42/100),
+// a fractional value that rounds, and the null omission. The bar glyphs and
+// "[bar] N%" format mirror the plan bar exactly.
+func TestCtxSection(t *testing.T) {
+	tests := []struct {
+		name string
+		p    Payload
+		want string
+	}{
+		{
+			name: "0% → empty bar",
+			p:    Payload{UsedPercentage: floatPtr(0)},
+			want: "[░░░░░░░░░░] 0%",
+		},
+		{
+			name: "42% → 4 filled",
+			p:    Payload{UsedPercentage: floatPtr(42)},
+			want: "[████░░░░░░] 42%",
+		},
+		{
+			name: "100% → full bar",
+			p:    Payload{UsedPercentage: floatPtr(100)},
+			want: "[██████████] 100%",
+		},
+		{
+			name: "fractional rounds to nearest integer (42.5 → 43)",
+			p:    Payload{UsedPercentage: floatPtr(42.5)},
+			want: "[████░░░░░░] 43%",
+		},
+		{
+			name: "null (nil) → omitted",
+			p:    Payload{UsedPercentage: nil},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ctxSection(tt.p); got != tt.want {
+				t.Errorf("ctxSection() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestRenderBar_PlanBarUnchanged pins that the shared renderBar helper still
+// produces the exact bracketed bars the plan bar embedded before the extraction,
+// proving the plan bar's output is byte-unchanged. The existing plan-section
+// tests (TestRenderSegment_States, TestPercentAndBar) also assert the full
+// "Phase X/Y · D/T [bar] N%" strings unchanged, which is the primary evidence.
+func TestRenderBar_PlanBarUnchanged(t *testing.T) {
+	tests := []struct {
+		pct  int
+		want string
+	}{
+		{0, "[░░░░░░░░░░]"},
+		{33, "[███░░░░░░░]"},
+		{58, "[█████░░░░░]"},
+		{100, "[██████████]"},
+	}
+	for _, tt := range tests {
+		if got := renderBar(tt.pct); got != tt.want {
+			t.Errorf("renderBar(%d) = %q, want %q", tt.pct, got, tt.want)
+		}
 	}
 }
 

@@ -263,10 +263,6 @@ func renderExecuting(info planInfo) string {
 	// Step segment + bar + percent — only when there are steps to count.
 	if info.totalSteps > 0 {
 		pct := int(math.Round(float64(info.doneSteps) / float64(info.totalSteps) * 100))
-		filled := pct / 10
-		if filled > barSegments {
-			filled = barSegments
-		}
 
 		if hasPhase {
 			sb.WriteString(" · ")
@@ -274,18 +270,39 @@ func renderExecuting(info planInfo) string {
 		sb.WriteString(strconv.Itoa(info.doneSteps))
 		sb.WriteByte('/')
 		sb.WriteString(strconv.Itoa(info.totalSteps))
-		sb.WriteString(" [")
-		for i := 0; i < barSegments; i++ {
-			if i < filled {
-				sb.WriteString(glyphFilled)
-			} else {
-				sb.WriteString(glyphEmpty)
-			}
-		}
-		sb.WriteString("] ")
+		sb.WriteByte(' ')
+		sb.WriteString(renderBar(pct))
+		sb.WriteByte(' ')
 		sb.WriteString(strconv.Itoa(pct))
 		sb.WriteByte('%')
 	}
 
+	return sb.String()
+}
+
+// renderBar renders the bracketed progress bar "[████░░░░░░]" for the given
+// integer percentage (0–100). The fill is pct/10 segments (clamped to
+// barSegments), using glyphFilled for filled and glyphEmpty for empty cells.
+//
+// It returns only the bracketed bar — no surrounding spaces and no percent
+// label — so callers add their own spacing/percent. Both the plan bar
+// (renderExecuting) and the ctx bar (ctxSection) build on this helper to stay
+// byte-identical.
+func renderBar(pct int) string {
+	filled := pct / 10
+	if filled > barSegments {
+		filled = barSegments
+	}
+
+	var sb strings.Builder
+	sb.WriteByte('[')
+	for i := 0; i < barSegments; i++ {
+		if i < filled {
+			sb.WriteString(glyphFilled)
+		} else {
+			sb.WriteString(glyphEmpty)
+		}
+	}
+	sb.WriteByte(']')
 	return sb.String()
 }
