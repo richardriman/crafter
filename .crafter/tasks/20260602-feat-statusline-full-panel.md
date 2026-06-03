@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-06-02
 - **Work branch:** feat/plan-progress-statusline
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -237,3 +237,20 @@ Spec requires the branch glyph configurable, default `⎇` (U+2387), kept simple
 - **Decision (Tech Debt):** Phase 2 review Suggestion #3 — `abbrevCapacity` integer-truncates non-clean sizes (`1_500_000 → "1M"`, `1_900 → "1k"`). Within contract (A2 chose the simple k/M rule; all real context-window sizes — 200k, 1M — are integer-clean). Deferred by user. Not fixed in this task.
 
 ## Outcome
+
+`crafter statusline` is now a full single-line status panel that replaces the GSD status line. The four-rung cascade was demoted to the **plan section** (prefix-free) and a `RenderPanel(Payload)` assembler joins up to five sections — `plan │ model │ vcs │ ctx │ cost` — with `" │ "`, filtering empties so there are never doubled/leading/trailing separators. The panel renders whatever payload data exists regardless of task state and only collapses to `""` when genuinely nothing is renderable; always exits 0 / silent-fail. Branch icon is configurable via `CRAFTER_STATUSLINE_BRANCH_ICON` (default `⎇`). Scope was CLI-rendering only — the `install.sh`/`settings.json` compose→replace rewiring remains a deliberate follow-up.
+
+**Commits (per phase):**
+- Phase 1 (prefix-free plan section + panel skeleton): `443b01a`
+- Phase 2 (model / vcs group / ctx / cost sections + JSON struct extension): `431272d`
+- Phase 3 (degradation-matrix tests, silent-fail guard, docs): `320b0c1`
+- Consolidated end-of-task (STATE.md + PROJECT.md + skillbook): see follow-up commit
+
+**Verification:** `mise exec -- go test ./...` fully green across all five packages; `go vet` clean; `TestRenderPanel_DegradationMatrix` (11 cases through the real entry point) + `TestRunStatusline_NeverBreaksStatusBar` guard; full-panel and degraded manual examples confirmed against the real binary (ANSI escapes present for dim project + green/red diff).
+
+**Review:** Phase 1/2 closed with no Critical/Major; Phase 3 had no Critical/Major — one Minor (guard-test hermeticity) fixed at user request via `t.Chdir(t.TempDir())`; two Suggestions (`-v` stdout noise; implicit empty-`setup` matrix rows) deferred.
+
+**Deferred / follow-up:**
+- `install.sh` / `settings.json` compose→replace rewiring (crafter panel replaces the GSD line) — the explicit next task.
+- Tech debt (per `## Decisions`): sub-cent cost renders `$0.00`; `abbrevCapacity` truncates non-clean sizes — both within contract, deferred by user.
+- R1/R6/R8 (display_name verbatim value, ANSI rendering in Claude Code, `project_dir` vs `current_dir`) remain low-risk OPEN flags to confirm against a real payload.
