@@ -8,6 +8,13 @@ import (
 	"github.com/richardriman/crafter/cli/internal/claudesettings"
 )
 
+// printLines writes each line followed by a newline to cmd's stdout.
+func printLines(cmd *cobra.Command, lines []string) {
+	for _, l := range lines {
+		fmt.Fprintln(cmd.OutOrStdout(), l)
+	}
+}
+
 const (
 	onForeignKeep      = "keep"
 	onForeignOverwrite = "overwrite"
@@ -63,12 +70,16 @@ func runInstallStatusline(cmd *cobra.Command, args []string) error {
 		// Ours and byte-identical: nothing to write.
 		return nil
 	case claudesettings.StatusLineNeedsDecision:
-		// A foreign statusLine is present. The destructive overwrite (with .bak)
-		// is Phase 4 and the full compose/manual guidance text is Phase 2; this
-		// step only wires the resolved decision flag through.
 		switch installStatuslineOnForeign {
 		case onForeignKeep:
-			// Non-destructive: leave the foreign value untouched.
+			// Non-destructive: leave the foreign value untouched and print
+			// the compose-wrapper / manual-merge guidance for the user.
+			raw, _ := settings.Get("statusLine")
+			lines, err := claudesettings.ForeignKeepGuidanceLines(installStatuslineSettings, raw, installStatuslineCommand)
+			if err != nil {
+				return err
+			}
+			printLines(cmd, lines)
 			return nil
 		case onForeignOverwrite:
 			// Phase 4 implements the real .bak + overwrite. Stub for now: do not

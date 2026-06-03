@@ -460,70 +460,15 @@ install_statusline() {
   local crafter_bin="$2"
   local statusline_cmd="\"${crafter_bin}\" statusline"
 
-  if ! command -v node &>/dev/null; then
-    echo "Warning: node not found, skipping statusline hook registration"
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping statusline registration"
     return 0
   fi
 
-  SETTINGS_FILE="$settings_file" STATUSLINE_CMD="$statusline_cmd" node -e '
-    (function() {
-      const fs = require("fs");
-      const settingsFile = process.env.SETTINGS_FILE;
-      const statuslineCmd = process.env.STATUSLINE_CMD;
-
-      let settings = {};
-      try {
-        settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-      } catch (e) {}
-
-      if (settings.statusLine !== undefined) {
-        // Collision: a statusLine key already exists — print composite wrapper guidance.
-        const existingStatusLine = settings.statusLine;
-        const existingCmd = (existingStatusLine && typeof existingStatusLine.command === "string")
-          ? existingStatusLine.command
-          : null;
-        console.log("");
-        console.log("Note: statusLine already set in " + settingsFile);
-        console.log("");
-        if (existingCmd === null) {
-          // Non-command type or malformed — cannot build a runnable composite.
-          console.log("An existing statusLine of a non-command type was found; merge manually:");
-          console.log(JSON.stringify(existingStatusLine, null, 2));
-        } else {
-          // Build the composite tee-wrapper command as a plain JS string, then
-          // let JSON.stringify handle all quoting/escaping when we serialize it.
-          // Use \x27 for the single-quote character to avoid breaking the outer
-          // bash single-quoted node -e string.
-          //
-          // Apply POSIX single-quote escaping before interpolating any value
-          // into the bash -c \x27...\x27 wrapper: replace each \x27 with \x27\\\x27\x27
-          // so that existing commands containing single quotes do not prematurely
-          // close the outer quote (e.g. awk \x27{print $1}\x27, date \x27+%H:%M\x27).
-          function shSingleQuoteEscape(s) {
-            return s.split("\x27").join("\x27\\\x27\x27");
-          }
-          var sq = "\x27";
-          var safeExistingCmd = shSingleQuoteEscape(existingCmd);
-          var safeStatuslineCmd = shSingleQuoteEscape(statuslineCmd);
-          var compositeCmd = "bash -c " + sq + "in=$(cat); printf \"%s %s\" \"$(printf \"%s\" \"$in\" | " + safeExistingCmd + ")\" \"$(printf \"%s\" \"$in\" | " + safeStatuslineCmd + ")\"" + sq;
-          var guidance = { statusLine: { type: "command", command: compositeCmd } };
-          console.log("Existing command: " + existingCmd);
-          console.log("");
-          console.log("To combine both statuslines, paste this into your settings.json:");
-          console.log("");
-          console.log(JSON.stringify(guidance, null, 2));
-          console.log("");
-          console.log("The wrapper reads stdin once and feeds the same payload to both commands.");
-        }
-        return;
-      }
-
-      settings.statusLine = { type: "command", command: statuslineCmd };
-
-      fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
-      console.log("statusLine registered in " + settingsFile);
-    })();
-  '
+  "$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command "$statusline_cmd" \
+    --on-foreign=keep
 }
 
 install_global() {

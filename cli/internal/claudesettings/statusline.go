@@ -2,6 +2,7 @@ package claudesettings
 
 import (
 	"encoding/json"
+	"fmt"
 	"path"
 	"strings"
 )
@@ -64,9 +65,9 @@ type statusLineValue struct {
 }
 
 // statusLineCommand extracts the .command string from the raw statusLine value.
-// It returns ("", false) when the value is absent, not an object, or has no
-// string command (mirroring install.sh's `typeof existingStatusLine.command ===
-// "string"` guard, which treats a non-command-shaped value as "no command").
+// It returns ("", false) when the value is absent, cannot be unmarshalled as an
+// object, or has an empty .command field — treating a non-command-shaped value
+// as "no command present".
 func statusLineCommand(raw json.RawMessage, present bool) (string, bool) {
 	if !present {
 		return "", false
@@ -153,13 +154,19 @@ func tokenizeCommand(command string) []string {
 
 // ClassifyStatusLine inspects the statusLine value held in s and reports
 // whether it is absent, ours, or foreign.
+//
+// Classification boundary:
+//   - key absent → StatusLineAbsent
+//   - key present AND command is ours → StatusLineOurs
+//   - key present AND NOT ours (including non-command-shaped objects, foreign
+//     command strings, null command, custom types, etc.) → StatusLineForeign
 func ClassifyStatusLine(s *Settings) StatusLineClass {
 	raw, present := s.Get(statusLineKey)
-	cmd, ok := statusLineCommand(raw, present)
-	if !ok {
+	if !present {
 		return StatusLineAbsent
 	}
-	if IsOurStatusLine(cmd) {
+	cmd, ok := statusLineCommand(raw, present)
+	if ok && IsOurStatusLine(cmd) {
 		return StatusLineOurs
 	}
 	return StatusLineForeign
@@ -180,23 +187,26 @@ func ClassifyStatusLine(s *Settings) StatusLineClass {
 // zero value for StatusLineNoop and StatusLineNeedsDecision.
 func ReconcileStatusLine(s *Settings, crafterCmd string) (StatusLineAction, StatusLineValue) {
 	raw, present := s.Get(statusLineKey)
-	cmd, ok := statusLineCommand(raw, present)
 
-	switch {
-	case !ok:
-		// Absent (or non-command-shaped): install fresh.
+	if !present {
+		// Key absent: install fresh.
 		return StatusLineSet, newStatusLineValue(crafterCmd)
-	case IsOurStatusLine(cmd):
+	}
+
+	cmd, ok := statusLineCommand(raw, present)
+	if ok && IsOurStatusLine(cmd) {
 		if cmd == crafterCmd {
 			// Byte-identical to the fresh command: no write at all.
 			return StatusLineNoop, StatusLineValue{}
 		}
 		// Ours but stale (e.g. moved binary path): refresh it.
 		return StatusLineUpdated, newStatusLineValue(crafterCmd)
-	default:
-		// Foreign: this step does not act; a later phase decides.
-		return StatusLineNeedsDecision, StatusLineValue{}
 	}
+
+	// Present and NOT ours — includes non-command-shaped objects, foreign
+	// command strings, null command, custom types, etc.
+	// This step does not act; a later phase decides keep-vs-overwrite.
+	return StatusLineNeedsDecision, StatusLineValue{}
 }
 
 // StatusLineValue is the object a caller writes back into settings under the
@@ -210,4 +220,92 @@ type StatusLineValue struct {
 // matching install.sh's `{ type: "command", command: <cmd> }`.
 func newStatusLineValue(command string) StatusLineValue {
 	return StatusLineValue{Type: "command", Command: command}
+}
+
+// shSingleQuoteEscape applies POSIX single-quote escaping to s so that it can
+// be embedded inside an outer bash -c '...' string without prematurely closing
+// the surrounding single quotes. Each literal single-quote in s is replaced
+// with '\'': end the outer quote, emit a backslash-escaped quote, re-open.
+//
+// This function is the authoritative implementation of this escaping logic.
+func shSingleQuoteEscape(s string) string {
+	return strings.ReplaceAll(s, "'", `'\''`)
+}
+
+// compositeStatusLineCmd builds the tee-wrapper bash command that feeds the
+// same stdin to both existingCmd and crafterCmd and concatenates their outputs.
+// The result is the composite command string (not yet JSON-encoded).
+//
+// Shape:
+//
+//	bash -c 'in=$(cat); printf "%s %s" "$(printf "%s" "$in" | <safeExisting>)" "$(printf "%s" "$in" | <safeCrafter>)"'
+func compositeStatusLineCmd(existingCmd, crafterCmd string) string {
+	safe := shSingleQuoteEscape(existingCmd)
+	safeCrafter := shSingleQuoteEscape(crafterCmd)
+	return fmt.Sprintf(
+		`bash -c 'in=$(cat); printf "%%s %%s" "$(printf "%%s" "$in" | %s)" "$(printf "%%s" "$in" | %s)"'`,
+		safe, safeCrafter,
+	)
+}
+
+// ForeignKeepGuidanceLines returns the lines the subcommand should print to
+// stdout when a foreign statusLine is present and --on-foreign=keep is in
+// effect. The guidance is printed as a preamble + valid JSON the user can paste
+// into settings.json to compose both status-lines.
+//
+// This Go function is the authoritative source of the guidance output; it is
+// not derived from any install.sh block.
+//
+// When the existing value has a string command, the lines include a composite
+// bash -c tee-wrapper that feeds stdin to both the foreign command and the
+// crafter command.
+//
+// When the existing value has no string command (malformed/non-command type)
+// the returned lines describe the manual-merge fallback.
+//
+// settingsFile is included in the preamble for context; rawExisting is the raw
+// JSON of the existing statusLine value; crafterCmd is the freshly-computed
+// crafter command.
+func ForeignKeepGuidanceLines(settingsFile string, rawExisting json.RawMessage, crafterCmd string) ([]string, error) {
+	var v statusLineValue
+	_ = json.Unmarshal(rawExisting, &v)
+
+	var lines []string
+	lines = append(lines, "")
+	lines = append(lines, "Note: statusLine already set in "+settingsFile)
+	lines = append(lines, "")
+
+	if v.Command == "" {
+		// Non-command type or malformed — cannot build a runnable composite.
+		lines = append(lines, "An existing statusLine of a non-command type was found; merge manually:")
+		// Pretty-print the existing value for context.
+		formatted, err := json.MarshalIndent(rawExisting, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("formatting existing statusLine for guidance: %w", err)
+		}
+		lines = append(lines, string(formatted))
+		return lines, nil
+	}
+
+	// Build the composite wrapper, then serialize the full guidance object.
+	compositeCmd := compositeStatusLineCmd(v.Command, crafterCmd)
+	guidance := map[string]any{
+		"statusLine": map[string]string{
+			"type":    "command",
+			"command": compositeCmd,
+		},
+	}
+	guidanceJSON, err := json.MarshalIndent(guidance, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("serializing guidance JSON: %w", err)
+	}
+
+	lines = append(lines, "Existing command: "+v.Command)
+	lines = append(lines, "")
+	lines = append(lines, "To combine both statuslines, paste this into your settings.json:")
+	lines = append(lines, "")
+	lines = append(lines, string(guidanceJSON))
+	lines = append(lines, "")
+	lines = append(lines, "The wrapper reads stdin once and feeds the same payload to both commands.")
+	return lines, nil
 }
