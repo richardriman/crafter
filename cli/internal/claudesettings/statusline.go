@@ -222,6 +222,20 @@ func newStatusLineValue(command string) StatusLineValue {
 	return StatusLineValue{Type: "command", Command: command}
 }
 
+// NewStatusLineValue is the exported form of newStatusLineValue for use by
+// callers outside this package (e.g. the cmd layer).
+func NewStatusLineValue(command string) StatusLineValue {
+	return newStatusLineValue(command)
+}
+
+// StatusLineCommandString extracts the .command string from the raw statusLine
+// JSON value, returning an empty string when the value is absent, malformed, or
+// has no command field. It is the exported form for use outside this package.
+func StatusLineCommandString(raw json.RawMessage) string {
+	cmd, _ := statusLineCommand(raw, raw != nil)
+	return cmd
+}
+
 // shSingleQuoteEscape applies POSIX single-quote escaping to s so that it can
 // be embedded inside an outer bash -c '...' string without prematurely closing
 // the surrounding single quotes. Each literal single-quote in s is replaced

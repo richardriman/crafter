@@ -691,6 +691,370 @@ func TestRunInstallStatusline_NonCommandForeignKeep(t *testing.T) {
 	}
 }
 
+// TestRunInstallStatusline_ForeignOverwrite verifies the --on-foreign=overwrite path:
+//   (a) statusLine is updated to the freshly-computed crafter command,
+//   (b) a .bak file holds the original on-disk bytes,
+//   (c) stdout echoes the old (foreign) command,
+//   (d) re-running is safe: the .bak is not clobbered on a second run.
+func TestRunInstallStatusline_ForeignOverwrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	existingCmd := `date +%H:%M`
+	crafterCmd := `"/home/u/.claude/crafter/bin/crafter" statusline`
+
+	seed := `{
+  "statusLine": {
+    "type": "command",
+    "command": ` + jsonString(existingCmd) + `
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = crafterCmd
+	installStatuslineOnForeign = onForeignOverwrite
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline (overwrite): %v", err)
+	}
+
+	// (a) statusLine must now hold the crafter command.
+	if got := readStatusLineCommand(t, path); got != crafterCmd {
+		t.Errorf("statusLine.command: got %q, want %q", got, crafterCmd)
+	}
+
+	// (b) .bak must hold the original on-disk bytes verbatim.
+	bak := path + ".bak"
+	gotBak, err := os.ReadFile(bak)
+	if err != nil {
+		t.Fatalf("expected .bak to exist: %v", err)
+	}
+	if string(gotBak) != seed {
+		t.Errorf(".bak content:\n got: %q\nwant: %q", string(gotBak), seed)
+	}
+
+	// (c) stdout must echo the old foreign command.
+	output := out.String()
+	if !strings.Contains(output, existingCmd) {
+		t.Errorf("stdout does not echo old command %q:\n%s", existingCmd, output)
+	}
+}
+
+// TestRunInstallStatusline_ForeignOverwrite_Idempotent verifies that re-running
+// the overwrite path a second time does NOT clobber the .bak from the first run,
+// and does not return an error.
+func TestRunInstallStatusline_ForeignOverwrite_Idempotent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	existingCmd := `date +%H:%M`
+	crafterCmd := `"/home/u/.claude/crafter/bin/crafter" statusline`
+
+	seed := `{
+  "statusLine": {
+    "type": "command",
+    "command": ` + jsonString(existingCmd) + `
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = crafterCmd
+	installStatuslineOnForeign = onForeignOverwrite
+
+	installStatuslineCmd.SetOut(&bytes.Buffer{})
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	// First run: overwrite fires, .bak created.
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("first run: %v", err)
+	}
+	bakContentAfterFirst, err := os.ReadFile(path + ".bak")
+	if err != nil {
+		t.Fatalf("reading .bak after first run: %v", err)
+	}
+
+	// Second run: statusLine is now ours — reconcile returns Noop, no overwrite.
+	installStatuslineCmd.SetOut(&bytes.Buffer{})
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("second run: %v", err)
+	}
+
+	// .bak must be identical to what the first run created.
+	bakContentAfterSecond, err := os.ReadFile(path + ".bak")
+	if err != nil {
+		t.Fatalf("reading .bak after second run: %v", err)
+	}
+	if !bytes.Equal(bakContentAfterFirst, bakContentAfterSecond) {
+		t.Errorf(".bak was modified by re-run:\n  after first:  %q\n  after second: %q",
+			string(bakContentAfterFirst), string(bakContentAfterSecond))
+	}
+
+	// No .bak.1 should exist (re-run went through Noop, not overwrite).
+	if _, err := os.Stat(path + ".bak.1"); !os.IsNotExist(err) {
+		t.Error("re-run created unexpected .bak.1")
+	}
+}
+
+// TestRunInstallStatusline_ForeignOverwrite_RawBytesBackup verifies that the
+// .bak holds the raw on-disk bytes even when the settings file contains garbled
+// JSON (addressing Phase-1 finding #2: backup before Load discards garbled content).
+func TestRunInstallStatusline_ForeignOverwrite_RawBytesBackup(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	crafterCmd := `"/home/u/.claude/crafter/bin/crafter" statusline`
+
+	// A settings file with a foreign statusLine AND extra garbled trailing bytes
+	// that would cause re-serialisation to look different from the original file.
+	// (We use valid JSON here but with non-standard spacing that a re-marshal
+	// would normalise away — proving the backup is the raw bytes, not re-serialised.)
+	rawContent := []byte(`{"statusLine":{"type":"command","command":"date +%H:%M"}    }` + "\n")
+	if err := os.WriteFile(path, rawContent, 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = crafterCmd
+	installStatuslineOnForeign = onForeignOverwrite
+
+	installStatuslineCmd.SetOut(&bytes.Buffer{})
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline: %v", err)
+	}
+
+	// .bak must hold the original raw bytes verbatim (not re-serialised).
+	gotBak, err := os.ReadFile(path + ".bak")
+	if err != nil {
+		t.Fatalf("expected .bak to exist: %v", err)
+	}
+	if !bytes.Equal(gotBak, rawContent) {
+		t.Errorf(".bak is not raw bytes:\n got: %q\nwant: %q", string(gotBak), string(rawContent))
+	}
+}
+
+// TestRunInstallStatusline_ForeignOverwrite_StaleBakGetsNumberedSibling verifies
+// that when a .bak from a prior run already exists with DIFFERENT content, the
+// current foreign value lands in .bak.1 (the stale .bak is left untouched).
+func TestRunInstallStatusline_ForeignOverwrite_StaleBakGetsNumberedSibling(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	crafterCmd := `"/home/u/.claude/crafter/bin/crafter" statusline`
+
+	// Seed a stale .bak with content that does NOT match the current settings.
+	staleContent := []byte(`{"statusLine":{"type":"command","command":"old-backup"}}` + "\n")
+	if err := os.WriteFile(path+".bak", staleContent, 0o644); err != nil {
+		t.Fatalf("seeding .bak: %v", err)
+	}
+
+	// Current foreign value.
+	seed := `{
+  "statusLine": {
+    "type": "command",
+    "command": "current-foreign"
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = crafterCmd
+	installStatuslineOnForeign = onForeignOverwrite
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline: %v", err)
+	}
+
+	// (1) statusLine updated.
+	if got := readStatusLineCommand(t, path); got != crafterCmd {
+		t.Errorf("statusLine.command: got %q, want %q", got, crafterCmd)
+	}
+
+	// (2) Stale .bak left untouched.
+	gotBak, err := os.ReadFile(path + ".bak")
+	if err != nil {
+		t.Fatalf("reading .bak failed: %v", err)
+	}
+	if !bytes.Equal(gotBak, staleContent) {
+		t.Errorf("stale .bak was clobbered: expected %q, got %q", string(staleContent), string(gotBak))
+	}
+
+	// (3) Current foreign bytes preserved in .bak.1.
+	bak1Content, err := os.ReadFile(path + ".bak.1")
+	if err != nil {
+		t.Fatalf("expected .bak.1 to hold current foreign value: %v", err)
+	}
+	if string(bak1Content) != seed {
+		t.Errorf(".bak.1 content:\n got: %q\nwant: %q", string(bak1Content), seed)
+	}
+
+	// (4) Old command echoed to stdout.
+	if !strings.Contains(out.String(), "current-foreign") {
+		t.Errorf("stdout does not echo old command; got: %s", out.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Classify mode (--classify flag) tests
+// ---------------------------------------------------------------------------
+
+// TestRunInstallStatusline_Classify_Absent verifies that --classify prints
+// "absent" when no statusLine key is present, and writes nothing to disk.
+func TestRunInstallStatusline_Classify_Absent(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "settings.json")
+	// Do NOT create the file — absent rung.
+
+	installStatuslineSettings = path
+	installStatuslineCommand = `"/home/u/.claude/crafter/bin/crafter" statusline`
+	installStatuslineClassify = true
+	t.Cleanup(func() { installStatuslineClassify = false })
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline --classify (absent): %v", err)
+	}
+
+	got := strings.TrimSpace(out.String())
+	if got != "absent" {
+		t.Errorf("--classify output = %q, want %q", got, "absent")
+	}
+
+	// Must not create the settings file.
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("--classify created or modified the settings file (must be a no-op)")
+	}
+}
+
+// TestRunInstallStatusline_Classify_Ours verifies that --classify prints "ours"
+// when the statusLine command is already the crafter invocation, and writes nothing.
+func TestRunInstallStatusline_Classify_Ours(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	crafterCmd := `"/home/u/.claude/crafter/bin/crafter" statusline`
+	seed := `{
+  "statusLine": {
+    "type": "command",
+    "command": ` + jsonString(crafterCmd) + `
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = crafterCmd
+	installStatuslineClassify = true
+	t.Cleanup(func() { installStatuslineClassify = false })
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline --classify (ours): %v", err)
+	}
+
+	got := strings.TrimSpace(out.String())
+	if got != "ours" {
+		t.Errorf("--classify output = %q, want %q", got, "ours")
+	}
+
+	// Settings file must be byte-for-byte unchanged.
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings after --classify: %v", err)
+	}
+	if string(after) != seed {
+		t.Errorf("--classify (ours) modified the settings file")
+	}
+}
+
+// TestRunInstallStatusline_Classify_Foreign verifies that --classify prints
+// "foreign" when a different (non-crafter) command is present, and writes nothing.
+func TestRunInstallStatusline_Classify_Foreign(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	foreignCmd := `starship`
+	seed := `{
+  "statusLine": {
+    "type": "command",
+    "command": ` + jsonString(foreignCmd) + `
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = `"/home/u/.claude/crafter/bin/crafter" statusline`
+	installStatuslineClassify = true
+	t.Cleanup(func() { installStatuslineClassify = false })
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline --classify (foreign): %v", err)
+	}
+
+	got := strings.TrimSpace(out.String())
+	if got != "foreign" {
+		t.Errorf("--classify output = %q, want %q", got, "foreign")
+	}
+
+	// Settings file must be byte-for-byte unchanged.
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings after --classify: %v", err)
+	}
+	if string(after) != seed {
+		t.Errorf("--classify (foreign) modified the settings file")
+	}
+}
+
+// TestRunInstallStatusline_Classify_CompositeWrapperIsForeign verifies that a
+// composite tee-wrapper command that EMBEDS the crafter call (but is not the
+// plain two-token crafter command) is correctly classified as "foreign".
+func TestRunInstallStatusline_Classify_CompositeWrapperIsForeign(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	// The composite wrapper the old guidance used to emit.
+	composite := `bash -c 'in=$(cat); printf "%s %s" "$(printf "%s" "$in" | date +%H:%M)" "$(printf "%s" "$in" | "/home/u/.claude/crafter/bin/crafter" statusline)"'`
+	seed := `{"statusLine":{"type":"command","command":` + jsonString(composite) + `}}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installStatuslineSettings = path
+	installStatuslineCommand = `"/home/u/.claude/crafter/bin/crafter" statusline`
+	installStatuslineClassify = true
+	t.Cleanup(func() { installStatuslineClassify = false })
+
+	var out bytes.Buffer
+	installStatuslineCmd.SetOut(&out)
+	t.Cleanup(func() { installStatuslineCmd.SetOut(nil) })
+
+	if err := runInstallStatusline(installStatuslineCmd, nil); err != nil {
+		t.Fatalf("runInstallStatusline --classify (composite): %v", err)
+	}
+
+	got := strings.TrimSpace(out.String())
+	if got != "foreign" {
+		t.Errorf("--classify (composite wrapper) = %q, want %q", got, "foreign")
+	}
+}
+
 // extractJSONObject finds the first line in s whose trimmed content is exactly
 // "{" (marking the start of a top-level JSON block) and decodes the complete
 // JSON object from that point using json.Decoder. This avoids matching '{'

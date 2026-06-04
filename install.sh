@@ -442,10 +442,53 @@ install_statusline() {
     return 0
   fi
 
+  # Classify the existing statusLine rung BEFORE deciding whether to prompt.
+  # The binary reads the settings file and prints exactly one of:
+  #   absent  — no statusLine key present
+  #   ours    — statusLine already set to the crafter invocation
+  #   foreign — a different command is present
+  # It writes nothing and exits 0.
+  local rung
+  rung="$("$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command  "$statusline_cmd" \
+    --classify)"
+
+  # Resolve the keep-vs-overwrite decision.
+  #
+  # Decision order:
+  #   1. Installer-internal injection (used by tests that have no TTY).
+  #   2. Interactive prompt — ONLY when rung == foreign AND a real terminal is
+  #      available (read from /dev/tty so piped / curl|bash invocations are
+  #      never blocked).
+  #   3. Non-interactive fallback or non-foreign rung: keep (on absent/ours the
+  #      binary applies the right action regardless of on_foreign).
+  local on_foreign
+  if [[ -n "${_CRAFTER_INSTALL_ON_FOREIGN:-}" ]]; then
+    # Internal injection — bypasses TTY detection; used by H-series tests.
+    on_foreign="$_CRAFTER_INSTALL_ON_FOREIGN"
+  elif [[ "$rung" == "foreign" ]] && { [ -t 1 ] || [ -t 2 ]; } && [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    # Foreign rung AND a real terminal is attached on stdout or stderr, and
+    # /dev/tty is reachable.
+    # (stdin may be a pipe in curl|bash, so we never test -t 0.)
+    local answer
+    printf "A different statusLine command is already set in %s.\nOverwrite it with the Crafter statusLine? [y/N] " "$settings_file" > /dev/tty
+    read -r answer < /dev/tty || answer=""
+    case "$answer" in
+      [Yy]|[Yy][Ee][Ss]) on_foreign="overwrite" ;;
+      *)                  on_foreign="keep"      ;;
+    esac
+  else
+    # absent or ours rung, or non-interactive (piped, curl|bash, CI):
+    # keep is the right default — the binary handles absent/ours correctly
+    # regardless of on_foreign, and foreign non-interactive stays untouched.
+    on_foreign="keep"
+  fi
+
   "$crafter_bin" install statusline \
     --settings "$settings_file" \
     --command "$statusline_cmd" \
-    --on-foreign=keep
+    --on-foreign="$on_foreign"
 }
 
 install_global() {

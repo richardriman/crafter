@@ -17,6 +17,7 @@
 package claudesettings
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -152,6 +153,76 @@ func Backup(path string) error {
 	}
 
 	if err := os.WriteFile(bak, data, 0o644); err != nil {
+		return fmt.Errorf("writing settings backup: %w", err)
+	}
+	return nil
+}
+
+// BackupForOverwrite saves rawBytes (the raw on-disk content of the settings
+// file, read BEFORE any Load/mutation) as a recovery artifact before a
+// destructive foreign-overwrite.
+//
+// This function addresses two deferred Phase-1 review findings:
+//
+//   - Finding #2: the backup is taken from the raw on-disk bytes, not from a
+//     re-serialized Settings object. This means a malformed-but-meaningful
+//     original file remains recoverable even when Load treated it as empty.
+//
+//   - Finding #3: the backup is content-aware so that a stale, unrelated .bak
+//     cannot shadow the foreign value being destroyed:
+//   - No .bak exists: write rawBytes to path+".bak".
+//   - .bak exists AND its content equals rawBytes: skip — the overwrite was
+//     already backed up (idempotent re-run is safe).
+//   - .bak exists AND its content DIFFERS from rawBytes: the existing .bak holds
+//     a different backup; write rawBytes to path+".bak.1" (or ".bak.2", etc.,
+//     choosing the lowest suffix whose target does not yet exist).
+//
+// The caller must pass the raw bytes read from path before calling Load, because
+// Load is tolerant and silently treats garbled content as an empty object —
+// re-serialising the loaded Settings would lose the original on-disk bytes.
+func BackupForOverwrite(path string, rawBytes []byte) error {
+	bak := path + ".bak"
+
+	existing, err := os.ReadFile(bak)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("checking settings backup: %w", err)
+	}
+
+	if err == nil {
+		// A .bak already exists.
+		if bytes.Equal(existing, rawBytes) {
+			// Content matches — this exact foreign value is already safely backed
+			// up. Re-run is a no-op.
+			return nil
+		}
+		// The existing .bak holds different content (a prior backup, an unrelated
+		// value). Find the next available numbered sibling so the current foreign
+		// value is still preserved.
+		const maxBackups = 4096
+		for n := 1; n <= maxBackups; n++ {
+			numbered := fmt.Sprintf("%s.bak.%d", path, n)
+			f, err := os.OpenFile(numbered, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+			if err == nil {
+				_, werr := f.Write(rawBytes)
+				cerr := f.Close()
+				if werr != nil {
+					return fmt.Errorf("writing numbered settings backup %s: %w", numbered, werr)
+				}
+				if cerr != nil {
+					return fmt.Errorf("closing numbered settings backup %s: %w", numbered, cerr)
+				}
+				return nil
+			}
+			if !errors.Is(err, os.ErrExist) {
+				return fmt.Errorf("checking numbered backup %s: %w", numbered, err)
+			}
+			// That numbered slot is already taken; try the next.
+		}
+		return fmt.Errorf("too many backup files for %s: all .bak.1 through .bak.%d already exist", path, maxBackups)
+	}
+
+	// No .bak at all: create path+".bak".
+	if err := os.WriteFile(bak, rawBytes, 0o644); err != nil {
 		return fmt.Errorf("writing settings backup: %w", err)
 	}
 	return nil

@@ -96,7 +96,13 @@ To wire it up, pass `--with-statusline` to the installer:
 curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --with-statusline
 ```
 
-The installer sets the top-level `statusLine` key in your `settings.json` to `{ "type": "command", "command": "<crafter-bin> statusline" }` **only when no `statusLine` is already present**. On collision it leaves your existing value untouched and prints a ready-to-paste composite wrapper (`bash -c '...'`) that feeds stdin to both commands and joins their outputs — so you never lose an existing statusline.
+The installer applies a three-rung decision tree to your `settings.json`:
+
+- **absent** — no `statusLine` key exists: the installer sets it automatically to `{ "type": "command", "command": "<crafter-bin> statusline" }`.
+- **ours** — the key already holds a Crafter statusline command: the installer updates it only if the binary path changed (e.g. after a move); an identical entry is a no-op.
+- **foreign** — any other value is present (another tool's statusline, including a previous GSD one): on a real terminal the installer **prompts** whether to overwrite. On **yes**, the original `settings.json` is backed up to `settings.json.bak` and the old command is printed to the terminal so it is recoverable, then the Crafter statusline is written. On **no**, or when running non-interactively (`curl | bash`, CI, no TTY), the installer leaves the foreign value untouched and prints a ready-to-paste composite wrapper so you can merge both statuslines manually.
+
+The installer no longer needs `node` to edit `settings.json` — all JSON mutation is performed by the Go `crafter` binary.
 
 ## Skills
 

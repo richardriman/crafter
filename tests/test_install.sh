@@ -1690,6 +1690,265 @@ test_with_statusline_crafter_binary_missing_warns_and_skips() {
 }
 
 # ---------------------------------------------------------------------------
+# H. Statusline foreign-overwrite, keep, and non-interactive paths
+#    (Step 4.3 — tests for the --on-foreign decision added in Step 4.2)
+#
+# All three tests inject a FOREIGN statusLine seed and drive the
+# keep-vs-overwrite decision via _CRAFTER_INSTALL_ON_FOREIGN (the
+# installer-internal bypass env var added in Step 4.2) so that no real TTY
+# is needed.  H1 and H2 use the real-go shim (mutation-capable binary);
+# H3 also uses a real binary but exercises the automatic non-interactive
+# fallback by supplying stdin from /dev/null and omitting the env var.
+# ---------------------------------------------------------------------------
+
+# H1. Foreign + _CRAFTER_INSTALL_ON_FOREIGN=overwrite:
+#     - settings.json statusLine.command becomes the crafter command
+#     - settings.json.bak holds the original on-disk bytes (old foreign value)
+#     - installer stdout echoes the old foreign command (bare string)
+test_foreign_overwrite_sets_crafter_cmd_creates_bak_and_echoes_old_cmd() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-statusline-sentinel"
+  # Pre-seed settings.json with a foreign statusLine command.
+  local seed_json
+  seed_json="$(printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel")"
+  printf '%s' "$seed_json" > "$home_dir/.claude/settings.json"
+
+  # Use real-go shim: _download_cli_binary places a mutation-capable binary.
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # Run the installer with the injection env var to take the overwrite path
+  # without requiring a real TTY.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    _CRAFTER_INSTALL_ON_FOREIGN=overwrite \
+    bash "$INSTALL_SH" --global --with-statusline 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # (a) settings.json now carries the crafter command (not the old foreign value).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  # The crafter command written by install_statusline is `"<bin>" statusline`;
+  # in JSON the inner double quotes are escaped as \", so the file contains:
+  #   crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter'
+  assert_contains "$settings" 'statusline'
+  # The old foreign sentinel must NOT remain as the statusLine command.
+  # (It may still appear inside the .bak reference but must not be the live command.)
+  local cmd_value=""
+  local cmd_line=""
+  cmd_line="$(printf '%s\n' "$settings" | grep '"command":' | head -n1 || true)"
+  cmd_value="$(_decode_json_cmd_line "$cmd_line")"
+  if [[ "$cmd_value" == "$sentinel" ]]; then
+    _fail "test_foreign_overwrite: statusLine.command is still the foreign sentinel after overwrite"
+  fi
+
+  # (b) A .bak file must exist and must contain the original on-disk bytes.
+  local bak_file="$home_dir/.claude/settings.json.bak"
+  assert_file_exists "$bak_file"
+  local bak_content
+  bak_content="$(cat "$bak_file")"
+  assert_contains "$bak_content" "$sentinel"
+
+  # (c) Installer stdout must echo the old foreign command (bare string, one line).
+  # runForeignOverwrite calls fmt.Fprintln(cmd.OutOrStdout(), oldCmd) where
+  # oldCmd = StatusLineCommandString(raw) = the .command string from the seed.
+  assert_contains "$output" "$sentinel"
+}
+
+# H2. Foreign + _CRAFTER_INSTALL_ON_FOREIGN=keep:
+#     - settings.json is unchanged (foreign sentinel preserved)
+#     - guidance text is printed ("statusLine already set")
+test_foreign_keep_preserves_existing_cmd_and_prints_guidance() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-keep-sentinel"
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    _CRAFTER_INSTALL_ON_FOREIGN=keep \
+    bash "$INSTALL_SH" --global --with-statusline 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # settings.json must still hold the foreign sentinel unchanged.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # The live statusLine.command must still be the sentinel.
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_foreign_keep: sentinel '$sentinel' missing from settings.json after keep path"
+  fi
+
+  # Guidance must be printed (ForeignKeepGuidanceLines emits "statusLine already set").
+  assert_contains "$output" "statusLine already set"
+}
+
+# H3. Piped / non-interactive (no TTY, no injection env var):
+#     - installer must never hang
+#     - takes the keep/guidance path automatically
+#     - settings.json unchanged (foreign sentinel preserved)
+#
+# The real-terminal predicate in install_statusline() checks `[ -t 1 ] || [ -t 2 ]`
+# AND `/dev/tty` reachability.  Running with stdout/stderr captured in a
+# command substitution AND stdin from /dev/null means no TTY is attached, so
+# the predicate is false and the non-interactive fallback (keep) is taken
+# without any prompt or hang — without needing _CRAFTER_INSTALL_ON_FOREIGN.
+test_noninteractive_piped_foreign_takes_keep_path_without_hanging() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-noninteractive-sentinel"
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # No _CRAFTER_INSTALL_ON_FOREIGN; stdin from /dev/null removes any chance of
+  # a blocking `read` call that would hang the test.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # settings.json must be unchanged — foreign value preserved (keep path).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_noninteractive_piped: sentinel '$sentinel' missing from settings.json — keep path was not taken"
+  fi
+
+  # Guidance must be emitted (same as keep path).
+  assert_contains "$output" "statusLine already set"
+}
+
+# ---------------------------------------------------------------------------
+# H4. Absent-seed --with-statusline installs non-interactively without prompting.
+#     The classify step should return "absent"; no TTY prompt must fire.
+#     Uses the real mutation-capable binary.
+test_absent_seed_with_statusline_sets_statusline_without_prompt() {
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # No _CRAFTER_INSTALL_ON_FOREIGN injection, no TTY (subprocess output capture
+  # + stdin from /dev/null), no pre-seeded settings.json.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # The installer must complete without hanging and must have written statusLine.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" 'statusline'
+
+  # No prompt text must appear in the output (the prompt is shown only on foreign).
+  if [[ "$output" == *"already set"* ]]; then
+    _fail "test_absent_seed_with_statusline_sets_statusline_without_prompt: unexpected prompt/guidance in output for absent seed"
+  fi
+}
+
+# H5. Ours-seed --with-statusline is a noop and does NOT prompt.
+#     The classify step returns "ours"; the apply step is a noop; no prompt fires.
+test_ours_seed_with_statusline_is_noop_without_prompt() {
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # Run a first install to get the real crafter command written into settings.json.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+
+  # Confirm the first run wrote the crafter statusLine (the "ours" seed).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+
+  # Second run: statusLine is now "ours"; must complete without prompting.
+  PATH="$real_go_bin:$PATH"
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # No prompt text (foreign-only) must appear.
+  if [[ "$output" == *"already set"* ]]; then
+    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: unexpected prompt/guidance in output for ours seed"
+  fi
+
+  # Exactly one statusLine key must remain.
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  local count
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: expected 1 statusLine key, got $count"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Syntax check
 # ---------------------------------------------------------------------------
 test_install_sh_passes_bash_syntax_check() {
