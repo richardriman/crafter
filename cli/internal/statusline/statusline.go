@@ -18,6 +18,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -97,6 +98,18 @@ func abbrevCapacity(size int) string {
 	}
 }
 
+// reContextParenthetical matches a trailing " (… context)" group in a model
+// display name, e.g. " (1M context)" in "Opus 4.8 (1M context)". It is used
+// by modelSection to strip the redundant capacity parenthetical when crafter
+// is itself appending its own abbreviated capacity token.
+//
+// The pattern requires:
+//   - a literal space before the opening paren (so "Foo(context)" is not matched)
+//   - any non-empty content before the word "context" (case-insensitive)
+//   - optional whitespace around the content
+//   - end-of-string anchor
+var reContextParenthetical = regexp.MustCompile(`(?i)\s+\([^)]*context[^)]*\)\s*$`)
+
 // modelSection renders the model section, e.g. "Opus 4.8 1M (high)".
 //
 // It concatenates ModelDisplayName, the abbreviated ContextWindowSize, and the
@@ -104,6 +117,12 @@ func abbrevCapacity(size int) string {
 //   - empty ModelDisplayName → "" (omit the whole section).
 //   - ContextWindowSize == 0 → omit the capacity token (no "0"/"0k").
 //   - empty EffortLevel → omit the " (...)" suffix.
+//
+// When ContextWindowSize > 0, any trailing " (… context)" parenthetical in
+// ModelDisplayName is stripped before appending the abbreviated capacity, so
+// a display name like "Opus 4.8 (1M context)" with ContextWindowSize=1000000
+// renders as "Opus 4.8 1M (high)" rather than "Opus 4.8 (1M context) 1M (high)".
+// The strip is skipped when ContextWindowSize == 0 so no information is lost.
 //
 // So the possible forms are "Opus 4.8 1M (high)", "Opus 4.8 1M",
 // "Opus 4.8 (high)", and "Opus 4.8".
@@ -114,6 +133,7 @@ func modelSection(p Payload) string {
 
 	s := p.ModelDisplayName
 	if p.ContextWindowSize > 0 {
+		s = strings.TrimRight(reContextParenthetical.ReplaceAllString(s, ""), " ")
 		s += " " + abbrevCapacity(p.ContextWindowSize)
 	}
 	if p.EffortLevel != "" {

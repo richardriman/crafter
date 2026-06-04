@@ -1023,6 +1023,34 @@ func TestModelSection(t *testing.T) {
 			p:    Payload{ContextWindowSize: 1_000_000, EffortLevel: "high"},
 			want: "",
 		},
+		// --- context-parenthetical stripping ---
+		{
+			// Headline fix: Claude Code embeds "(1M context)" in the display name;
+			// crafter must strip it before appending its own "1M" token.
+			name: "display_name with (1M context) parenthetical + capacity → stripped",
+			p:    Payload{ModelDisplayName: "Opus 4.8 (1M context)", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
+			want: "Opus 4.8 1M (xhigh)",
+		},
+		{
+			// Display name without a context parenthetical → no change in behaviour.
+			name: "display_name without parenthetical + capacity → unchanged",
+			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
+			want: "Opus 4.8 1M (xhigh)",
+		},
+		{
+			// Guard: when ContextWindowSize == 0, the parenthetical must NOT be
+			// stripped so the display name is preserved verbatim.
+			name: "display_name with (1M context) but capacity 0 → NOT stripped",
+			p:    Payload{ModelDisplayName: "Opus 4.8 (1M context)", ContextWindowSize: 0, EffortLevel: "xhigh"},
+			want: "Opus 4.8 (1M context) (xhigh)",
+		},
+		{
+			// A trailing parenthetical that does NOT mention "context" must be
+			// preserved — only context-bearing parentheticals are stripped.
+			name: "non-context trailing parenthetical preserved when capacity present",
+			p:    Payload{ModelDisplayName: "Sonnet 4.6 (beta)", ContextWindowSize: 200_000, EffortLevel: "low"},
+			want: "Sonnet 4.6 (beta) 200k (low)",
+		},
 	}
 
 	for _, tt := range tests {
