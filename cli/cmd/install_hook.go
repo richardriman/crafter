@@ -18,24 +18,23 @@ var (
 	installHookCommand  string
 )
 
-// hookEntry mirrors an install.sh SessionStart entry: an object carrying a
-// hooks array of command descriptors.
-type hookEntry struct {
-	Hooks []hookCommand `json:"hooks"`
-}
-
-// hookCommand is a single `{ "type": "command", "command": "<cmd>" }` descriptor.
-type hookCommand struct {
-	Type    string `json:"type"`
-	Command string `json:"command"`
+// hookEntryProbe is a minimal struct used ONLY to read inner hooks[].command
+// values from a raw SessionStart entry during the idempotency check. It is
+// never re-marshalled back; the raw entry bytes are always preserved verbatim.
+type hookEntryProbe struct {
+	Hooks []struct {
+		Command string `json:"command"`
+	} `json:"hooks"`
 }
 
 var installHookCmd = &cobra.Command{
 	Use:   "hook",
 	Short: "Register the Crafter SessionStart hook into a Claude Code settings.json",
-	Long: "Register a SessionStart hook command into a settings.json. This is a " +
-		"basic registration; the behaviour-preserving, idempotent port is a later " +
-		"phase.",
+	Long: "Register a SessionStart hook command into a settings.json. " +
+		"The registration is idempotent: if the command is already present in any " +
+		"existing SessionStart entry the file is left untouched. Pre-existing " +
+		"SessionStart entries (including any extra fields such as matcher or " +
+		"inner command timeouts) are preserved verbatim.",
 	SilenceUsage: true,
 	RunE:         runInstallHook,
 }
@@ -56,10 +55,9 @@ func runInstallHook(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Hold the hooks object as a raw-value map, mirroring how claudesettings
-	// holds top-level settings: every sibling event array (PreToolUse, Stop, ...)
-	// and any unknown nested key round-trips verbatim, and only SessionStart is
-	// mutated below.
+	// Hold the hooks object as a raw-value map so every sibling event array
+	// (PreToolUse, Stop, ...) and unknown nested key round-trips verbatim.
+	// Only the SessionStart array is mutated below.
 	hooks := map[string]json.RawMessage{}
 	if raw, ok := settings.Get(hooksKey); ok {
 		// Ignore a malformed hooks value: treat it as empty, mirroring the
@@ -67,25 +65,61 @@ func runInstallHook(cmd *cobra.Command, args []string) error {
 		_ = json.Unmarshal(raw, &hooks)
 	}
 
-	// Decode the existing SessionStart array (missing/invalid -> empty), append
-	// the new entry, and re-encode it back under the same key. install.sh dedup
-	// (skip-if-already-registered) is a later phase; for now we always append.
-	var sessionStart []hookEntry
+	// Model the existing SessionStart array as []json.RawMessage so each entry
+	// is kept byte-for-byte intact (preserving entry-level fields like matcher
+	// and inner-command fields like timeout that are not in our struct).
+	// Missing or invalid value degrades to an empty slice.
+	var sessionStart []json.RawMessage
 	if raw, ok := hooks[sessionStartKey]; ok {
 		_ = json.Unmarshal(raw, &sessionStart)
 	}
-	sessionStart = append(sessionStart, hookEntry{
-		Hooks: []hookCommand{{Type: "command", Command: installHookCommand}},
-	})
 
-	encoded, err := json.Marshal(sessionStart)
-	if err != nil {
-		return err
+	// Idempotency check: scan each raw entry using a minimal probe struct that
+	// reads only hooks[].command — we never re-marshal the probe, so no fields
+	// of the original entry are ever discarded.
+	// Mirrors the install.sh node block's alreadyRegistered check:
+	//   settings.hooks.SessionStart.some(e => e.hooks && e.hooks.some(h => h.command === hookCommand))
+	alreadyRegistered := false
+	for _, rawEntry := range sessionStart {
+		var probe hookEntryProbe
+		if err := json.Unmarshal(rawEntry, &probe); err != nil {
+			// Malformed entry: skip without altering.
+			continue
+		}
+		for _, h := range probe.Hooks {
+			if h.Command == installHookCommand {
+				alreadyRegistered = true
+				break
+			}
+		}
+		if alreadyRegistered {
+			break
+		}
 	}
-	hooks[sessionStartKey] = encoded
 
-	if err := settings.Set(hooksKey, hooks); err != nil {
-		return err
+	if !alreadyRegistered {
+		// Build the new crafter-owned entry and append it as a raw JSON value.
+		newEntry, err := json.Marshal(map[string]interface{}{
+			"hooks": []map[string]string{
+				{"type": "command", "command": installHookCommand},
+			},
+		})
+		if err != nil {
+			return err
+		}
+		sessionStart = append(sessionStart, json.RawMessage(newEntry))
+
+		encoded, err := json.Marshal(sessionStart)
+		if err != nil {
+			return err
+		}
+		hooks[sessionStartKey] = encoded
+
+		if err := settings.Set(hooksKey, hooks); err != nil {
+			return err
+		}
+		return claudesettings.Save(installHookSettings, settings)
 	}
-	return claudesettings.Save(installHookSettings, settings)
+
+	return nil
 }

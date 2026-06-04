@@ -413,6 +413,7 @@ install_to() {
 }
 
 install_hook() {
+  local crafter_bin="$1"
   local hooks_dir="$HOME/.claude/hooks"
   local settings_file="$HOME/.claude/settings.json"
   local hook_dest="$hooks_dir/crafter-check-update.js"
@@ -420,39 +421,15 @@ install_hook() {
   mkdir -p "$hooks_dir"
   cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
 
-  if ! command -v node &>/dev/null; then
-    echo "Warning: node not found, skipping hook registration"
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping hook registration"
     return 0
   fi
 
-  SETTINGS_FILE="$settings_file" HOOK_CMD="node \"$hook_dest\"" node -e '
-    const fs = require("fs");
-    const settingsFile = process.env.SETTINGS_FILE;
-    const hookCommand = process.env.HOOK_CMD;
-
-    let settings = {};
-    try {
-      settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-    } catch (e) {}
-
-    if (!settings.hooks) settings.hooks = {};
-    if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
-
-    // Check if already registered
-    const alreadyRegistered = settings.hooks.SessionStart.some(function(entry) {
-      return entry.hooks && entry.hooks.some(function(h) {
-        return h.command === hookCommand;
-      });
-    });
-
-    if (!alreadyRegistered) {
-      settings.hooks.SessionStart.push({
-        hooks: [{ type: "command", command: hookCommand }]
-      });
-    }
-
-    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
-  '
+  local hook_cmd="node \"$hook_dest\""
+  "$crafter_bin" install hook \
+    --settings "$settings_file" \
+    --command "$hook_cmd"
 }
 
 install_statusline() {
@@ -477,7 +454,7 @@ install_global() {
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
   _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
-  install_hook
+  install_hook "$HOME/.claude/crafter/bin/crafter"
   if [[ -n "$WITH_STATUSLINE" ]]; then
     install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
   fi
@@ -495,7 +472,7 @@ install_local() {
   # Allow binary build to fail without aborting the rest of the install;
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
   _download_cli_binary "$local_base" || true
-  install_hook
+  install_hook "$local_base/crafter/bin/crafter"
   if [[ -n "$WITH_STATUSLINE" ]]; then
     install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
   fi

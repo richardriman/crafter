@@ -29,6 +29,146 @@ func readStatusLineCommand(t *testing.T, path string) string {
 	return settings.StatusLine.Command
 }
 
+// TestRunInstallHook_Idempotent verifies that running the hook registration a
+// second time with the same command does NOT produce a duplicate SessionStart
+// entry. This mirrors the install.sh node block's alreadyRegistered guard.
+func TestRunInstallHook_Idempotent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	hookCmd := `node "/home/u/.claude/hooks/crafter-check-update.js"`
+
+	// First run: registers the hook.
+	installHookSettings = path
+	installHookCommand = hookCmd
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("first runInstallHook: %v", err)
+	}
+
+	// Second run: must be a no-op (no duplicate entry).
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("second runInstallHook: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings: %v", err)
+	}
+	var settings struct {
+		Hooks struct {
+			SessionStart []struct {
+				Hooks []struct {
+					Command string `json:"command"`
+				} `json:"hooks"`
+			} `json:"SessionStart"`
+		} `json:"hooks"`
+	}
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("parsing settings: %v", err)
+	}
+	if got := len(settings.Hooks.SessionStart); got != 1 {
+		t.Errorf("SessionStart entries after two runs: got %d, want 1 (idempotency violated)", got)
+	}
+}
+
+// TestRunInstallHook_PreservesUnrelatedTopLevelKeys verifies that registering a
+// hook does not drop top-level settings keys unrelated to hooks (e.g. model,
+// permissions). This guards the round-trip contract of the claudesettings layer.
+func TestRunInstallHook_PreservesUnrelatedTopLevelKeys(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	hookCmd := `node "/home/u/.claude/hooks/crafter-check-update.js"`
+
+	seed := `{
+  "model": "claude-opus",
+  "permissions": { "allow": ["Read"] }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installHookSettings = path
+	installHookCommand = hookCmd
+
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("runInstallHook: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings: %v", err)
+	}
+	var settings struct {
+		Model       string          `json:"model"`
+		Permissions json.RawMessage `json:"permissions"`
+		Hooks       struct {
+			SessionStart []struct {
+				Hooks []struct {
+					Command string `json:"command"`
+				} `json:"hooks"`
+			} `json:"SessionStart"`
+		} `json:"hooks"`
+	}
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("parsing settings: %v", err)
+	}
+
+	if settings.Model != "claude-opus" {
+		t.Errorf("model: got %q, want %q (unrelated key was dropped)", settings.Model, "claude-opus")
+	}
+	wantPerms := `{"allow":["Read"]}`
+	if got := compactRaw(t, settings.Permissions); got != wantPerms {
+		t.Errorf("permissions: got %s, want %s (unrelated key was dropped or mutated)", got, wantPerms)
+	}
+	if len(settings.Hooks.SessionStart) != 1 {
+		t.Fatalf("SessionStart entries: got %d, want 1", len(settings.Hooks.SessionStart))
+	}
+	if len(settings.Hooks.SessionStart[0].Hooks) != 1 ||
+		settings.Hooks.SessionStart[0].Hooks[0].Command != hookCmd {
+		t.Errorf("hook command not registered correctly: %+v", settings.Hooks.SessionStart[0])
+	}
+}
+
+// TestRunInstallHook_GarbledSettingsFile verifies the tolerant-read posture:
+// a garbled (invalid JSON) settings file is treated as empty settings and the
+// hook is registered cleanly without returning an error.
+func TestRunInstallHook_GarbledSettingsFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	if err := os.WriteFile(path, []byte("not valid json {{{{"), 0o644); err != nil {
+		t.Fatalf("writing garbled settings: %v", err)
+	}
+	hookCmd := `node "/home/u/.claude/hooks/crafter-check-update.js"`
+
+	installHookSettings = path
+	installHookCommand = hookCmd
+
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("runInstallHook on garbled file: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings after: %v", err)
+	}
+	var settings struct {
+		Hooks struct {
+			SessionStart []struct {
+				Hooks []struct {
+					Type    string `json:"type"`
+					Command string `json:"command"`
+				} `json:"hooks"`
+			} `json:"SessionStart"`
+		} `json:"hooks"`
+	}
+	if err := json.Unmarshal(data, &settings); err != nil {
+		t.Fatalf("parsing settings after garbled-file run: %v", err)
+	}
+	if len(settings.Hooks.SessionStart) != 1 {
+		t.Fatalf("SessionStart entries: got %d, want 1", len(settings.Hooks.SessionStart))
+	}
+	entry := settings.Hooks.SessionStart[0]
+	if len(entry.Hooks) != 1 || entry.Hooks[0].Type != "command" || entry.Hooks[0].Command != hookCmd {
+		t.Errorf("hook not registered correctly after garbled-file run: %+v", entry)
+	}
+}
+
 // TestRunInstallStatusline_AbsentRung verifies that when no statusLine key is
 // present, the command sets the freshly-computed Crafter command.
 func TestRunInstallStatusline_AbsentRung(t *testing.T) {
@@ -200,6 +340,117 @@ func TestRunInstallHook_PreservesSiblingHookKeys(t *testing.T) {
 	}
 	if last.Hooks[0].Type != "command" || last.Hooks[0].Command != hookCmd {
 		t.Errorf("appended hook: got %+v, want {command %q}", last.Hooks[0], hookCmd)
+	}
+}
+
+// TestRunInstallHook_PreservesExtraFieldsOnForeignEntries is the regression
+// test for the data-loss bug where typed-struct round-trips stripped entry-level
+// fields (e.g. matcher) and inner-command fields (e.g. timeout) from pre-existing
+// SessionStart entries that were not owned by crafter.
+//
+// This test WOULD FAIL against the old typed-struct code because re-marshalling
+// []hookEntry silently drops every field not declared on the struct.
+func TestRunInstallHook_PreservesExtraFieldsOnForeignEntries(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	crafterHookCmd := `node "/home/u/.claude/hooks/crafter-check-update.js"`
+
+	// Seed a SessionStart entry that carries an entry-level "matcher" AND an
+	// inner-command "timeout" — extra fields preserved verbatim through the
+	// raw-passthrough. These must survive untouched after crafter appends its own entry.
+	seed := `{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "existing-cmd",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}` + "\n"
+	if err := os.WriteFile(path, []byte(seed), 0o644); err != nil {
+		t.Fatalf("seeding settings: %v", err)
+	}
+
+	installHookSettings = path
+	installHookCommand = crafterHookCmd
+
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("runInstallHook: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings: %v", err)
+	}
+
+	// Parse with a generous struct that captures extra fields as RawMessage so
+	// we can assert on their presence.
+	var result struct {
+		Hooks struct {
+			SessionStart []struct {
+				Matcher string `json:"matcher"`
+				Hooks   []struct {
+					Type    string          `json:"type"`
+					Command string          `json:"command"`
+					Timeout json.RawMessage `json:"timeout"`
+				} `json:"hooks"`
+			} `json:"SessionStart"`
+		} `json:"hooks"`
+	}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("parsing result: %v", err)
+	}
+
+	// (1) Exactly two entries: the pre-existing one and the new crafter entry.
+	if got := len(result.Hooks.SessionStart); got != 2 {
+		t.Fatalf("SessionStart entries: got %d, want 2", got)
+	}
+
+	// (2) The first (pre-existing) entry must still have matcher and inner timeout.
+	first := result.Hooks.SessionStart[0]
+	if first.Matcher != "*" {
+		t.Errorf("pre-existing entry: matcher stripped; got %q, want %q", first.Matcher, "*")
+	}
+	if len(first.Hooks) != 1 {
+		t.Fatalf("pre-existing entry: hooks count %d, want 1", len(first.Hooks))
+	}
+	if first.Hooks[0].Command != "existing-cmd" {
+		t.Errorf("pre-existing entry: command got %q, want %q", first.Hooks[0].Command, "existing-cmd")
+	}
+	if string(first.Hooks[0].Timeout) != "30" {
+		t.Errorf("pre-existing entry: timeout stripped; got %s, want 30", string(first.Hooks[0].Timeout))
+	}
+
+	// (3) The second (new crafter) entry must carry the crafter command.
+	second := result.Hooks.SessionStart[1]
+	if len(second.Hooks) != 1 || second.Hooks[0].Command != crafterHookCmd {
+		t.Errorf("new crafter entry: got %+v, want command %q", second.Hooks, crafterHookCmd)
+	}
+
+	// (4) Idempotency: running again must not add a third entry.
+	if err := runInstallHook(installHookCmd, nil); err != nil {
+		t.Fatalf("second runInstallHook: %v", err)
+	}
+	data2, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading settings after second run: %v", err)
+	}
+	var result2 struct {
+		Hooks struct {
+			SessionStart []json.RawMessage `json:"SessionStart"`
+		} `json:"hooks"`
+	}
+	if err := json.Unmarshal(data2, &result2); err != nil {
+		t.Fatalf("parsing result2: %v", err)
+	}
+	if got := len(result2.Hooks.SessionStart); got != 2 {
+		t.Errorf("SessionStart entries after idempotency run: got %d, want 2 (duplicate appended)", got)
 	}
 }
 

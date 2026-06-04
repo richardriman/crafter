@@ -1033,12 +1033,20 @@ test_local_installs_hook_file() {
 }
 
 test_global_registers_hook_in_settings() {
-  local tmp home_dir output ec settings
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary so `crafter install hook`
+  # actually writes settings.json (without a real binary the hook registration
+  # is silently skipped and settings.json is never created).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
   assert_contains "$settings" "crafter-check-update.js"
@@ -1046,13 +1054,20 @@ test_global_registers_hook_in_settings() {
 }
 
 test_local_registers_hook_in_settings() {
-  local tmp home_dir proj_dir output ec settings
+  local tmp home_dir proj_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   proj_dir="$tmp/project"
   mkdir -p "$home_dir" "$proj_dir"
+  # Inject a real mutation-capable crafter binary so `crafter install hook`
+  # actually writes $HOME/.claude/settings.json (both modes target HOME).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$proj_dir" output ec --local
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
   assert_contains "$settings" "crafter-check-update.js"
@@ -1060,17 +1075,25 @@ test_local_registers_hook_in_settings() {
 }
 
 test_hook_registration_is_idempotent() {
-  local tmp home_dir output ec settings count
+  local tmp home_dir output ec settings count real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary for both runs.
+  # install_to deletes the crafter dir on each run, so the binary must be
+  # re-placed by the shim each time (same pattern as G4 statusline tests).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
   # Second run must not duplicate the hook entry
   _run_installer "$home_dir" "$tmp" output ec --global
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  count="$(echo "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
+  count="$(printf '%s\n' "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
     _fail "hook_registration_is_idempotent: expected 1 occurrence of crafter-check-update.js in settings.json, got $count"
   fi
@@ -1280,12 +1303,20 @@ test_error_no_tar_exits_with_message() {
 
 # G1. Default install (no flag) does NOT add statusLine key — global.
 test_global_default_install_no_statusline() {
-  local tmp home_dir output ec settings
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary so hook registration writes
+  # settings.json (without a real binary the hook registration is skipped and
+  # settings.json is never created, making the subsequent assertion vacuous).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   # settings.json is created by the hook registration; statusLine must be absent.
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
