@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-06-03
 - **Work branch:** feat/plan-progress-statusline
-- **Status:** active
+- **Status:** completed
 - **Scope:** Large
 
 ## Request
@@ -193,3 +193,12 @@ Outcome: a real-TTY foreign collision prompts the user; on "yes" the binary over
 - **Decision (User Accepted):** Phase 3 review finding #1 (Major) fix direction = **preserve raw SessionStart entries verbatim**. The Go hook registration now models `hooks.SessionStart` as `[]json.RawMessage` (foreign entries pass through untouched, preserving `matcher`/`timeout`/any extra fields); a read-only `hookEntryProbe` reads only inner `hooks[].command` for the idempotency scan and is never re-marshalled; only the crafter-owned entry is constructed. **Reason:** The prior typed-struct (`hookEntry`/`hookCommand`) round-trip silently stripped valid hook-schema fields from pre-existing entries — a data-loss regression against the Node `parse/push/stringify` behavior the port was supposed to preserve (A7). The two residual Suggestions (vestigial `Extra` field + stale `hookEntry` comment in `install_test.go`) were fixed before the Phase 3 commit.
 
 ## Outcome
+
+All four phases complete on branch `feat/plan-progress-statusline` (PR #42). The installer's `settings.json` mutation is fully migrated from `node -e` into the Go `crafter` binary, and `install.sh --with-statusline` now does a safe smart-replace decision tree instead of compose-on-collision.
+
+- **Phase 1** (`bd2a1ba`) — Go foundation: `cli/internal/claudesettings` package (tolerant load, atomic pretty-JSON writer, `statusLine` classifier absent/ours/foreign, "ours" matcher, `.bak` helper) + non-wired `crafter install` command group skeleton.
+- **Phase 2** (`529fd80`) — `install_statusline()` wired to `crafter install statusline` with `--on-foreign=keep`; its `node -e` block + node guard removed; foreign-keep guidance reproduced in Go (two-layer JSON+shell escaping); Section G install tests migrated to the Go path against a real binary.
+- **Phase 3** (`3ed0b80`) — `install_hook()` wired to `crafter install hook`; its `node -e` block + node guard removed (install.sh now node-free for settings editing); hook port preserves Node's pretty-JSON shape, idempotency, and raw SessionStart entries; hook tests migrated.
+- **Phase 4** (`f1c033a`) — interactive foreign-overwrite end-to-end: Go `--on-foreign=overwrite` (content-aware `.bak`/`.bak.N` via atomic `O_EXCL` + `maxBackups` cap, echoes old command, overwrites); bash TTY detection + `/dev/tty` prompt; a `--classify` dry-run mode gates the prompt to the foreign rung so absent/ours installs never prompt; `_CRAFTER_INSTALL_ON_FOREIGN` injection keeps the destructive path test-reachable without a TTY; README + ARCHITECTURE updated. Review fix loop: 1 Major (#1 unconditional prompt → fixed via classify-then-apply) + 2 Minor + 2 Suggestions, all resolved; re-review clean; phase verification 9/9.
+
+Verification at completion: `go vet ./...` clean, `go test ./...` green, `bash -n install.sh` clean, `bash tests/test_install.sh` 63 passed / 0 failed. No `node -e` / `command -v node` remains in `install.sh` for settings editing. End-of-task docs check: ARCHITECTURE.md already current (updated in Phase 4), PROJECT.md unaffected (node was never a declared stack dependency).

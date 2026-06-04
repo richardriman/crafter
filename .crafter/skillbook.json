@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-03T13:39:49Z",
+  "updatedAt": "2026-06-04T22:07:49Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 22,
+      "appliedCount": 25,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 13,
+      "appliedCount": 15,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 19,
+      "appliedCount": 22,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 18,
+      "appliedCount": 21,
       "deprecated": false
     },
     {
@@ -65,7 +65,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:32Z",
-      "appliedCount": 12,
+      "appliedCount": 14,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 18,
+      "appliedCount": 21,
       "deprecated": false
     },
     {
@@ -87,7 +87,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
-      "appliedCount": 18,
+      "appliedCount": 21,
       "deprecated": false
     },
     {
@@ -98,7 +98,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:38Z",
-      "appliedCount": 11,
+      "appliedCount": 13,
       "deprecated": false
     },
     {
@@ -109,7 +109,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:45Z",
-      "appliedCount": 17,
+      "appliedCount": 20,
       "deprecated": false
     },
     {
@@ -120,7 +120,7 @@
       "sourceTask": "20260519-chore-crafter-jargon-context-bleed.md",
       "confidence": "low",
       "addedAt": "2026-05-19T21:10:43Z",
-      "appliedCount": 3,
+      "appliedCount": 4,
       "deprecated": false
     },
     {
@@ -131,7 +131,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 3,
+      "appliedCount": 6,
       "deprecated": false
     },
     {
@@ -142,7 +142,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 3,
+      "appliedCount": 6,
       "deprecated": false
     },
     {
@@ -153,7 +153,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 3,
+      "appliedCount": 6,
       "deprecated": false
     },
     {
@@ -164,7 +164,7 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     },
     {
@@ -175,6 +175,28 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
+      "appliedCount": 3,
+      "deprecated": false
+    },
+    {
+      "id": "4d17c2ec7f978016",
+      "agent": "implementer",
+      "rule": "When a bash installer must show an interactive prompt only for a specific case that the Go binary classifies (e.g. a 'foreign' settings.json collision), do NOT prompt unconditionally whenever the feature flag is passed. Add a non-interactive --classify/dry-run mode to the Go command that reuses the canonical classifier and prints the rung, then gate the bash prompt on that rung. Otherwise the prompt fires in the wrong states (absent/ours).",
+      "rationale": "Phase 4's first cut prompted on every interactive --with-statusline install because bash never learned the absent/ours/foreign rung; review flagged it Major and it was fixed via classify-then-apply.",
+      "sourceTask": "20260603-feat-statusline-install-replace",
+      "confidence": "low",
+      "addedAt": "2026-06-04T22:07:49Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "c170d6a2f778b443",
+      "agent": "implementer",
+      "rule": "Install tests (tests/test_install.sh) that assert on mutated settings.json MUST run against a real mutation-capable crafter binary (the _make_real_go_bin_dir helper / source-build path), never the echo-only _make_fake_go_bin_dir shim — the fake binary cannot mutate JSON, so such assertions pass vacuously.",
+      "rationale": "Across the node-\u003eGo settings-mutation migration (Phases 2-4) every settings-edit test had to be pointed at the real binary; the echo-only fake would silently make the assertions vacuous.",
+      "sourceTask": "20260603-feat-statusline-install-replace",
+      "confidence": "low",
+      "addedAt": "2026-06-04T22:07:49Z",
       "appliedCount": 0,
       "deprecated": false
     }
