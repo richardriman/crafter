@@ -13,6 +13,9 @@ INSTALL_SH="$REPO_DIR/install.sh"
 # Global cleanup trap — removes any temp directories left over on interrupt
 # ---------------------------------------------------------------------------
 _ALL_TMPDIRS=()
+# Cached path to the real (mutation-capable) crafter binary used by G-series
+# statusline tests.  Set once by _build_real_crafter_bin; empty until then.
+_REAL_CRAFTER_BIN=""
 _global_cleanup() {
   local d
   for d in "${_ALL_TMPDIRS[@]+"${_ALL_TMPDIRS[@]}"}"; do
@@ -216,6 +219,100 @@ _make_fake_go_bin_dir() {
     > "$shim_dir/go"
   chmod +x "$shim_dir/go"
   echo "$shim_dir"
+}
+
+# Build a real (mutation-capable) crafter binary from source and cache the path
+# in $_REAL_CRAFTER_BIN.  Prints the cached path to stdout.
+# Uses `mise exec -- go build` in $REPO_DIR/cli; the build happens at most once
+# per test-suite run.  Exits the whole suite with an error message if the build
+# cannot succeed (so no test silently passes against a dummy binary).
+_build_real_crafter_bin() {
+  if [[ -n "$_REAL_CRAFTER_BIN" && -x "$_REAL_CRAFTER_BIN" ]]; then
+    echo "$_REAL_CRAFTER_BIN"
+    return 0
+  fi
+  local out
+  out="$(_make_tmp)/crafter-real"
+  if ! (cd "$REPO_DIR/cli" && mise exec -- go build -o "$out" . 2>/dev/null); then
+    echo "ERROR: _build_real_crafter_bin: failed to build crafter from source." >&2
+    echo "  Make sure 'mise exec -- go build' works in $REPO_DIR/cli." >&2
+    exit 1
+  fi
+  chmod +x "$out"
+  _REAL_CRAFTER_BIN="$out"
+  echo "$out"
+}
+
+# Create a fake "go" directory whose shim, instead of compiling, copies the
+# pre-built real crafter binary to the -o destination.  This makes the
+# installer's _download_cli_binary place a mutation-capable binary so that
+# install_statusline can actually write to settings.json.
+# Returns the shim directory path via stdout.
+_make_real_go_bin_dir() {
+  local real_bin
+  real_bin="$(_build_real_crafter_bin)"
+  local shim_dir
+  shim_dir="$(_make_tmp)/real_go_bin"
+  mkdir -p "$shim_dir"
+  # Write the shim with the real binary path interpolated.
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'out=""' \
+    'while [[ $# -gt 0 ]]; do' \
+    '  case "$1" in' \
+    '    -o)' \
+    '      out="$2"' \
+    '      shift 2' \
+    '      ;;' \
+    '    *)' \
+    '      shift' \
+    '      ;;' \
+    '  esac' \
+    'done' \
+    'if [[ -z "$out" ]]; then' \
+    '  echo "real-go shim: missing -o output path" >&2' \
+    '  exit 1' \
+    'fi' \
+    'mkdir -p "$(dirname "$out")"' \
+    "cp $(printf '%q' "$real_bin") \"\$out\"" \
+    'chmod +x "$out"' \
+    > "$shim_dir/go"
+  chmod +x "$shim_dir/go"
+  echo "$shim_dir"
+}
+
+# Extract the guidance JSON block from installer output.
+# The block appears after the "paste this into your settings.json:" marker line.
+# Uses awk brace-depth counting so commands containing literal braces are handled.
+# Prints the extracted JSON block to stdout; prints nothing if not found.
+_extract_guidance_json() {
+  local output="$1"
+  printf '%s\n' "$output" | awk '
+    /paste this into your settings.json:/ { found=1; next }
+    found && /^[[:space:]]*$/ && !started { next }
+    found && /^\{/ { started=1; depth=0 }
+    started {
+      print
+      n=split($0,c,"")
+      for(i=1;i<=n;i++){
+        if(c[i]=="{") depth++
+        else if(c[i]=="}") { depth--; if(depth==0) exit }
+      }
+    }
+  '
+}
+
+# Decode a JSON string value from a line of the form:
+#   `    "command": "...",`
+# Strips the key prefix and trailing comma/quotes, then decodes \" -> " and \\ -> \.
+_decode_json_cmd_line() {
+  local line="$1"
+  # Strip leading whitespace, key, and opening quote; strip trailing `",` or `"`.
+  local encoded
+  encoded="$(printf '%s' "$line" | sed 's/^[[:space:]]*"command": "//; s/",[[:space:]]*$//; s/"[[:space:]]*$//')"
+  # Decode JSON string escapes relevant to our output: \" -> " and \\ -> \
+  printf '%s' "$encoded" | sed 's/\\"/"/g; s/\\\\/\\/g'
 }
 
 # Build a symlink-based "safe_bin" directory that mirrors the real PATH but
@@ -936,12 +1033,20 @@ test_local_installs_hook_file() {
 }
 
 test_global_registers_hook_in_settings() {
-  local tmp home_dir output ec settings
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary so `crafter install hook`
+  # actually writes settings.json (without a real binary the hook registration
+  # is silently skipped and settings.json is never created).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
   assert_contains "$settings" "crafter-check-update.js"
@@ -949,13 +1054,20 @@ test_global_registers_hook_in_settings() {
 }
 
 test_local_registers_hook_in_settings() {
-  local tmp home_dir proj_dir output ec settings
+  local tmp home_dir proj_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   proj_dir="$tmp/project"
   mkdir -p "$home_dir" "$proj_dir"
+  # Inject a real mutation-capable crafter binary so `crafter install hook`
+  # actually writes $HOME/.claude/settings.json (both modes target HOME).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$proj_dir" output ec --local
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
   assert_contains "$settings" "crafter-check-update.js"
@@ -963,17 +1075,25 @@ test_local_registers_hook_in_settings() {
 }
 
 test_hook_registration_is_idempotent() {
-  local tmp home_dir output ec settings count
+  local tmp home_dir output ec settings count real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary for both runs.
+  # install_to deletes the crafter dir on each run, so the binary must be
+  # re-placed by the shim each time (same pattern as G4 statusline tests).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
   # Second run must not duplicate the hook entry
   _run_installer "$home_dir" "$tmp" output ec --global
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  count="$(echo "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
+  count="$(printf '%s\n' "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
     _fail "hook_registration_is_idempotent: expected 1 occurrence of crafter-check-update.js in settings.json, got $count"
   fi
@@ -1175,6 +1295,657 @@ test_error_no_tar_exits_with_message() {
   _run_installer_no_cmd "tar" output ec
   assert_exit_code 1 "$ec"
   assert_contains "$output" "tar is required"
+}
+
+# ---------------------------------------------------------------------------
+# G. Statusline installation (--with-statusline)
+# ---------------------------------------------------------------------------
+
+# G1. Default install (no flag) does NOT add statusLine key — global.
+test_global_default_install_no_statusline() {
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  # Inject a real mutation-capable crafter binary so hook registration writes
+  # settings.json (without a real binary the hook registration is skipped and
+  # settings.json is never created, making the subsequent assertion vacuous).
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  # settings.json is created by the hook registration; statusLine must be absent.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  if [[ "$settings" == *'"statusLine"'* ]]; then
+    _fail "test_global_default_install_no_statusline: settings.json contains statusLine but flag was not passed"
+  fi
+}
+
+# G1. Default install (no flag) does NOT add statusLine key — local.
+test_local_default_install_no_statusline() {
+  local tmp home_dir proj_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  _run_installer "$home_dir" "$proj_dir" output ec --local
+  assert_exit_code 0 "$ec"
+  # Local statusline writes to the project .claude/settings.json.
+  # That file is only created by install_statusline (hook uses HOME's settings.json).
+  # When the flag is absent, the project settings.json must not exist OR lack statusLine.
+  local proj_settings="$proj_dir/.claude/settings.json"
+  if [[ -f "$proj_settings" ]]; then
+    settings="$(cat "$proj_settings")"
+    if [[ "$settings" == *'"statusLine"'* ]]; then
+      _fail "test_local_default_install_no_statusline: project settings.json contains statusLine but flag was not passed"
+    fi
+  fi
+}
+
+# G2. --with-statusline on a clean settings.json SETS the statusLine key — global.
+test_global_with_statusline_sets_statusline() {
+  local tmp home_dir output ec settings fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  # Inject a real-go shim so _download_cli_binary places a mutation-capable
+  # crafter binary; without a real binary install_statusline skips the write.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" '"type": "command"'
+  # Assert the exact command value: the written JSON must contain the quoted binary path
+  # followed by " statusline". In raw JSON the inner double quotes are escaped as \",
+  # so the raw file contains: crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter\" statusline'
+}
+
+# G2. --with-statusline on a clean settings.json SETS the statusLine key — local.
+test_local_with_statusline_sets_statusline() {
+  local tmp home_dir proj_dir output ec settings fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  # Inject a real-go shim so _download_cli_binary places a mutation-capable
+  # crafter binary; without a real binary install_statusline skips the write.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  local proj_settings="$proj_dir/.claude/settings.json"
+  assert_file_exists "$proj_settings"
+  settings="$(cat "$proj_settings")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" '"type": "command"'
+  # Assert the exact command value: the written JSON must contain the quoted binary path
+  # followed by " statusline". In raw JSON the inner double quotes are escaped as \",
+  # so the raw file contains: crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter\" statusline'
+}
+
+# G3. --with-statusline when statusLine already exists does NOT overwrite — global.
+test_global_with_statusline_no_overwrite_on_collision() {
+  local tmp home_dir output ec settings sentinel fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-existing-statusline-sentinel"
+  # Pre-seed settings.json with an existing statusLine value.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+  # Use real-go shim so the crafter binary is placed and can report the collision.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # Collision guidance should appear in stdout/stderr output.
+  assert_contains "$output" "statusLine already set"
+  # JSON structural integrity: the statusLine command value must still be the
+  # sentinel (foreign-keep path must not rewrite the statusLine key).
+  # Accept both compact (`"command":"<sentinel>"`) and pretty (`"command": "<sentinel>"`)
+  # formats since node may or may not reformat the file.
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_global_with_statusline_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
+  fi
+  if ! printf '%s\n' "$settings" | grep -qF '"statusLine"'; then
+    _fail "test_global_with_statusline_no_overwrite_on_collision: statusLine key missing from settings.json"
+  fi
+}
+
+# G3. --with-statusline when statusLine already exists does NOT overwrite — local.
+test_local_with_statusline_no_overwrite_on_collision() {
+  local tmp home_dir proj_dir output ec settings sentinel fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir/.claude"
+  sentinel="my-existing-statusline-sentinel"
+  # Pre-seed the project settings.json with an existing statusLine value.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$proj_dir/.claude/settings.json"
+  # Use real-go shim so the crafter binary is placed and can report the collision.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  settings="$(cat "$proj_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # Collision guidance should appear in stdout/stderr output.
+  assert_contains "$output" "statusLine already set"
+  # JSON structural integrity: the statusLine command value must still be the
+  # sentinel (foreign-keep path must not rewrite the statusLine key).
+  # Local settings.json is only touched by install_statusline (not by node hook
+  # installer which writes to HOME settings); it may be compact or pretty-printed.
+  # Assert the sentinel string appears within a "command" value context, accepting
+  # both `"command":"<sentinel>"` (compact) and `"command": "<sentinel>"` (pretty).
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_local_with_statusline_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
+  fi
+  if ! printf '%s\n' "$settings" | grep -qF '"statusLine"'; then
+    _fail "test_local_with_statusline_no_overwrite_on_collision: statusLine key missing from settings.json"
+  fi
+}
+
+# G4. --with-statusline is idempotent — second run does not corrupt settings — global.
+test_global_with_statusline_is_idempotent() {
+  local tmp home_dir output ec settings count fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  # Use real-go shim for both runs: install_to deletes the crafter dir on each
+  # run, so the binary must be re-placed by the shim each time.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  assert_exit_code 0 "$ec"
+  # Second run: ours-identical → noop (no overwrite, no duplicate key).
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  # Exactly one statusLine key must exist.
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_global_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+  fi
+  assert_contains "$settings" 'crafter'
+  assert_contains "$settings" 'statusline'
+}
+
+# G4. --with-statusline is idempotent — second run does not corrupt settings — local.
+test_local_with_statusline_is_idempotent() {
+  local tmp home_dir proj_dir output ec settings count fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  proj_dir="$tmp/project"
+  mkdir -p "$home_dir" "$proj_dir"
+  # Use real-go shim for both runs: install_to deletes the crafter dir on each
+  # run, so the binary must be re-placed by the shim each time.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  assert_exit_code 0 "$ec"
+  # Second run: ours-identical → noop (no overwrite, no duplicate key).
+  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+  local proj_settings="$proj_dir/.claude/settings.json"
+  settings="$(cat "$proj_settings")"
+  # Exactly one statusLine key must exist.
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_local_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+  fi
+  assert_contains "$settings" 'crafter'
+  assert_contains "$settings" 'statusline'
+}
+
+# G5. Collision guidance stdout is valid JSON whose .statusLine.command contains
+#     both the existing command and the crafter statusline invocation.
+test_collision_guidance_is_valid_json() {
+  local tmp home_dir output ec sentinel guidance_json cmd_line cmd_value fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="some-existing-statusline-tool"
+  # Pre-seed settings.json with an existing statusLine so a collision is triggered.
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+  # Use real-go shim so the crafter binary is placed and can emit guidance.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+
+  # Extract the guidance JSON block using pure-bash awk brace-depth counting so
+  # that command values containing literal braces do not cause premature exit.
+  guidance_json="$(_extract_guidance_json "$output")"
+
+  if [[ -z "$guidance_json" ]]; then
+    _fail "test_collision_guidance_is_valid_json: could not extract statusLine JSON block from installer output"
+    return
+  fi
+
+  # Structural check: the block must start with '{' and end with '}'.
+  local trimmed="${guidance_json#"${guidance_json%%[! ]*}"}"   # ltrim
+  if [[ "${trimmed:0:1}" != "{" ]]; then
+    _fail "test_collision_guidance_is_valid_json: guidance block does not start with '{': $trimmed"
+    return
+  fi
+
+  # Extract the "command" value from the guidance JSON and decode JSON escapes.
+  # The Go encoder produces exactly one "command": "..." line in the MarshalIndent output.
+  cmd_line="$(printf '%s\n' "$guidance_json" | grep '"command":')"
+  cmd_value="$(_decode_json_cmd_line "$cmd_line")"
+
+  if [[ -z "$cmd_value" ]]; then
+    _fail "test_collision_guidance_is_valid_json: could not extract .command from guidance JSON"
+    return
+  fi
+
+  # The composite command must reference the existing tool.
+  if [[ "$cmd_value" != *"$sentinel"* ]]; then
+    _fail "test_collision_guidance_is_valid_json: .command does not contain existing command '$sentinel': $cmd_value"
+  fi
+  # The composite command must reference the crafter statusline invocation.
+  if [[ "$cmd_value" != *"statusline"* ]]; then
+    _fail "test_collision_guidance_is_valid_json: .command does not contain 'statusline': $cmd_value"
+  fi
+}
+
+# G6. Collision guidance: existing command containing a single quote produces
+#     a syntactically valid composite bash command (regression for #1).
+test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell() {
+  local tmp home_dir output ec guidance_json cmd_line cmd_value fake_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+
+  # Seed an existing statusLine.command that contains single quotes — the
+  # exact pattern that breaks an unescaped bash -c '...' wrapper.
+  # We JSON-encode the value (single quote has no special meaning in JSON).
+  printf '{"statusLine":{"type":"command","command":"awk '"'"'{print $1}'"'"'"}}\n' \
+    > "$home_dir/.claude/settings.json"
+
+  # Use real-go shim so the crafter binary is placed and can emit guidance.
+  fake_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$fake_go_bin:$PATH"
+  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+
+  # Extract the guidance JSON block using pure-bash awk brace-depth counting.
+  guidance_json="$(_extract_guidance_json "$output")"
+
+  if [[ -z "$guidance_json" ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: could not extract guidance JSON"
+    return
+  fi
+
+  # Extract and decode the .command value from the guidance JSON.
+  # The Go encoder (json.MarshalIndent) places "command": "..." on one line.
+  cmd_line="$(printf '%s\n' "$guidance_json" | grep '"command":')"
+  cmd_value="$(_decode_json_cmd_line "$cmd_line")"
+
+  if [[ -z "$cmd_value" ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: could not decode .command from guidance JSON"
+    return
+  fi
+
+  # The extracted .command must be syntactically valid bash — no unexpected EOF.
+  #
+  # WHY we EXECUTE rather than use `bash -n -c`:
+  # bash -n -c "$cmd_value" only parses the OUTER level of the command — it sees
+  # the tokens `bash`, `-c`, and a string argument, and returns 0 without ever
+  # parsing the INNER single-quoted pipeline.  A pre-fix unescaped single quote
+  # inside that pipeline (e.g. `awk '{print $1}'`) would make bash -n exit 0
+  # for both the broken and the correct command, giving false confidence.
+  #
+  # By actually EXECUTING with `bash -c "$cmd_value"`, bash parses and runs the
+  # inner single-quoted pipeline.  A broken inner quote (pre-fix) causes bash to
+  # abort with "unexpected EOF while looking for matching" / "syntax error" and
+  # exit 2.  A correct (post-fix, '\''…'\''-escaped) command runs normally and
+  # exits 0 even if the crafter binary is absent (a missing-binary error is exit
+  # 127 caught inside the inner $(...) substitution, NOT a syntax error).
+  #
+  # Discrimination proof (verified manually):
+  #   pre-fix  (awk '{print $1}' embedded raw) → exit 2, stderr contains "syntax error"
+  #   post-fix (awk '\''{ print $1 }'\''  escaped) → exit 0, no syntax error in stderr
+  local exec_output="" exec_ec=0
+  exec_output="$(printf 'hello world\n' | bash -c "$cmd_value" 2>&1)" || exec_ec=$?
+
+  # A shell SYNTAX error from a broken inner quote exits with code 2 and prints
+  # "syntax error" / "unexpected" in stderr.  Any other non-zero exit (e.g. 127
+  # for a missing crafter binary) is acceptable — it is a runtime error, not a
+  # syntax error.
+  if [[ "$exec_ec" -eq 2 ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: composite .command has shell syntax error (exit $exec_ec): $cmd_value"
+    return
+  fi
+  if [[ "$exec_output" == *"syntax error"* || "$exec_output" == *"unexpected EOF"* || "$exec_output" == *"unexpected token"* ]]; then
+    _fail "test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell: composite .command produced syntax-error output: $exec_output"
+  fi
+}
+
+# G7. --with-statusline when the crafter binary is absent: warns, exits 0,
+#     and leaves settings unchanged (binary-absent posture from Step 2.2).
+test_with_statusline_crafter_binary_missing_warns_and_skips() {
+  local tmp home_dir output ec settings
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  if [[ -f "$HOME/.tool-versions" && ! -f "$home_dir/.tool-versions" ]]; then
+    cp "$HOME/.tool-versions" "$home_dir/.tool-versions"
+  fi
+  # Run with a minimal PATH (no go, mise, or asdf) so the binary cannot be
+  # built.  _download_cli_binary fails gracefully and install_statusline sees
+  # a missing binary → prints the warning and exits 0.
+  local _ec=0
+  output="$(cd "$tmp" && HOME="$home_dir" PATH="/usr/local/bin:/usr/bin:/bin" \
+    bash "$INSTALL_SH" --global --with-statusline 2>&1)" \
+    && _ec=$? || _ec=$?
+  assert_exit_code 0 "$_ec"
+  # The installer must emit the binary-not-found warning.
+  assert_contains "$output" "crafter binary not found"
+  # settings.json must NOT gain a statusLine key (binary absent → skip).
+  local settings_file="$home_dir/.claude/settings.json"
+  if [[ -f "$settings_file" ]]; then
+    settings="$(cat "$settings_file")"
+    if [[ "$settings" == *'"statusLine"'* ]]; then
+      _fail "test_with_statusline_crafter_binary_missing_warns_and_skips: settings.json contains statusLine but crafter binary was absent"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# H. Statusline foreign-overwrite, keep, and non-interactive paths
+#    (Step 4.3 — tests for the --on-foreign decision added in Step 4.2)
+#
+# All three tests inject a FOREIGN statusLine seed and drive the
+# keep-vs-overwrite decision via _CRAFTER_INSTALL_ON_FOREIGN (the
+# installer-internal bypass env var added in Step 4.2) so that no real TTY
+# is needed.  H1 and H2 use the real-go shim (mutation-capable binary);
+# H3 also uses a real binary but exercises the automatic non-interactive
+# fallback by supplying stdin from /dev/null and omitting the env var.
+# ---------------------------------------------------------------------------
+
+# H1. Foreign + _CRAFTER_INSTALL_ON_FOREIGN=overwrite:
+#     - settings.json statusLine.command becomes the crafter command
+#     - settings.json.bak holds the original on-disk bytes (old foreign value)
+#     - installer stdout echoes the old foreign command (bare string)
+test_foreign_overwrite_sets_crafter_cmd_creates_bak_and_echoes_old_cmd() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-statusline-sentinel"
+  # Pre-seed settings.json with a foreign statusLine command.
+  local seed_json
+  seed_json="$(printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel")"
+  printf '%s' "$seed_json" > "$home_dir/.claude/settings.json"
+
+  # Use real-go shim: _download_cli_binary places a mutation-capable binary.
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # Run the installer with the injection env var to take the overwrite path
+  # without requiring a real TTY.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    _CRAFTER_INSTALL_ON_FOREIGN=overwrite \
+    bash "$INSTALL_SH" --global --with-statusline 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # (a) settings.json now carries the crafter command (not the old foreign value).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  # The crafter command written by install_statusline is `"<bin>" statusline`;
+  # in JSON the inner double quotes are escaped as \", so the file contains:
+  #   crafter/bin/crafter\" statusline
+  assert_contains "$settings" 'crafter/bin/crafter'
+  assert_contains "$settings" 'statusline'
+  # The old foreign sentinel must NOT remain as the statusLine command.
+  # (It may still appear inside the .bak reference but must not be the live command.)
+  local cmd_value=""
+  local cmd_line=""
+  cmd_line="$(printf '%s\n' "$settings" | grep '"command":' | head -n1 || true)"
+  cmd_value="$(_decode_json_cmd_line "$cmd_line")"
+  if [[ "$cmd_value" == "$sentinel" ]]; then
+    _fail "test_foreign_overwrite: statusLine.command is still the foreign sentinel after overwrite"
+  fi
+
+  # (b) A .bak file must exist and must contain the original on-disk bytes.
+  local bak_file="$home_dir/.claude/settings.json.bak"
+  assert_file_exists "$bak_file"
+  local bak_content
+  bak_content="$(cat "$bak_file")"
+  assert_contains "$bak_content" "$sentinel"
+
+  # (c) Installer stdout must echo the old foreign command (bare string, one line).
+  # runForeignOverwrite calls fmt.Fprintln(cmd.OutOrStdout(), oldCmd) where
+  # oldCmd = StatusLineCommandString(raw) = the .command string from the seed.
+  assert_contains "$output" "$sentinel"
+}
+
+# H2. Foreign + _CRAFTER_INSTALL_ON_FOREIGN=keep:
+#     - settings.json is unchanged (foreign sentinel preserved)
+#     - guidance text is printed ("statusLine already set")
+test_foreign_keep_preserves_existing_cmd_and_prints_guidance() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-keep-sentinel"
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    _CRAFTER_INSTALL_ON_FOREIGN=keep \
+    bash "$INSTALL_SH" --global --with-statusline 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # settings.json must still hold the foreign sentinel unchanged.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  # The live statusLine.command must still be the sentinel.
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_foreign_keep: sentinel '$sentinel' missing from settings.json after keep path"
+  fi
+
+  # Guidance must be printed (ForeignKeepGuidanceLines emits "statusLine already set").
+  assert_contains "$output" "statusLine already set"
+}
+
+# H3. Piped / non-interactive (no TTY, no injection env var):
+#     - installer must never hang
+#     - takes the keep/guidance path automatically
+#     - settings.json unchanged (foreign sentinel preserved)
+#
+# The real-terminal predicate in install_statusline() checks `[ -t 1 ] || [ -t 2 ]`
+# AND `/dev/tty` reachability.  Running with stdout/stderr captured in a
+# command substitution AND stdin from /dev/null means no TTY is attached, so
+# the predicate is false and the non-interactive fallback (keep) is taken
+# without any prompt or hang — without needing _CRAFTER_INSTALL_ON_FOREIGN.
+test_noninteractive_piped_foreign_takes_keep_path_without_hanging() {
+  local tmp home_dir output ec settings sentinel real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+  sentinel="my-foreign-noninteractive-sentinel"
+  printf '{"statusLine":{"type":"command","command":"%s"}}\n' "$sentinel" \
+    > "$home_dir/.claude/settings.json"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # No _CRAFTER_INSTALL_ON_FOREIGN; stdin from /dev/null removes any chance of
+  # a blocking `read` call that would hang the test.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # settings.json must be unchanged — foreign value preserved (keep path).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" "$sentinel"
+  if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
+    _fail "test_noninteractive_piped: sentinel '$sentinel' missing from settings.json — keep path was not taken"
+  fi
+
+  # Guidance must be emitted (same as keep path).
+  assert_contains "$output" "statusLine already set"
+}
+
+# ---------------------------------------------------------------------------
+# H4. Absent-seed --with-statusline installs non-interactively without prompting.
+#     The classify step should return "absent"; no TTY prompt must fire.
+#     Uses the real mutation-capable binary.
+test_absent_seed_with_statusline_sets_statusline_without_prompt() {
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # No _CRAFTER_INSTALL_ON_FOREIGN injection, no TTY (subprocess output capture
+  # + stdin from /dev/null), no pre-seeded settings.json.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # The installer must complete without hanging and must have written statusLine.
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+  assert_contains "$settings" 'statusline'
+
+  # No prompt text must appear in the output (the prompt is shown only on foreign).
+  if [[ "$output" == *"already set"* ]]; then
+    _fail "test_absent_seed_with_statusline_sets_statusline_without_prompt: unexpected prompt/guidance in output for absent seed"
+  fi
+}
+
+# H5. Ours-seed --with-statusline is a noop and does NOT prompt.
+#     The classify step returns "ours"; the apply step is a noop; no prompt fires.
+test_ours_seed_with_statusline_is_noop_without_prompt() {
+  local tmp home_dir output ec settings real_go_bin old_path result_ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir/.claude"
+
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
+
+  # Run a first install to get the real crafter command written into settings.json.
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
+
+  # Confirm the first run wrote the crafter statusLine (the "ours" seed).
+  assert_file_exists "$home_dir/.claude/settings.json"
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  assert_contains "$settings" '"statusLine"'
+
+  # Second run: statusLine is now "ours"; must complete without prompting.
+  PATH="$real_go_bin:$PATH"
+  result_ec=0
+  output="$(
+    cd "$tmp" && \
+    HOME="$home_dir" \
+    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+  )" || result_ec=$?
+  PATH="$old_path"
+
+  assert_exit_code 0 "$result_ec"
+
+  # No prompt text (foreign-only) must appear.
+  if [[ "$output" == *"already set"* ]]; then
+    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: unexpected prompt/guidance in output for ours seed"
+  fi
+
+  # Exactly one statusLine key must remain.
+  settings="$(cat "$home_dir/.claude/settings.json")"
+  local count
+  count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
+  if [[ "$count" -ne 1 ]]; then
+    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: expected 1 statusLine key, got $count"
+  fi
 }
 
 # ---------------------------------------------------------------------------

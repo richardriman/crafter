@@ -17,6 +17,7 @@ REPO="richardriman/crafter"
 VERSION=""         # empty = use main branch
 TEMP_DIR=""
 REMOTE_MODE=0      # set to 1 when running from downloaded source (curl|bash path)
+WITH_STATUSLINE="" # set to 1 when --with-statusline is passed
 
 # ---------------------------------------------------------------------------
 # Detect whether we are running locally (from a cloned repo) or remotely
@@ -53,12 +54,14 @@ trap _cleanup EXIT
 # ---------------------------------------------------------------------------
 usage() {
   cat <<EOF
-Usage: ./install.sh [--global | --local] [--version VERSION]
+Usage: ./install.sh [--global | --local] [--version VERSION] [--with-statusline]
 
   --global           Install Crafter globally to ~/.claude/ (default)
   --local            Install Crafter locally to .claude/ in the current project
   --version VERSION  Pin a specific release version (e.g. 0.1.0)
                      Defaults to the latest main branch
+  --with-statusline  Register the crafter statusline hook in Claude Code
+                     settings.json (opt-in; off by default)
 
 When run via curl | bash, the installer automatically downloads the required
 files from GitHub — no git dependency needed.
@@ -410,6 +413,7 @@ install_to() {
 }
 
 install_hook() {
+  local crafter_bin="$1"
   local hooks_dir="$HOME/.claude/hooks"
   local settings_file="$HOME/.claude/settings.json"
   local hook_dest="$hooks_dir/crafter-check-update.js"
@@ -417,39 +421,74 @@ install_hook() {
   mkdir -p "$hooks_dir"
   cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
 
-  if ! command -v node &>/dev/null; then
-    echo "Warning: node not found, skipping hook registration"
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping hook registration"
     return 0
   fi
 
-  SETTINGS_FILE="$settings_file" HOOK_CMD="node \"$hook_dest\"" node -e '
-    const fs = require("fs");
-    const settingsFile = process.env.SETTINGS_FILE;
-    const hookCommand = process.env.HOOK_CMD;
+  local hook_cmd="node \"$hook_dest\""
+  "$crafter_bin" install hook \
+    --settings "$settings_file" \
+    --command "$hook_cmd"
+}
 
-    let settings = {};
-    try {
-      settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-    } catch (e) {}
+install_statusline() {
+  local settings_file="$1"
+  local crafter_bin="$2"
+  local statusline_cmd="\"${crafter_bin}\" statusline"
 
-    if (!settings.hooks) settings.hooks = {};
-    if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping statusline registration"
+    return 0
+  fi
 
-    // Check if already registered
-    const alreadyRegistered = settings.hooks.SessionStart.some(function(entry) {
-      return entry.hooks && entry.hooks.some(function(h) {
-        return h.command === hookCommand;
-      });
-    });
+  # Classify the existing statusLine rung BEFORE deciding whether to prompt.
+  # The binary reads the settings file and prints exactly one of:
+  #   absent  — no statusLine key present
+  #   ours    — statusLine already set to the crafter invocation
+  #   foreign — a different command is present
+  # It writes nothing and exits 0.
+  local rung
+  rung="$("$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command  "$statusline_cmd" \
+    --classify)"
 
-    if (!alreadyRegistered) {
-      settings.hooks.SessionStart.push({
-        hooks: [{ type: "command", command: hookCommand }]
-      });
-    }
+  # Resolve the keep-vs-overwrite decision.
+  #
+  # Decision order:
+  #   1. Installer-internal injection (used by tests that have no TTY).
+  #   2. Interactive prompt — ONLY when rung == foreign AND a real terminal is
+  #      available (read from /dev/tty so piped / curl|bash invocations are
+  #      never blocked).
+  #   3. Non-interactive fallback or non-foreign rung: keep (on absent/ours the
+  #      binary applies the right action regardless of on_foreign).
+  local on_foreign
+  if [[ -n "${_CRAFTER_INSTALL_ON_FOREIGN:-}" ]]; then
+    # Internal injection — bypasses TTY detection; used by H-series tests.
+    on_foreign="$_CRAFTER_INSTALL_ON_FOREIGN"
+  elif [[ "$rung" == "foreign" ]] && { [ -t 1 ] || [ -t 2 ]; } && [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    # Foreign rung AND a real terminal is attached on stdout or stderr, and
+    # /dev/tty is reachable.
+    # (stdin may be a pipe in curl|bash, so we never test -t 0.)
+    local answer
+    printf "A different statusLine command is already set in %s.\nOverwrite it with the Crafter statusLine? [y/N] " "$settings_file" > /dev/tty
+    read -r answer < /dev/tty || answer=""
+    case "$answer" in
+      [Yy]|[Yy][Ee][Ss]) on_foreign="overwrite" ;;
+      *)                  on_foreign="keep"      ;;
+    esac
+  else
+    # absent or ours rung, or non-interactive (piped, curl|bash, CI):
+    # keep is the right default — the binary handles absent/ours correctly
+    # regardless of on_foreign, and foreign non-interactive stays untouched.
+    on_foreign="keep"
+  fi
 
-    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
-  '
+  "$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command "$statusline_cmd" \
+    --on-foreign="$on_foreign"
 }
 
 install_global() {
@@ -458,7 +497,10 @@ install_global() {
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
   _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
-  install_hook
+  install_hook "$HOME/.claude/crafter/bin/crafter"
+  if [[ -n "$WITH_STATUSLINE" ]]; then
+    install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
+  fi
   echo ""
   echo "Crafter installed globally."
   echo ""
@@ -467,11 +509,16 @@ install_global() {
 }
 
 install_local() {
-  install_to "$(pwd)/.claude" "locally in $(pwd)"
+  local local_base
+  local_base="$(pwd)/.claude"
+  install_to "$local_base" "locally in $(pwd)"
   # Allow binary build to fail without aborting the rest of the install;
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
-  _download_cli_binary "$(pwd)/.claude" || true
-  install_hook
+  _download_cli_binary "$local_base" || true
+  install_hook "$local_base/crafter/bin/crafter"
+  if [[ -n "$WITH_STATUSLINE" ]]; then
+    install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
+  fi
   echo ""
   echo "Crafter installed locally in this project."
   echo ""
@@ -506,6 +553,10 @@ while [[ $# -gt 0 ]]; do
       fi
       VERSION="${VERSION#v}"
       shift 2
+      ;;
+    --with-statusline)
+      WITH_STATUSLINE=1
+      shift
       ;;
     --help|-h)
       usage
