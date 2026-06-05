@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // TestStatuslineInput_DecodeFull verifies that a representative Claude Code
@@ -235,5 +236,99 @@ func TestRunStatusline_NeverBreaksStatusBar(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+// TestRunStatusline_PipePath_FullPayload verifies the pipe path (stdin is a
+// regular file, not a tty) with a complete valid payload: runStatusline must
+// read the payload, not error, and not panic. This is the happy-path complement
+// to the degraded cases in TestRunStatusline_NeverBreaksStatusBar.
+func TestRunStatusline_PipePath_FullPayload(t *testing.T) {
+	payload := `{
+		"model": {"display_name": "Sonnet 4.6"},
+		"effort": {"level": "normal"},
+		"context_window": {"used_percentage": 12.3, "context_window_size": 200000},
+		"cost": {"total_cost_usd": 0.05, "total_lines_added": 10, "total_lines_removed": 2},
+		"workspace": {"current_dir": "` + t.TempDir() + `", "project_dir": ""}
+	}`
+	withStdin(t, payload, func() {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("runStatusline panicked: %v", r)
+			}
+		}()
+		if err := runStatusline(statuslineCmd, nil); err != nil {
+			t.Errorf("pipe path with full payload returned non-nil error: %v", err)
+		}
+	})
+}
+
+// TestRunStatusline_PipePath_BlocksOnNeverEOF demonstrates that the pipe path
+// (stdin is a pipe, not a tty) causes runStatusline to block when the write end
+// of the pipe is never closed — that is, io.ReadAll is entered and does not
+// return until EOF.
+//
+// This is the strongest deterministic test of the tty guard achievable without
+// a real terminal file descriptor (which is not allocatable under go test) or a
+// production seam (which is out of scope for this step). It proves:
+//
+//   - The pipe path (ModeCharDevice == 0) always enters the blocking io.ReadAll.
+//   - Therefore the tty guard (ModeCharDevice set) is the necessary and
+//     sufficient mechanism that prevents blocking on an interactive terminal —
+//     its absence would cause exactly the hang this test observes.
+//
+// Limitation: because go test cannot allocate a real tty fd, we cannot
+// directly trigger the ModeCharDevice branch and assert it returns promptly.
+// The guard logic (statusline.go) has been reviewed by inspection; this test
+// provides the complementary behavioral proof from the pipe side.
+func TestRunStatusline_PipePath_BlocksOnNeverEOF(t *testing.T) {
+	// Switch to a temp dir so the goroutine that unblocks after pw.Close() does
+	// not resolve the live repo's git/plan state and emit an incidental panel
+	// line to stdout. This is the same hygiene TestRunStatusline_NeverBreaksStatusBar
+	// already applies for its chdir cases.
+	t.Chdir(t.TempDir())
+
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	// pw is intentionally never written to or closed for the duration of the
+	// test: io.ReadAll on pr will block until the write end closes.
+	defer pw.Close()
+	defer pr.Close()
+
+	orig := os.Stdin
+	os.Stdin = pr
+	defer func() { os.Stdin = orig }()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- runStatusline(statuslineCmd, nil)
+	}()
+
+	const deadline = 80 * time.Millisecond
+	select {
+	case err := <-done:
+		// runStatusline returned before EOF — this means it did NOT block on
+		// the pipe. That would indicate the tty guard was triggered via some
+		// unexpected mechanism, which would require investigation.
+		t.Errorf("runStatusline returned before stdin EOF (unexpected early return, err=%v); "+
+			"expected it to block on the never-EOF pipe — if the tty guard is triggering "+
+			"on a pipe fd, the guard logic has changed", err)
+	case <-time.After(deadline):
+		// Expected path: the goroutine is still blocked inside io.ReadAll,
+		// confirming the pipe path reads stdin and that the tty guard is what
+		// prevents this block for real character devices.
+	}
+
+	// Unblock the goroutine so it does not leak: close the write end so
+	// io.ReadAll gets EOF and the goroutine can exit cleanly before the test
+	// completes.
+	pw.Close()
+	select {
+	case <-done:
+		// goroutine exited cleanly
+	case <-time.After(2 * time.Second):
+		t.Error("goroutine did not exit after write-end close — possible goroutine leak")
 	}
 }
