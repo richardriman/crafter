@@ -414,19 +414,14 @@ install_to() {
 
 install_hook() {
   local crafter_bin="$1"
-  local hooks_dir="$HOME/.claude/hooks"
   local settings_file="$HOME/.claude/settings.json"
-  local hook_dest="$hooks_dir/crafter-check-update.js"
-
-  mkdir -p "$hooks_dir"
-  cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
 
   if [ ! -x "$crafter_bin" ]; then
     echo "Warning: crafter binary not found, skipping hook registration"
     return 0
   fi
 
-  local hook_cmd="node \"$hook_dest\""
+  local hook_cmd="\"${crafter_bin}\" check-update"
   "$crafter_bin" install hook \
     --settings "$settings_file" \
     --command "$hook_cmd"

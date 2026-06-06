@@ -1007,21 +1007,24 @@ test_upgrade_preserves_non_crafter_agents_and_skills() {
 # E. Hook installation
 # ---------------------------------------------------------------------------
 
-test_hook_source_file_exists_in_repo() {
-  assert_file_exists "$REPO_DIR/hooks/crafter-check-update.js"
+test_hook_provided_by_go_binary() {
+  # The hook is now embedded in the Go binary as a subcommand; the JS source
+  # file no longer ships with the repo.
+  assert_file_not_exists "$REPO_DIR/hooks/crafter-check-update.js"
 }
 
-test_global_installs_hook_file() {
+test_global_does_not_install_js_hook_file() {
   local tmp home_dir output ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
   _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
-  assert_file_exists "$home_dir/.claude/hooks/crafter-check-update.js"
+  # The hook is provided by the Go binary subcommand; no JS file is copied.
+  assert_file_not_exists "$home_dir/.claude/hooks/crafter-check-update.js"
 }
 
-test_local_installs_hook_file() {
+test_local_does_not_install_js_hook_file() {
   local tmp home_dir proj_dir output ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1029,7 +1032,8 @@ test_local_installs_hook_file() {
   mkdir -p "$home_dir" "$proj_dir"
   _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
-  assert_file_exists "$home_dir/.claude/hooks/crafter-check-update.js"
+  # The hook is provided by the Go binary subcommand; no JS file is copied.
+  assert_file_not_exists "$home_dir/.claude/hooks/crafter-check-update.js"
 }
 
 test_global_registers_hook_in_settings() {
@@ -1049,7 +1053,7 @@ test_global_registers_hook_in_settings() {
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  assert_contains "$settings" "crafter-check-update.js"
+  assert_contains "$settings" "check-update"
   assert_contains "$settings" "SessionStart"
 }
 
@@ -1070,7 +1074,7 @@ test_local_registers_hook_in_settings() {
   assert_exit_code 0 "$result_ec"
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  assert_contains "$settings" "crafter-check-update.js"
+  assert_contains "$settings" "check-update"
   assert_contains "$settings" "SessionStart"
 }
 
@@ -1093,9 +1097,9 @@ test_hook_registration_is_idempotent() {
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  count="$(printf '%s\n' "$settings" | grep -o "crafter-check-update.js" | wc -l | tr -d ' ')"
+  count="$(printf '%s\n' "$settings" | grep -o "check-update" | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
-    _fail "hook_registration_is_idempotent: expected 1 occurrence of crafter-check-update.js in settings.json, got $count"
+    _fail "hook_registration_is_idempotent: expected 1 occurrence of check-update in settings.json, got $count"
   fi
 }
 
