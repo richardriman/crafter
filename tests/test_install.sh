@@ -1302,18 +1302,18 @@ test_error_no_tar_exits_with_message() {
 }
 
 # ---------------------------------------------------------------------------
-# G. Statusline installation (--with-statusline)
+# G. Statusline installation (default-on)
 # ---------------------------------------------------------------------------
 
-# G1. Default install (no flag) does NOT add statusLine key — global.
-test_global_default_install_no_statusline() {
+# G1. Default install (no flag) DOES add statusLine key — global.
+test_global_default_install_adds_statusline() {
   local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   mkdir -p "$home_dir"
-  # Inject a real mutation-capable crafter binary so hook registration writes
-  # settings.json (without a real binary the hook registration is skipped and
-  # settings.json is never created, making the subsequent assertion vacuous).
+  # Inject a real mutation-capable crafter binary so install_statusline can
+  # write the statusLine key into settings.json (the echo-only fake-go shim
+  # cannot mutate JSON).
   real_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$real_go_bin:$PATH"
@@ -1321,37 +1321,41 @@ test_global_default_install_no_statusline() {
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
-  # settings.json is created by the hook registration; statusLine must be absent.
+  # statusLine must be present: statusline is now default-on.
   assert_file_exists "$home_dir/.claude/settings.json"
   settings="$(cat "$home_dir/.claude/settings.json")"
-  if [[ "$settings" == *'"statusLine"'* ]]; then
-    _fail "test_global_default_install_no_statusline: settings.json contains statusLine but flag was not passed"
+  if [[ "$settings" != *'"statusLine"'* ]]; then
+    _fail "test_global_default_install_adds_statusline: settings.json missing statusLine on a default install"
   fi
 }
 
-# G1. Default install (no flag) does NOT add statusLine key — local.
-test_local_default_install_no_statusline() {
-  local tmp home_dir proj_dir output ec settings
+# G1. Default install (no flag) DOES add statusLine key — local.
+test_local_default_install_adds_statusline() {
+  local tmp home_dir proj_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
   proj_dir="$tmp/project"
   mkdir -p "$home_dir" "$proj_dir"
+  # Inject a real mutation-capable crafter binary so install_statusline can
+  # write the statusLine key into the project settings.json.
+  real_go_bin="$(_make_real_go_bin_dir)"
+  old_path="$PATH"
+  PATH="$real_go_bin:$PATH"
   _run_installer "$home_dir" "$proj_dir" output ec --local
-  assert_exit_code 0 "$ec"
+  result_ec=$ec
+  PATH="$old_path"
+  assert_exit_code 0 "$result_ec"
   # Local statusline writes to the project .claude/settings.json.
-  # That file is only created by install_statusline (hook uses HOME's settings.json).
-  # When the flag is absent, the project settings.json must not exist OR lack statusLine.
   local proj_settings="$proj_dir/.claude/settings.json"
-  if [[ -f "$proj_settings" ]]; then
-    settings="$(cat "$proj_settings")"
-    if [[ "$settings" == *'"statusLine"'* ]]; then
-      _fail "test_local_default_install_no_statusline: project settings.json contains statusLine but flag was not passed"
-    fi
+  assert_file_exists "$proj_settings"
+  settings="$(cat "$proj_settings")"
+  if [[ "$settings" != *'"statusLine"'* ]]; then
+    _fail "test_local_default_install_adds_statusline: project settings.json missing statusLine on a default install"
   fi
 }
 
-# G2. --with-statusline on a clean settings.json SETS the statusLine key — global.
-test_global_with_statusline_sets_statusline() {
+# G2. Default install on a clean settings.json SETS the statusLine key — global.
+test_global_default_install_sets_statusline_key() {
   local tmp home_dir output ec settings fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1361,7 +1365,7 @@ test_global_with_statusline_sets_statusline() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1375,8 +1379,8 @@ test_global_with_statusline_sets_statusline() {
   assert_contains "$settings" 'crafter/bin/crafter\" statusline'
 }
 
-# G2. --with-statusline on a clean settings.json SETS the statusLine key — local.
-test_local_with_statusline_sets_statusline() {
+# G2. Default install on a clean settings.json SETS the statusLine key — local.
+test_local_default_install_sets_statusline_key() {
   local tmp home_dir proj_dir output ec settings fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1387,7 +1391,7 @@ test_local_with_statusline_sets_statusline() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  _run_installer "$home_dir" "$proj_dir" output ec --local
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1402,8 +1406,8 @@ test_local_with_statusline_sets_statusline() {
   assert_contains "$settings" 'crafter/bin/crafter\" statusline'
 }
 
-# G3. --with-statusline when statusLine already exists does NOT overwrite — global.
-test_global_with_statusline_no_overwrite_on_collision() {
+# G3. Default install when statusLine already exists does NOT overwrite — global.
+test_global_default_install_no_overwrite_on_collision() {
   local tmp home_dir output ec settings sentinel fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1416,7 +1420,7 @@ test_global_with_statusline_no_overwrite_on_collision() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1429,15 +1433,15 @@ test_global_with_statusline_no_overwrite_on_collision() {
   # Accept both compact (`"command":"<sentinel>"`) and pretty (`"command": "<sentinel>"`)
   # formats since node may or may not reformat the file.
   if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
-    _fail "test_global_with_statusline_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
+    _fail "test_global_default_install_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
   fi
   if ! printf '%s\n' "$settings" | grep -qF '"statusLine"'; then
-    _fail "test_global_with_statusline_no_overwrite_on_collision: statusLine key missing from settings.json"
+    _fail "test_global_default_install_no_overwrite_on_collision: statusLine key missing from settings.json"
   fi
 }
 
-# G3. --with-statusline when statusLine already exists does NOT overwrite — local.
-test_local_with_statusline_no_overwrite_on_collision() {
+# G3. Default install when statusLine already exists does NOT overwrite — local.
+test_local_default_install_no_overwrite_on_collision() {
   local tmp home_dir proj_dir output ec settings sentinel fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1451,7 +1455,7 @@ test_local_with_statusline_no_overwrite_on_collision() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  _run_installer "$home_dir" "$proj_dir" output ec --local
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1466,15 +1470,15 @@ test_local_with_statusline_no_overwrite_on_collision() {
   # Assert the sentinel string appears within a "command" value context, accepting
   # both `"command":"<sentinel>"` (compact) and `"command": "<sentinel>"` (pretty).
   if ! printf '%s\n' "$settings" | grep -qF "\"$sentinel\""; then
-    _fail "test_local_with_statusline_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
+    _fail "test_local_default_install_no_overwrite_on_collision: sentinel '$sentinel' missing from settings.json"
   fi
   if ! printf '%s\n' "$settings" | grep -qF '"statusLine"'; then
-    _fail "test_local_with_statusline_no_overwrite_on_collision: statusLine key missing from settings.json"
+    _fail "test_local_default_install_no_overwrite_on_collision: statusLine key missing from settings.json"
   fi
 }
 
-# G4. --with-statusline is idempotent — second run does not corrupt settings — global.
-test_global_with_statusline_is_idempotent() {
+# G4. Default install is idempotent — second run does not corrupt settings — global.
+test_global_default_install_is_idempotent() {
   local tmp home_dir output ec settings count fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1484,10 +1488,10 @@ test_global_with_statusline_is_idempotent() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   assert_exit_code 0 "$ec"
   # Second run: ours-identical → noop (no overwrite, no duplicate key).
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1495,14 +1499,14 @@ test_global_with_statusline_is_idempotent() {
   # Exactly one statusLine key must exist.
   count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
-    _fail "test_global_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+    _fail "test_global_default_install_is_idempotent: expected 1 statusLine key, got $count"
   fi
   assert_contains "$settings" 'crafter'
   assert_contains "$settings" 'statusline'
 }
 
-# G4. --with-statusline is idempotent — second run does not corrupt settings — local.
-test_local_with_statusline_is_idempotent() {
+# G4. Default install is idempotent — second run does not corrupt settings — local.
+test_local_default_install_is_idempotent() {
   local tmp home_dir proj_dir output ec settings count fake_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1513,10 +1517,10 @@ test_local_with_statusline_is_idempotent() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  _run_installer "$home_dir" "$proj_dir" output ec --local
   assert_exit_code 0 "$ec"
   # Second run: ours-identical → noop (no overwrite, no duplicate key).
-  _run_installer "$home_dir" "$proj_dir" output ec --local --with-statusline
+  _run_installer "$home_dir" "$proj_dir" output ec --local
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1525,7 +1529,7 @@ test_local_with_statusline_is_idempotent() {
   # Exactly one statusLine key must exist.
   count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
-    _fail "test_local_with_statusline_is_idempotent: expected 1 statusLine key, got $count"
+    _fail "test_local_default_install_is_idempotent: expected 1 statusLine key, got $count"
   fi
   assert_contains "$settings" 'crafter'
   assert_contains "$settings" 'statusline'
@@ -1546,7 +1550,7 @@ test_collision_guidance_is_valid_json() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1605,7 +1609,7 @@ test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell() {
   fake_go_bin="$(_make_real_go_bin_dir)"
   old_path="$PATH"
   PATH="$fake_go_bin:$PATH"
-  _run_installer "$home_dir" "$tmp" output ec --global --with-statusline
+  _run_installer "$home_dir" "$tmp" output ec --global
   result_ec=$ec
   PATH="$old_path"
   assert_exit_code 0 "$result_ec"
@@ -1663,9 +1667,9 @@ test_collision_guidance_single_quote_in_existing_cmd_is_valid_shell() {
   fi
 }
 
-# G7. --with-statusline when the crafter binary is absent: warns, exits 0,
+# G7. Default install when the crafter binary is absent: warns, exits 0,
 #     and leaves settings unchanged (binary-absent posture from Step 2.2).
-test_with_statusline_crafter_binary_missing_warns_and_skips() {
+test_default_install_crafter_binary_missing_warns_and_skips() {
   local tmp home_dir output ec settings
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1678,7 +1682,7 @@ test_with_statusline_crafter_binary_missing_warns_and_skips() {
   # a missing binary → prints the warning and exits 0.
   local _ec=0
   output="$(cd "$tmp" && HOME="$home_dir" PATH="/usr/local/bin:/usr/bin:/bin" \
-    bash "$INSTALL_SH" --global --with-statusline 2>&1)" \
+    bash "$INSTALL_SH" --global 2>&1)" \
     && _ec=$? || _ec=$?
   assert_exit_code 0 "$_ec"
   # The installer must emit the binary-not-found warning.
@@ -1688,21 +1692,21 @@ test_with_statusline_crafter_binary_missing_warns_and_skips() {
   if [[ -f "$settings_file" ]]; then
     settings="$(cat "$settings_file")"
     if [[ "$settings" == *'"statusLine"'* ]]; then
-      _fail "test_with_statusline_crafter_binary_missing_warns_and_skips: settings.json contains statusLine but crafter binary was absent"
+      _fail "test_default_install_crafter_binary_missing_warns_and_skips: settings.json contains statusLine but crafter binary was absent"
     fi
   fi
 }
 
 # ---------------------------------------------------------------------------
 # H. Statusline foreign-overwrite, keep, and non-interactive paths
-#    (Step 4.3 — tests for the --on-foreign decision added in Step 4.2)
 #
 # All three tests inject a FOREIGN statusLine seed and drive the
 # keep-vs-overwrite decision via _CRAFTER_INSTALL_ON_FOREIGN (the
-# installer-internal bypass env var added in Step 4.2) so that no real TTY
-# is needed.  H1 and H2 use the real-go shim (mutation-capable binary);
-# H3 also uses a real binary but exercises the automatic non-interactive
-# fallback by supplying stdin from /dev/null and omitting the env var.
+# installer-internal bypass env var) so that no real TTY is needed.
+# H1 and H2 use the real-go shim (mutation-capable binary); H3 also uses a
+# real binary but exercises the automatic non-interactive fallback by
+# supplying stdin from /dev/null and omitting the env var.
+# Statusline is default-on; all these tests run without any flags.
 # ---------------------------------------------------------------------------
 
 # H1. Foreign + _CRAFTER_INSTALL_ON_FOREIGN=overwrite:
@@ -1732,7 +1736,7 @@ test_foreign_overwrite_sets_crafter_cmd_creates_bak_and_echoes_old_cmd() {
     cd "$tmp" && \
     HOME="$home_dir" \
     _CRAFTER_INSTALL_ON_FOREIGN=overwrite \
-    bash "$INSTALL_SH" --global --with-statusline 2>&1
+    bash "$INSTALL_SH" --global 2>&1
   )" || result_ec=$?
 
   PATH="$old_path"
@@ -1791,7 +1795,7 @@ test_foreign_keep_preserves_existing_cmd_and_prints_guidance() {
     cd "$tmp" && \
     HOME="$home_dir" \
     _CRAFTER_INSTALL_ON_FOREIGN=keep \
-    bash "$INSTALL_SH" --global --with-statusline 2>&1
+    bash "$INSTALL_SH" --global 2>&1
   )" || result_ec=$?
 
   PATH="$old_path"
@@ -1840,7 +1844,7 @@ test_noninteractive_piped_foreign_takes_keep_path_without_hanging() {
   output="$(
     cd "$tmp" && \
     HOME="$home_dir" \
-    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+    bash "$INSTALL_SH" --global < /dev/null 2>&1
   )" || result_ec=$?
 
   PATH="$old_path"
@@ -1860,10 +1864,10 @@ test_noninteractive_piped_foreign_takes_keep_path_without_hanging() {
 }
 
 # ---------------------------------------------------------------------------
-# H4. Absent-seed --with-statusline installs non-interactively without prompting.
+# H4. Absent-seed default install installs non-interactively without prompting.
 #     The classify step should return "absent"; no TTY prompt must fire.
 #     Uses the real mutation-capable binary.
-test_absent_seed_with_statusline_sets_statusline_without_prompt() {
+test_absent_seed_default_install_sets_statusline_without_prompt() {
   local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1879,7 +1883,7 @@ test_absent_seed_with_statusline_sets_statusline_without_prompt() {
   output="$(
     cd "$tmp" && \
     HOME="$home_dir" \
-    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+    bash "$INSTALL_SH" --global < /dev/null 2>&1
   )" || result_ec=$?
 
   PATH="$old_path"
@@ -1894,13 +1898,13 @@ test_absent_seed_with_statusline_sets_statusline_without_prompt() {
 
   # No prompt text must appear in the output (the prompt is shown only on foreign).
   if [[ "$output" == *"already set"* ]]; then
-    _fail "test_absent_seed_with_statusline_sets_statusline_without_prompt: unexpected prompt/guidance in output for absent seed"
+    _fail "test_absent_seed_default_install_sets_statusline_without_prompt: unexpected prompt/guidance in output for absent seed"
   fi
 }
 
-# H5. Ours-seed --with-statusline is a noop and does NOT prompt.
+# H5. Ours-seed default install is a noop and does NOT prompt.
 #     The classify step returns "ours"; the apply step is a noop; no prompt fires.
-test_ours_seed_with_statusline_is_noop_without_prompt() {
+test_ours_seed_default_install_is_noop_without_prompt() {
   local tmp home_dir output ec settings real_go_bin old_path result_ec
   tmp="$(_make_tmp)"
   home_dir="$tmp/home"
@@ -1915,7 +1919,7 @@ test_ours_seed_with_statusline_is_noop_without_prompt() {
   output="$(
     cd "$tmp" && \
     HOME="$home_dir" \
-    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+    bash "$INSTALL_SH" --global < /dev/null 2>&1
   )" || result_ec=$?
 
   PATH="$old_path"
@@ -1932,7 +1936,7 @@ test_ours_seed_with_statusline_is_noop_without_prompt() {
   output="$(
     cd "$tmp" && \
     HOME="$home_dir" \
-    bash "$INSTALL_SH" --global --with-statusline < /dev/null 2>&1
+    bash "$INSTALL_SH" --global < /dev/null 2>&1
   )" || result_ec=$?
   PATH="$old_path"
 
@@ -1940,7 +1944,7 @@ test_ours_seed_with_statusline_is_noop_without_prompt() {
 
   # No prompt text (foreign-only) must appear.
   if [[ "$output" == *"already set"* ]]; then
-    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: unexpected prompt/guidance in output for ours seed"
+    _fail "test_ours_seed_default_install_is_noop_without_prompt: unexpected prompt/guidance in output for ours seed"
   fi
 
   # Exactly one statusLine key must remain.
@@ -1948,8 +1952,26 @@ test_ours_seed_with_statusline_is_noop_without_prompt() {
   local count
   count="$(printf '%s' "$settings" | grep -o '"statusLine"' | wc -l | tr -d ' ')"
   if [[ "$count" -ne 1 ]]; then
-    _fail "test_ours_seed_with_statusline_is_noop_without_prompt: expected 1 statusLine key, got $count"
+    _fail "test_ours_seed_default_install_is_noop_without_prompt: expected 1 statusLine key, got $count"
   fi
+}
+
+# H6. Passing the now-removed --with-statusline flag is rejected as an unknown
+#     flag (documents the accepted breaking change from Phase 3 step 3.1).
+test_with_statusline_flag_is_rejected_as_unknown() {
+  local tmp home_dir output ec
+  tmp="$(_make_tmp)"
+  home_dir="$tmp/home"
+  mkdir -p "$home_dir"
+  local _ec=0
+  output="$(cd "$tmp" && HOME="$home_dir" bash "$INSTALL_SH" --global --with-statusline 2>&1)" \
+    && _ec=$? || _ec=$?
+  # The arg parser must reject the unknown flag with a non-zero exit code.
+  if [[ "$_ec" -eq 0 ]]; then
+    _fail "test_with_statusline_flag_is_rejected_as_unknown: expected non-zero exit but got 0"
+  fi
+  # The error output must mention the unknown option.
+  assert_contains "$output" "Unknown option"
 }
 
 # ---------------------------------------------------------------------------

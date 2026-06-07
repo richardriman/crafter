@@ -90,17 +90,13 @@ The command never breaks the status bar: it always exits 0 and produces no outpu
 
 **Known limitation:** the resolver matches only the standard `- **Work branch:**` metadata field. A task file using a non-standard field (e.g. `- **Branch:**`) is not counted toward `N active elsewhere`. This is intentional — the resolver is strict to the single documented field.
 
-To wire it up, pass `--with-statusline` to the installer:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/richardriman/crafter/main/install.sh | bash -s -- --with-statusline
-```
+The statusline is wired automatically on every install — no extra flag is needed. The `--with-statusline` flag has been **removed** and the installer now hard-errors if it is passed; a pinned one-liner still including `--with-statusline` will fail after upgrading.
 
 The installer applies a three-rung decision tree to your `settings.json`:
 
 - **absent** — no `statusLine` key exists: the installer sets it automatically to `{ "type": "command", "command": "<crafter-bin> statusline" }`.
 - **ours** — the key already holds a Crafter statusline command: the installer updates it only if the binary path changed (e.g. after a move); an identical entry is a no-op.
-- **foreign** — any other value is present (another tool's statusline, including a previous GSD one): on a real terminal the installer **prompts** whether to overwrite. On **yes**, the original `settings.json` is backed up to `settings.json.bak` and the old command is printed to the terminal so it is recoverable, then the Crafter statusline is written. On **no**, or when running non-interactively (`curl | bash`, CI, no TTY), the installer leaves the foreign value untouched and prints a ready-to-paste composite wrapper so you can merge both statuslines manually.
+- **foreign** — any other `statusLine` value is present: on a real terminal the installer **prompts** whether to overwrite. On **yes**, the original `settings.json` is backed up to `settings.json.bak` and the old command is printed to the terminal so it is recoverable, then the Crafter statusline is written. On **no**, or when running non-interactively (`curl | bash`, CI, no TTY), the installer leaves the foreign value untouched and prints a ready-to-paste composite wrapper so you can merge both statuslines manually.
 
 The installer no longer needs `node` to edit `settings.json` — all JSON mutation is performed by the Go `crafter` binary.
 
