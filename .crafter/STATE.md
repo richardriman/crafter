@@ -10,7 +10,7 @@ Work is on branch `feat/statusline-auto-install-go-hook` (built on the PR-#42 st
 
 **(3) Statusline installs by default** — both `--global` and `--local` runs run the existing smart-replace decision tree on every install (absent→set, ours→update/no-op, foreign→ask on a real TTY with `.bak` + echoed old command / keep + ready-to-paste guidance when non-interactive, never hang); the `--with-statusline` opt-in flag was removed entirely (now an unknown flag that hard-errors). Install tests inverted to default-on (real-binary harness) + a new flag-rejection test; README + `.crafter/ARCHITECTURE.md` describe the new default in neutral, behavior-focused wording.
 
-Next step: open a PR for this branch. Separately, the progressive-loading task remains parked on branch `feat/crafter-do-progressive-loading` (Phase 0+1 done; Phase 2 — orchestrator master-plan + lazy per-step `rules/do/*` loading — still pending; see `## Planned`).
+PR for this branch is open as **PR #44** (https://github.com/richardriman/crafter/pull/44). Separately, the progressive-loading task remains parked on branch `feat/crafter-do-progressive-loading` (Phase 0+1 done; Phase 2 — orchestrator master-plan + lazy per-step `rules/do/*` loading — still pending; see `## Planned`).
 
 ## Recent Changes
 
