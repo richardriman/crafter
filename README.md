@@ -68,6 +68,38 @@ crafter update --version 0.8.1
 crafter update --local
 ```
 
+### Statusline
+
+`crafter statusline` renders Crafter state as a full status panel for Claude Code's native status bar. The panel is a single line of up to five sections joined by ` │ ` (a space-padded `│`), in the order `plan │ model │ vcs │ ctx │ cost`. Each section degrades independently and is simply omitted when it has no data, so the panel always renders whatever it can:
+
+```
+Phase 2/3 · 7/12 [█████░░░░░] 58% │ Opus 4.8 1M (high) │ crafter ⎇ feat/statusline +18/-4 │ [████░░░░░░] 43% │ $0.42
+```
+
+**plan** — the plan position. When an active task is on the current branch it shows the full plan-progress segment (`Phase 2/3 · 7/12 [█████░░░░░] 58%`); before an approved plan exists it shows the edge states `planning` (plan not written yet) or `plan: awaiting approval` (written but not approved). When no task is active on the current branch the section falls back through `✓ done` (a completed task on this branch) and `N active elsewhere` (active tasks on other branches; the count is not pluralized, so a single task renders `1 active elsewhere`). The section is dropped when none of these apply.
+
+**model** — `display_name` + the abbreviated context-window capacity (`1M`, `200k`) + the effort level in parentheses, e.g. `Opus 4.8 1M (high)`. The capacity is dropped when unknown and the `(level)` suffix is dropped when there is no effort level.
+
+**vcs** — a group of `<project> ⎇ <branch> +N/-N`: the project name (basename of `workspace.project_dir`, dim grey), the branch icon and branch name, and the green/red added/removed line counts. Each part appears only when its data is present. The branch icon defaults to `⎇` (U+2387) and is configurable via the `CRAFTER_STATUSLINE_BRANCH_ICON` environment variable.
+
+**ctx** — a progress bar plus percentage from `context_window.used_percentage` (e.g. `[████░░░░░░] 43%`), using the same bar style as the plan section. Omitted when the percentage is null.
+
+**cost** — the session cost from `cost.total_cost_usd`, formatted `$X.XX`. Omitted when zero or absent.
+
+The command never breaks the status bar: it always exits 0 and produces no output on any error (no `.crafter/` directory, detached HEAD, unreadable files). It does not collapse to empty just because there is no task — any section with data still renders.
+
+**Known limitation:** the resolver matches only the standard `- **Work branch:**` metadata field. A task file using a non-standard field (e.g. `- **Branch:**`) is not counted toward `N active elsewhere`. This is intentional — the resolver is strict to the single documented field.
+
+The statusline is wired automatically on every install — no extra flag is needed. The `--with-statusline` flag has been **removed** and the installer now hard-errors if it is passed; a pinned one-liner still including `--with-statusline` will fail after upgrading.
+
+The installer applies a three-rung decision tree to your `settings.json`:
+
+- **absent** — no `statusLine` key exists: the installer sets it automatically to `{ "type": "command", "command": "<crafter-bin> statusline" }`.
+- **ours** — the key already holds a Crafter statusline command: the installer updates it only if the binary path changed (e.g. after a move); an identical entry is a no-op.
+- **foreign** — any other `statusLine` value is present: on a real terminal the installer **prompts** whether to overwrite. On **yes**, the original `settings.json` is backed up to `settings.json.bak` and the old command is printed to the terminal so it is recoverable, then the Crafter statusline is written. On **no**, or when running non-interactively (`curl | bash`, CI, no TTY), the installer leaves the foreign value untouched and prints a ready-to-paste composite wrapper so you can merge both statuslines manually.
+
+The installer no longer needs `node` to edit `settings.json` — all JSON mutation is performed by the Go `crafter` binary.
+
 ## Skills
 
 | Command | Description |

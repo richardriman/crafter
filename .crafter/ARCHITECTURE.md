@@ -17,8 +17,6 @@ crafter/
 │       └── SKILL.md             # crafter-status — display current state
 ├── docs/                        # Supplementary documentation
 │   └── philosophy.md            # Design philosophy and principles
-├── hooks/                       # Claude Code lifecycle hooks
-│   └── crafter-check-update.js  # SessionStart hook — automatic update check (24h-cached GitHub Releases API)
 ├── cli/                         # Go CLI binary source (crafter utility tool)
 │   ├── main.go                  # Entry point
 │   ├── cmd/                     # Cobra command definitions
@@ -30,10 +28,17 @@ crafter/
 │   │   ├── skillbook_add.go     # `crafter skillbook add`
 │   │   ├── skillbook_get.go     # `crafter skillbook get`
 │   │   ├── skillbook_init.go    # `crafter skillbook init`
+│   │   ├── statusline.go        # `crafter statusline` — render the full status panel (plan │ model │ vcs │ ctx │ cost)
+│   │   ├── check_update.go      # `crafter check-update` — SessionStart hook: print update notice + spawn background refresh
+│   │   ├── install.go           # `crafter install` — installer-machinery parent command
+│   │   ├── install_hook.go      # `crafter install hook` — register SessionStart hook into settings.json
+│   │   ├── install_statusline.go # `crafter install statusline` — reconcile statusLine into settings.json
 │   │   └── update.go            # `crafter update`
 │   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
+│   ├── internal/claudesettings/ # settings.json load/mutate/save + statusLine reconcile logic
 │   ├── internal/prbody/         # PR body renderer (reads NDJSON buffers + task file, emits markdown sections)
 │   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
+│   ├── internal/statusline/     # Statusline logic (task resolve, plan parse, per-section panel render)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
 │   └── go.sum                   # Dependency checksums
@@ -112,6 +117,8 @@ Task files in `.crafter/tasks/` serve dual purposes: active resume state while w
 
 `install.sh` supports `--global` (to `~/.claude/`) and `--local` (to `.claude/`) via a shared `install_to()` function, and also supports remote execution via `curl | bash` with optional `--version` selection. Installer deploys `skills/crafter-*/SKILL.md`.
 
+The statusline is wired by default on every install (both `--global` and `--local`). There is no opt-in flag; `--with-statusline` has been removed and the installer hard-errors if it is passed. The statusline reconcile is implemented in `crafter install statusline` via a three-rung decision tree: **absent** → set automatically; **ours** (already a Crafter command) → idempotent update only if the binary path differs, otherwise no-op; **foreign** (any other statusLine value) → on a real terminal the installer prompts to overwrite; on yes the original file is backed up to `settings.json.bak` and the old command is printed for recovery, then overwritten; on no, or when non-interactive (`curl | bash`, CI, no TTY), the foreign value is left untouched and manual-merge guidance is printed. All `settings.json` mutation is performed by the Go `crafter` binary — the installer does not need `node` to edit settings.
+
 ### Crafter CLI — Utility Binary
 
 A Go CLI binary (`crafter`) provides deterministic utilities that LLMs handle poorly. The binary is a utility tool, NOT orchestration — orchestration stays in markdown prompts. The CLI is invoked via Bash by the orchestrator.
@@ -124,6 +131,10 @@ Current subcommands:
 - `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
 - `crafter pr-body` — read per-run NDJSON buffers and task file, render `## Manual QA Plan`, `## Known Gaps`, and `## Decisions` sections for the PR body
+- `crafter statusline` — render the full status panel for Claude Code's status bar: up to five sections joined by ` │ ` in the order `plan │ model │ vcs │ ctx │ cost`. **plan** is the plan position (active task on the current branch → full plan-progress segment e.g. `Phase 2/3 · 7/12 [█████░░░░░] 58%`, else the cascade `✓ done` / `N active elsewhere`, else dropped); **model** is `display_name` + capacity + `(effort)` e.g. `Opus 4.8 1M (high)`; **vcs** is the group `<project> ⎇ <branch> +N/-N` (branch icon configurable via `CRAFTER_STATUSLINE_BRANCH_ICON`, default `⎇`); **ctx** is a progress bar + `%` from `context_window.used_percentage`; **cost** is `$X.XX` from `cost.total_cost_usd`. Each section degrades independently and is omitted when it has no data; always exits 0 and never collapses to empty merely because no task is active
+- `crafter check-update` — SessionStart hook command: reads the installed VERSION and a 4h-cached result file (`~/.claude/cache/crafter-update-check.json`), prints an update notice when one is available, then spawns a detached background refresh that queries GitHub `releases/latest` and rewrites the cache. Silent-fail and non-blocking; registered by `install.sh` as `"<crafter-bin>" check-update`
+- `crafter install hook` — register the Crafter SessionStart hook into a `settings.json` (idempotent: no-op when the command is already present; preserves all pre-existing hook entries verbatim)
+- `crafter install statusline` — reconcile the Crafter statusLine into a `settings.json` using the three-rung decision tree: **absent** → set; **ours, identical** → no-op; **ours, differs** → update; **foreign** → act on `--on-foreign keep|overwrite` (the TTY prompt and fallback live in `install.sh`; this subcommand never reads a terminal)
 
 Run-directory lifecycle (`.crafter/run/<task-id>/`) — canonical wording in `rules/do-workflow.md → ### Run directory lifecycle`.
 

@@ -147,6 +147,41 @@ _download_release() {
 }
 
 # ---------------------------------------------------------------------------
+# Resolve the command prefix needed to run `go`.
+#
+# Priority:
+#   1. `go` is directly on PATH  → prints "go"
+#   2. `mise` is available and manages Go  → prints "mise exec -- go"
+#   3. `asdf` is available and manages Go  → prints "asdf exec go"
+#   4. Nothing found  → prints nothing and returns 1
+#
+# Usage:
+#   IFS=' ' read -r -a go_cmd <<< "$(_resolve_go)" && "${go_cmd[@]}" build ...
+# ---------------------------------------------------------------------------
+_resolve_go() {
+  # Direct PATH hit — fast path, no version-manager overhead.
+  if command -v go &>/dev/null; then
+    echo "go"
+    return 0
+  fi
+
+  # mise: present and has Go shim available.
+  if command -v mise &>/dev/null && mise which go &>/dev/null 2>&1; then
+    echo "mise exec -- go"
+    return 0
+  fi
+
+  # asdf: present and has a Go version installed.
+  if command -v asdf &>/dev/null && asdf which go &>/dev/null 2>&1; then
+    echo "asdf exec go"
+    return 0
+  fi
+
+  # Nothing found.
+  return 1
+}
+
+# ---------------------------------------------------------------------------
 # Install CLI binary for the current platform/arch.
 # Prefers release assets in remote mode and falls back to source build.
 # ---------------------------------------------------------------------------
@@ -209,10 +244,25 @@ _download_cli_binary() {
   fi
 
   if [[ -f "$SCRIPT_DIR/cli/go.mod" ]]; then
-    if ! command -v go &>/dev/null; then
-      echo "Warning: go not found; skipping CLI source build fallback." >&2
-      return 0
+    # Resolve the go command prefix (direct PATH, mise, or asdf).
+    local go_prefix
+    if ! go_prefix="$(_resolve_go)"; then
+      echo "" >&2
+      echo "ERROR: Go toolchain not found." >&2
+      echo "  Crafter needs Go to build its CLI binary from source, but Go was not" >&2
+      echo "  detected on PATH, via mise, or via asdf." >&2
+      echo "  Install Go (https://go.dev/dl/) or make it available in your shell," >&2
+      echo "  then re-run install.sh." >&2
+      echo "  The rest of Crafter has been installed, but the 'crafter' binary is MISSING." >&2
+      echo "" >&2
+      # Do not return 0 — signal failure so the caller can surface it.
+      return 1
     fi
+    # Split the prefix into an array so it works as a command prefix correctly
+    # whether it is a single word ("go") or multiple ("mise exec -- go").
+    local -a go_cmd
+    IFS=' ' read -r -a go_cmd <<< "$go_prefix"
+
     local temp_tool_versions_created=0
     if [[ "$REMOTE_MODE" -eq 1 && -f "$HOME/.tool-versions" && ! -f "$SCRIPT_DIR/cli/.tool-versions" ]]; then
       cp "$HOME/.tool-versions" "$SCRIPT_DIR/cli/.tool-versions"
@@ -220,6 +270,8 @@ _download_cli_binary() {
     fi
     local go_version=""
     go_version="$(awk '/^go[[:space:]]+/ { print $2; exit }' "$SCRIPT_DIR/cli/go.mod" 2>/dev/null || true)"
+    # When asdf manages Go versions, pin the exact version that matches
+    # the one declared in go.mod so ASDF_GOLANG_VERSION picks the right shim.
     if [[ -n "$go_version" ]] && command -v asdf &>/dev/null; then
       local asdf_go_version=""
       asdf_go_version="$(
@@ -231,8 +283,8 @@ _download_cli_binary() {
         go_version="$asdf_go_version"
       fi
     fi
-    echo "Building CLI binary from source..."
-    if (cd "$SCRIPT_DIR/cli" && ASDF_GOLANG_VERSION="$go_version" go build -o "$dest_bin" .); then
+    echo "Building CLI binary from source (using: ${go_cmd[*]})..."
+    if (cd "$SCRIPT_DIR/cli" && ASDF_GOLANG_VERSION="$go_version" "${go_cmd[@]}" build -o "$dest_bin" .); then
       chmod +x "$dest_bin"
       echo "CLI binary installed to $dest_bin"
     else
@@ -358,53 +410,87 @@ install_to() {
 }
 
 install_hook() {
-  local hooks_dir="$HOME/.claude/hooks"
+  local crafter_bin="$1"
   local settings_file="$HOME/.claude/settings.json"
-  local hook_dest="$hooks_dir/crafter-check-update.js"
 
-  mkdir -p "$hooks_dir"
-  cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
-
-  if ! command -v node &>/dev/null; then
-    echo "Warning: node not found, skipping hook registration"
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping hook registration"
     return 0
   fi
 
-  SETTINGS_FILE="$settings_file" HOOK_CMD="node \"$hook_dest\"" node -e '
-    const fs = require("fs");
-    const settingsFile = process.env.SETTINGS_FILE;
-    const hookCommand = process.env.HOOK_CMD;
+  local hook_cmd="\"${crafter_bin}\" check-update"
+  "$crafter_bin" install hook \
+    --settings "$settings_file" \
+    --command "$hook_cmd"
+}
 
-    let settings = {};
-    try {
-      settings = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-    } catch (e) {}
+install_statusline() {
+  local settings_file="$1"
+  local crafter_bin="$2"
+  local statusline_cmd="\"${crafter_bin}\" statusline"
 
-    if (!settings.hooks) settings.hooks = {};
-    if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
+  if [ ! -x "$crafter_bin" ]; then
+    echo "Warning: crafter binary not found, skipping statusline registration"
+    return 0
+  fi
 
-    // Check if already registered
-    const alreadyRegistered = settings.hooks.SessionStart.some(function(entry) {
-      return entry.hooks && entry.hooks.some(function(h) {
-        return h.command === hookCommand;
-      });
-    });
+  # Classify the existing statusLine rung BEFORE deciding whether to prompt.
+  # The binary reads the settings file and prints exactly one of:
+  #   absent  — no statusLine key present
+  #   ours    — statusLine already set to the crafter invocation
+  #   foreign — a different command is present
+  # It writes nothing and exits 0.
+  local rung
+  rung="$("$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command  "$statusline_cmd" \
+    --classify)"
 
-    if (!alreadyRegistered) {
-      settings.hooks.SessionStart.push({
-        hooks: [{ type: "command", command: hookCommand }]
-      });
-    }
+  # Resolve the keep-vs-overwrite decision.
+  #
+  # Decision order:
+  #   1. Installer-internal injection (used by tests that have no TTY).
+  #   2. Interactive prompt — ONLY when rung == foreign AND a real terminal is
+  #      available (read from /dev/tty so piped / curl|bash invocations are
+  #      never blocked).
+  #   3. Non-interactive fallback or non-foreign rung: keep (on absent/ours the
+  #      binary applies the right action regardless of on_foreign).
+  local on_foreign
+  if [[ -n "${_CRAFTER_INSTALL_ON_FOREIGN:-}" ]]; then
+    # Internal injection — bypasses TTY detection; used by H-series tests.
+    on_foreign="$_CRAFTER_INSTALL_ON_FOREIGN"
+  elif [[ "$rung" == "foreign" ]] && { [ -t 1 ] || [ -t 2 ]; } && [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    # Foreign rung AND a real terminal is attached on stdout or stderr, and
+    # /dev/tty is reachable.
+    # (stdin may be a pipe in curl|bash, so we never test -t 0.)
+    local answer
+    printf "A different statusLine command is already set in %s.\nOverwrite it with the Crafter statusLine? [y/N] " "$settings_file" > /dev/tty
+    read -r answer < /dev/tty || answer=""
+    case "$answer" in
+      [Yy]|[Yy][Ee][Ss]) on_foreign="overwrite" ;;
+      *)                  on_foreign="keep"      ;;
+    esac
+  else
+    # absent or ours rung, or non-interactive (piped, curl|bash, CI):
+    # keep is the right default — the binary handles absent/ours correctly
+    # regardless of on_foreign, and foreign non-interactive stays untouched.
+    on_foreign="keep"
+  fi
 
-    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
-  '
+  "$crafter_bin" install statusline \
+    --settings "$settings_file" \
+    --command "$statusline_cmd" \
+    --on-foreign="$on_foreign"
 }
 
 install_global() {
   install_to "$HOME/.claude" "globally"
-  _download_cli_binary "$HOME/.claude"
+  # Allow binary build to fail without aborting the rest of the install;
+  # _download_cli_binary already prints a clear error to stderr when Go is missing.
+  _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
-  install_hook
+  install_hook "$HOME/.claude/crafter/bin/crafter"
+  install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
   echo ""
   echo "Crafter installed globally."
   echo ""
@@ -413,9 +499,14 @@ install_global() {
 }
 
 install_local() {
-  install_to "$(pwd)/.claude" "locally in $(pwd)"
-  _download_cli_binary "$(pwd)/.claude"
-  install_hook
+  local local_base
+  local_base="$(pwd)/.claude"
+  install_to "$local_base" "locally in $(pwd)"
+  # Allow binary build to fail without aborting the rest of the install;
+  # _download_cli_binary already prints a clear error to stderr when Go is missing.
+  _download_cli_binary "$local_base" || true
+  install_hook "$local_base/crafter/bin/crafter"
+  install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
   echo ""
   echo "Crafter installed locally in this project."
   echo ""
