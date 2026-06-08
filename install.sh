@@ -398,6 +398,7 @@ install_to() {
   cp "$SCRIPT_DIR/agents/crafter-verifier.md"    "$agents_dest/crafter-verifier.md"
   cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
+  cp "$SCRIPT_DIR/agents/crafter-step-runner.md" "$agents_dest/crafter-step-runner.md"
 
   # Resolve the {CRAFTER_HOME} placeholder to the concrete install path
   local crafter_dest_escaped

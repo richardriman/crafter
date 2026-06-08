@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-07T19:58:39Z",
+  "updatedAt": "2026-06-08T22:07:24Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 27,
+      "appliedCount": 28,
       "deprecated": false
     },
     {
@@ -21,7 +21,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:07Z",
-      "appliedCount": 17,
+      "appliedCount": 18,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 24,
+      "appliedCount": 25,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 23,
+      "appliedCount": 24,
       "deprecated": false
     },
     {
@@ -65,7 +65,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:32Z",
-      "appliedCount": 16,
+      "appliedCount": 17,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 23,
+      "appliedCount": 24,
       "deprecated": false
     },
     {
@@ -87,7 +87,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
-      "appliedCount": 23,
+      "appliedCount": 24,
       "deprecated": false
     },
     {
@@ -98,7 +98,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:38Z",
-      "appliedCount": 15,
+      "appliedCount": 16,
       "deprecated": false
     },
     {
@@ -109,7 +109,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:45Z",
-      "appliedCount": 22,
+      "appliedCount": 23,
       "deprecated": false
     },
     {
@@ -131,7 +131,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 8,
+      "appliedCount": 9,
       "deprecated": false
     },
     {
@@ -142,7 +142,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 8,
+      "appliedCount": 9,
       "deprecated": false
     },
     {
@@ -153,7 +153,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 8,
+      "appliedCount": 9,
       "deprecated": false
     },
     {
@@ -164,7 +164,7 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
-      "appliedCount": 3,
+      "appliedCount": 4,
       "deprecated": false
     },
     {
@@ -175,7 +175,7 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
-      "appliedCount": 5,
+      "appliedCount": 6,
       "deprecated": false
     },
     {
@@ -219,7 +219,7 @@
       "sourceTask": "20260605-feat-statusline-auto-install-go-hook.md",
       "confidence": "low",
       "addedAt": "2026-06-07T19:58:39Z",
-      "appliedCount": 0,
+      "appliedCount": 1,
       "deprecated": false
     }
   ]
