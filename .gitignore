@@ -3,3 +3,5 @@ tmp/
 .crafter/run/
 # Local crafter install (binary + deployed trees)
 .claude/crafter/
+# Go build artifact: `go build .` inside cli/ emits a binary named after the dir
+/cli/cli

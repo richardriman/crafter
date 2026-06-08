@@ -17,7 +17,6 @@ REPO="richardriman/crafter"
 VERSION=""         # empty = use main branch
 TEMP_DIR=""
 REMOTE_MODE=0      # set to 1 when running from downloaded source (curl|bash path)
-WITH_STATUSLINE="" # set to 1 when --with-statusline is passed
 
 # ---------------------------------------------------------------------------
 # Detect whether we are running locally (from a cloned repo) or remotely
@@ -54,14 +53,12 @@ trap _cleanup EXIT
 # ---------------------------------------------------------------------------
 usage() {
   cat <<EOF
-Usage: ./install.sh [--global | --local] [--version VERSION] [--with-statusline]
+Usage: ./install.sh [--global | --local] [--version VERSION]
 
   --global           Install Crafter globally to ~/.claude/ (default)
   --local            Install Crafter locally to .claude/ in the current project
   --version VERSION  Pin a specific release version (e.g. 0.1.0)
                      Defaults to the latest main branch
-  --with-statusline  Register the crafter statusline hook in Claude Code
-                     settings.json (opt-in; off by default)
 
 When run via curl | bash, the installer automatically downloads the required
 files from GitHub — no git dependency needed.
@@ -414,19 +411,14 @@ install_to() {
 
 install_hook() {
   local crafter_bin="$1"
-  local hooks_dir="$HOME/.claude/hooks"
   local settings_file="$HOME/.claude/settings.json"
-  local hook_dest="$hooks_dir/crafter-check-update.js"
-
-  mkdir -p "$hooks_dir"
-  cp "$SCRIPT_DIR/hooks/crafter-check-update.js" "$hook_dest"
 
   if [ ! -x "$crafter_bin" ]; then
     echo "Warning: crafter binary not found, skipping hook registration"
     return 0
   fi
 
-  local hook_cmd="node \"$hook_dest\""
+  local hook_cmd="\"${crafter_bin}\" check-update"
   "$crafter_bin" install hook \
     --settings "$settings_file" \
     --command "$hook_cmd"
@@ -498,9 +490,7 @@ install_global() {
   _download_cli_binary "$HOME/.claude" || true
   _link_cli_into_path "$HOME/.claude"
   install_hook "$HOME/.claude/crafter/bin/crafter"
-  if [[ -n "$WITH_STATUSLINE" ]]; then
-    install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
-  fi
+  install_statusline "$HOME/.claude/settings.json" "$HOME/.claude/crafter/bin/crafter"
   echo ""
   echo "Crafter installed globally."
   echo ""
@@ -516,9 +506,7 @@ install_local() {
   # _download_cli_binary already prints a clear error to stderr when Go is missing.
   _download_cli_binary "$local_base" || true
   install_hook "$local_base/crafter/bin/crafter"
-  if [[ -n "$WITH_STATUSLINE" ]]; then
-    install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
-  fi
+  install_statusline "$local_base/settings.json" "$local_base/crafter/bin/crafter"
   echo ""
   echo "Crafter installed locally in this project."
   echo ""
@@ -553,10 +541,6 @@ while [[ $# -gt 0 ]]; do
       fi
       VERSION="${VERSION#v}"
       shift 2
-      ;;
-    --with-statusline)
-      WITH_STATUSLINE=1
-      shift
       ;;
     --help|-h)
       usage

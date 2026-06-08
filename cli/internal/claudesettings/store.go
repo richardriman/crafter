@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Settings is an in-memory view of a settings.json object. Values are kept as
@@ -109,6 +110,10 @@ func Save(path string, s *Settings) error {
 	data, err := s.Marshal()
 	if err != nil {
 		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("creating settings directory: %w", err)
 	}
 
 	tmp := path + ".tmp"

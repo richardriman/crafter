@@ -52,10 +52,17 @@ func init() {
 }
 
 func runStatusline(cmd *cobra.Command, args []string) error {
-	raw, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		// Silent-fail: never break the status bar on read errors.
-		return nil
+	var raw []byte
+
+	// Skip the blocking read when stdin is a character device (interactive tty).
+	// Under a pipe or file redirection the existing read path runs unchanged.
+	if fi, err := os.Stdin.Stat(); err != nil || (fi.Mode()&os.ModeCharDevice) == 0 {
+		var readErr error
+		raw, readErr = io.ReadAll(os.Stdin)
+		if readErr != nil {
+			// Silent-fail: never break the status bar on read errors.
+			return nil
+		}
 	}
 
 	var input statuslineInput
