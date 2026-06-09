@@ -47,6 +47,7 @@ crafter/
 │   ├── crafter-implementer.md   # Implementer agent
 │   ├── crafter-planner.md       # Planner agent
 │   ├── crafter-reviewer.md      # Reviewer agent
+│   ├── crafter-step-runner.md   # Step Runner agent — thin glue agent for per-step module delegation (extension-skills, step-0-resume, step-1-scope)
 │   └── crafter-verifier.md      # Verifier agent
 ├── rules/                       # Per-concern rule fragments (loaded selectively by commands)
 │   ├── core.md                  # Universal rules (language, principles, context maintenance)
@@ -75,7 +76,7 @@ crafter/
 
 ### Orchestrator / Agent Model
 
-Skills act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to five specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer), each spawned in a fresh context window with only the information it needs.
+Skills act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to six specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer, Step Runner), each spawned in a fresh context window with only the information it needs.
 
 Agents are defined as native Claude Code agents in `agents/` and are invoked by name (e.g., `crafter-planner`).
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-08T22:07:24Z",
+  "updatedAt": "2026-06-09T10:19:09Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -10,7 +10,7 @@
       "sourceTask": "green-commits",
       "confidence": "low",
       "addedAt": "2026-05-05T21:08:41Z",
-      "appliedCount": 28,
+      "appliedCount": 29,
       "deprecated": false
     },
     {
@@ -32,7 +32,7 @@
       "sourceTask": "20260509-feat-gh-15-auto-flag.md",
       "confidence": "low",
       "addedAt": "2026-05-09T11:14:14Z",
-      "appliedCount": 25,
+      "appliedCount": 26,
       "deprecated": false
     },
     {
@@ -43,7 +43,7 @@
       "sourceTask": "20260509-feat-gh-16-buffer-skill",
       "confidence": "low",
       "addedAt": "2026-05-10T00:10:41Z",
-      "appliedCount": 24,
+      "appliedCount": 25,
       "deprecated": false
     },
     {
@@ -76,7 +76,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:34Z",
-      "appliedCount": 24,
+      "appliedCount": 25,
       "deprecated": false
     },
     {
@@ -87,7 +87,7 @@
       "sourceTask": "20260510-feat-gh-17-pr-composer",
       "confidence": "low",
       "addedAt": "2026-05-10T02:56:42Z",
-      "appliedCount": 24,
+      "appliedCount": 25,
       "deprecated": false
     },
     {
@@ -109,7 +109,7 @@
       "sourceTask": "20260510-feat-gh-18-auto-agent-semantics",
       "confidence": "low",
       "addedAt": "2026-05-10T10:53:45Z",
-      "appliedCount": 23,
+      "appliedCount": 24,
       "deprecated": false
     },
     {
@@ -131,7 +131,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 9,
+      "appliedCount": 10,
       "deprecated": false
     },
     {
@@ -142,7 +142,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 9,
+      "appliedCount": 10,
       "deprecated": false
     },
     {
@@ -153,7 +153,7 @@
       "sourceTask": "20260601-plan-progress-statusline.md",
       "confidence": "low",
       "addedAt": "2026-06-02T13:11:33Z",
-      "appliedCount": 9,
+      "appliedCount": 10,
       "deprecated": false
     },
     {
@@ -164,7 +164,7 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
-      "appliedCount": 4,
+      "appliedCount": 5,
       "deprecated": false
     },
     {
@@ -175,7 +175,7 @@
       "sourceTask": "20260602-feat-statusline-full-panel.md",
       "confidence": "low",
       "addedAt": "2026-06-03T13:39:49Z",
-      "appliedCount": 6,
+      "appliedCount": 7,
       "deprecated": false
     },
     {
@@ -220,6 +220,17 @@
       "confidence": "low",
       "addedAt": "2026-06-07T19:58:39Z",
       "appliedCount": 1,
+      "deprecated": false
+    },
+    {
+      "id": "c4a9f5fd285d9b28",
+      "agent": "verifier",
+      "rule": "When verifying the diff surface of a feature branch whose earlier phases were already squash-merged to main (and main then merged back into the branch), compute the cumulative diff against the CURRENT merge-base and expect already-merged files to net to zero — their absence from the branch diff is benign, not a regression. Use a content grep (e.g. for the expected normalized token) as the tiebreaker, and md5/byte-compare against main, rather than treating missing files as lost work.",
+      "rationale": "In Step 3.3 of the progressive-loading task the Phase-1 normalize-classified files were absent from 'git diff merge-base..HEAD', which looked like a possible regression. It was benign: Phase 0+1 had squash-merged to main via PR #38 before the PR #44 merge-base, so those files were byte-identical to main and netted to zero in the branch diff. The grep-for-zero-remaining-literals check plus md5-vs-main confirmed normalization was intact.",
+      "sourceTask": "20260518-crafter-do-progressive-loading.md",
+      "confidence": "low",
+      "addedAt": "2026-06-09T10:19:09Z",
+      "appliedCount": 0,
       "deprecated": false
     }
   ]

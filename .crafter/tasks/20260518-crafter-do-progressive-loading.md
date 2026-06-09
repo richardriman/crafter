@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-05-18
 - **Work branch:** feat/crafter-do-progressive-loading
-- **Status:** active
+- **Status:** completed
 - **Scope:** Large
 
 ## Request
@@ -134,10 +134,10 @@ The headline redesign. One cohesive, reviewable SKILL.md change + the new step-r
 
 #### Phase 3 — Semantic-equivalence verification & bookkeeping
 
-- [ ] **Step 3.1 — Four-flow + resume walkthrough.** Walk default, `--fast`, `--auto`, and resume (each of 3 targets) end-to-end against the revised SKILL.md. Assert: (a) every step is delegated, not orchestrator-`Read`; (b) every orchestrator-side binding fires from the orchestrator side at the correct point; (c) routing is fully derivable from the eager spine + master-plan; (d) no step depends on a skipped/sibling module being in the orchestrator's context.
-- [ ] **Step 3.2 — Per-step binding parity check.** For every preserved binding (Step 3 `Edit`, Step 6 STOP/cap + (a)/(b)/(c), Step 6b paths + commit, Steps 7–9 checklist + hard gate, Step 9b push invariant + escape hatch) produce a before/after parity note proving it is intact and orchestrator-side.
-- [ ] **Step 3.3 — Deployment-surface + normalization confirmation.** Run `tests/test_install.sh` green incl. the new substitution assertion and the new agent in `_EXPECTED_FILES_REL`. Confirm no literal `~/.claude/crafter` install-path remains in normalize-classified source. Confirm the actual `git diff --stat` surface matches the Phase-0 declaration.
-- [ ] **Step 3.4 — Bookkeeping.** Update `.crafter/STATE.md` (Recent Changes, Current Focus, mark the `## Planned` item done), finalize the `docs/core-capabilities.md` ledger if not already, complete this task file's `## Outcome`. Consolidated end-of-task commit per `step-7-9-post-change` discipline.
+- [x] **Step 3.1 — Four-flow + resume walkthrough.** Walk default, `--fast`, `--auto`, and resume (each of 3 targets) end-to-end against the revised SKILL.md. Assert: (a) every step is delegated, not orchestrator-`Read`; (b) every orchestrator-side binding fires from the orchestrator side at the correct point; (c) routing is fully derivable from the eager spine + master-plan; (d) no step depends on a skipped/sibling module being in the orchestrator's context.
+- [x] **Step 3.2 — Per-step binding parity check.** For every preserved binding (Step 3 `Edit`, Step 6 STOP/cap + (a)/(b)/(c), Step 6b paths + commit, Steps 7–9 checklist + hard gate, Step 9b push invariant + escape hatch) produce a before/after parity note proving it is intact and orchestrator-side.
+- [x] **Step 3.3 — Deployment-surface + normalization confirmation.** Run `tests/test_install.sh` green incl. the new substitution assertion and the new agent in `_EXPECTED_FILES_REL`. Confirm no literal `~/.claude/crafter` install-path remains in normalize-classified source. Confirm the actual `git diff --stat` surface matches the Phase-0 declaration.
+- [x] **Step 3.4 — Bookkeeping.** Update `.crafter/STATE.md` (Recent Changes, Current Focus, mark the `## Planned` item done), finalize the `docs/core-capabilities.md` ledger if not already, complete this task file's `## Outcome`. Consolidated end-of-task commit per `step-7-9-post-change` discipline.
 
 ### 6. Karpathy Contract
 
@@ -229,4 +229,17 @@ The headline redesign. One cohesive, reviewable SKILL.md change + the new step-r
 - **Open platform question:** whether the Skill tool supports skill-from-skill invocation and whether it is context-isolated — Option B's viability hinges on it; Option A does not depend on it (uses the proven Agent tool).
 
 ## Outcome
-<!-- Filled on completion: what was actually done, commit SHA(s), any deviations from plan -->
+
+**Completed 2026-06-09.** `crafter-do` is now a master-plan hybrid-delegating orchestrator. The progressive-loading end goal recorded in `.crafter/STATE.md` `## Planned` is achieved on branch `feat/crafter-do-progressive-loading` (pending PR/merge).
+
+**What was done:**
+- **Phase 0** (analysis-only GATE) — GO. Per-step orchestrator/subagent split table + hybrid bucketing, eager-spine partition, repo-wide normalization inventory (Phase-1 set = 17 occurrences in 4 files; Phase-2 = SKILL.md ×34), install/test/docs/sibling design, resume-jump + cross-module routing trace (3 resume targets + 6 high-risk chains all PASS). No production edits.
+- **Phase 1** (commit `81c3e2c`, merged to `main` via PR #38) — centralized install-time `{CRAFTER_HOME}` → `$base/crafter` substitution in `install.sh` `install_to()` (escaped sed for `&`/`|`/`\`); repo-wide normalization of literal `~/.claude/crafter/...` install-paths to `{CRAFTER_HOME}/...` in the 4 normalize-classified files (`skills/crafter-debug/SKILL.md`, `skills/crafter-map-project/SKILL.md`, `rules/post-change.md`, `rules/delegation.md`); +2 install tests (no leftover placeholder / resolved path present / no wrong-base leak); `docs/core-capabilities.md` + sibling `20260421` Outcome reconciled.
+- **Phase 2** (commit `db70fd0`) — `skills/crafter-do/SKILL.md` redesigned: trimmed eager loader list to the 4-module spine (`core.md`, `do-workflow.md`, `delegation.md`, `task-lifecycle.md`), inline Workflow Master Plan navigation map (step sequence, scope branching, flag branching, three resume entry points), hybrid per-step delegation (existing role-agents Step 2→analyzer/3→planner/4→implementer/5+5a→verifier/6→reviewer; new thin `agents/crafter-step-runner.md` for glue steps — extension-skills discovery, step-0-resume lookup, step-1-scope assessment; fully orchestrator-side: flag-validation, project-resolution, step-6a, step-6b, step-9b). All orchestrator-only bindings kept inline. SKILL.md ×34 path normalization. New agent wired into `rules/delegation.md` roster + model table, `install.sh` agents `cp`, and `tests/test_install.sh` `_EXPECTED_FILES_REL`.
+- **Phase 3** (consolidated bookkeeping commit) — semantic-equivalence verification (all PASS): four-flow + resume walkthrough (default/`--fast`/`--auto` + 3 resume targets, properties a–d); 13/13 per-step binding parity vs. pre-redesign `db70fd0^` (all INTACT, none relocated into a subagent); `tests/test_install.sh` 64/0 green (global + local, no-leak/wrong-base asserts, step-runner in `_EXPECTED_FILES_REL`); zero remaining normalize-literals in source. Bookkeeping: STATE.md (Current Focus, Recent Changes, `## Planned` item marked done), `docs/core-capabilities.md` Phase 2+3 ledger line, `.crafter/ARCHITECTURE.md` (added `crafter-step-runner` to agent roster, 5→6 agents).
+
+**Deviations:** none material. The Phase-3 cumulative branch diff is smaller than the Phase-0-declared surface because Phase 0+1 already squash-merged to `main` (PR #38) before the current merge-base (PR #44) — the normalize-classified Phase-1 files are byte-identical to `main`, so they net to zero in the branch diff (verified benign in Step 3.3, not a regression). The `docs/core-capabilities.md` ledger reconciliation relabeled the Phase 0+1 entry and added a separate Phase 2+3 entry rather than a single appended line (within A8 reconciliation intent).
+
+**Commits:** `81c3e2c` (Phase 0+1), `db70fd0` (Phase 2), consolidated end-of-task bookkeeping commit (STATE.md + docs/core-capabilities.md + ARCHITECTURE.md + this task file).
+
+**Sibling:** `20260421-skills-first-runtime-portability.md` remains active and continues to own the full build/transform pipeline + multi-runtime adapters; only its normalization sub-mandate transferred here (one additive Outcome line, per NG8).
