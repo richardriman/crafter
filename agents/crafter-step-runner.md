@@ -19,11 +19,11 @@ You determine which procedure to run from the step id the orchestrator passes.
 
 ### `extension-skills` — Extension Skill Discovery
 
-The orchestrator provides: the `skills/` path and `PROJECT_PATH`.
+The orchestrator provides: `{PROJECT_PATH}`.
 
-Read the `rules/do/extension-skills.md` module the orchestrator names. Follow the discovery procedure exactly: scan the three priority locations in order — (1) project-local (`{PROJECT_PATH}/.claude/crafter/skills/`), (2) parent-project (first `../.claude/crafter/skills/` found walking up parent directories), (3) global (`{CRAFTER_HOME}/skills/`) — and evaluate each candidate's `When-Applies` clause against the current project context. Return a structured summary:
+Read the `rules/do/extension-skills.md` module the orchestrator names. Follow the discovery procedure exactly: scan the three priority locations in order — (1) project-local (`{PROJECT_PATH}/.claude/crafter/skills/`), (2) parent-project (first `../.claude/crafter/skills/` found walking up parent directories), (3) global (`{CRAFTER_HOME}/skills/`) — and for each `SKILL.md` found, check whether it contains a `## Skill Contract` section; if it does, the skill is Crafter-compatible and eligible. Do NOT evaluate `When-Applies` clauses against the current request — that filtering is deferred to Steps 1, 4, and 6. Return a structured summary:
 
-- **Extension skills found:** list each skill (name, location, `When-Applies` clause); or state "none found".
+- **Extension skills found:** list each compatible skill (name, location, `When-Applies` clause from its SKILL.md); or state "none found".
 - **Supplemental-only invariant:** confirm that none of the found skills replace any core agent; flag any that appear to violate this.
 
 ### `step-0-resume` — Resume Detection
