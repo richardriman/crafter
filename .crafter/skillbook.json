@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-09T10:19:09Z",
+  "updatedAt": "2026-06-11T14:32:24Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -230,6 +230,17 @@
       "sourceTask": "20260518-crafter-do-progressive-loading.md",
       "confidence": "low",
       "addedAt": "2026-06-09T10:19:09Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "4028eb3f430df176",
+      "agent": "implementer",
+      "rule": "When a step pushes to the default branch (main), do not push directly — main is a protected branch and direct pushes are rejected (GH006). Route the change through a topic branch + PR (gh pr create, then gh pr merge --squash).",
+      "rationale": "Hit twice in one session: the v0.13.0 version bump and then the crafter-release skill's own bump step both dead-ended on a direct push to protected main and had to be hand-routed through a PR.",
+      "sourceTask": "20260611-fix-release-skill-protected-main.md",
+      "confidence": "low",
+      "addedAt": "2026-06-11T14:32:24Z",
       "appliedCount": 0,
       "deprecated": false
     }

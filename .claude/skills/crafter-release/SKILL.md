@@ -42,13 +42,52 @@ Prepare a GitHub Release for this project, including CLI binary assets.
    - If `<version-file>` is **equal to or lower than** `<latest-version>`:
      - Use `<requested-version>` if provided; otherwise ask the user for a new version.
      - Validate that `<target-version>` is strictly greater than `<latest-version>`. If not, ask again.
-     - Update `VERSION`, commit, and push before continuing:
+     - Write and commit the bump locally:
        ```
        printf '%s\n' "<target-version>" > VERSION
        git add VERSION
        git commit -m "chore: bump version to <target-version>"
+       ```
+     - **Attempt a direct push first** (works for unprotected branches):
+       ```
        git push origin HEAD
        ```
+     - **If the direct push is rejected because the branch is protected** — any non-zero exit from `git push origin HEAD` may indicate branch protection; common phrases include `protected branch hook declined`, `GH006`, and `Changes must be made through a pull request`, but GitHub rulesets and other configurations can emit different wording. Treat ANY rejection of `git push origin HEAD` as a possible protection rejection and inspect the output before concluding it is something else — route the bump through a PR instead:
+       - Resolve the default branch name (the result is the bare name, e.g. `main`; substitute it for `<default-branch>` everywhere below):
+         ```
+         git remote show origin | sed -n '/HEAD branch/s/.*: //p'
+         ```
+       - Move the bump commit to a dedicated branch and reset the local default branch back to its upstream (this assumes the local default branch tracks `origin/<default-branch>`, which is true for a normal clone):
+         ```
+         git branch chore/bump-<target-version>
+         git reset --hard @{u}
+         git checkout chore/bump-<target-version>
+         git push -u origin chore/bump-<target-version>
+         ```
+       - Open the PR:
+         ```
+         gh pr create --base <default-branch> --head chore/bump-<target-version> \
+           --title "chore: bump version to <target-version>" \
+           --body "Bumps VERSION to <target-version> ahead of the v<target-version> release."
+         ```
+       - Attempt the squash merge immediately:
+         ```
+         gh pr merge chore/bump-<target-version> --squash --delete-branch
+         ```
+         If the merge is rejected because the PR is not yet mergeable — required status checks are still pending, or required approvals are missing — **do NOT treat this as a hard error and do NOT force-merge**. Instead, surface the blocker to the user: the release cannot continue until the bump PR satisfies the repository's branch-protection requirements (checks must pass and/or approval must be granted). As an alternative to polling, you may enable auto-merge so GitHub merges automatically once requirements are met:
+         ```
+         gh pr merge chore/bump-<target-version> --squash --auto --delete-branch
+         ```
+         Note: if auto-merge is not enabled on the repository, `gh pr merge --auto` will error. In that case, wait for the required checks/approvals to clear and re-run the plain squash merge: `gh pr merge chore/bump-<target-version> --squash --delete-branch`.
+         Either way, the remaining release steps (tag creation, binary upload) must wait until the PR has actually merged. Do not proceed until the squash merge is confirmed.
+       - Once the PR is merged, return to the default branch and reset to the canonical remote state (`pull --ff-only` is avoided here because a squash merge rewrites history — the local default branch's bump commit is not the squashed remote commit, so fast-forward would fail; resetting to the fetched upstream reliably lands the local branch on the merged bump commit):
+         ```
+         git checkout <default-branch>
+         git fetch origin
+         git reset --hard @{u}
+         ```
+       - Note: GitHub may auto-delete the topic branch on merge, so `--delete-branch` reporting that the branch is already gone is not an error — just continue. This only affects the topic branch and does not interfere with the subsequent fetch/reset of the default branch.
+     - **Invariant:** the release tag (Step 5 — Create the Release and Upload CLI Binaries) must NOT be created until the bumped `VERSION` is on the default branch — meaning either the direct push succeeded, or the PR was fully merged and the local default branch reset to the upstream. This ensures `gh release create` tags the commit that actually contains the new VERSION.
 
 7. After `<target-version>` is resolved, check whether release/tag `v<target-version>` already exists — verify both locally and on GitHub:
    ```
@@ -141,6 +180,11 @@ If changes are requested, revise the release notes and present them again until 
    ```
    cd cli
    make release
+   ```
+   If `go` is not on PATH because it is managed by a version manager (e.g. mise or asdf), run the build through it instead — for example:
+   ```
+   cd cli
+   mise exec -- make release
    ```
    This must produce:
    - `cli/bin/crafter-darwin-arm64`
