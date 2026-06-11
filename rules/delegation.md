@@ -19,6 +19,7 @@ The orchestrator is a **dispatcher** only: it manages workflow, communicates wit
 | `crafter-analyzer` | Investigator — project mapping or research/investigation tasks |
 | `crafter-verifier` | QA — checks verification criteria |
 | `crafter-reviewer` | Code reviewer — reviews changes against plan and conventions |
+| `crafter-step-runner` | Glue delegate for three `/crafter-do` steps — extension-skill discovery, Step 0 resume lookup, Step 1 scope assessment — returns a structured routing-relevant summary; never edits task files, branches, or commits |
 
 ## Model Configuration
 
@@ -31,6 +32,7 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 | `crafter-verifier` | `sonnet` | Needs reliable instruction-following for output constraints |
 | `crafter-reviewer` | `opus` | Thorough code analysis |
 | `crafter-analyzer` | `sonnet` | Adaptive — use `opus` for large scope tasks that require deeper research |
+| `crafter-step-runner` | `sonnet` | Lightweight instruction-following for structured lookup and assessment steps |
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 

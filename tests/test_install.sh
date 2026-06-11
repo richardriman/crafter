@@ -413,6 +413,7 @@ _EXPECTED_FILES_REL=(
   "agents/crafter-verifier.md"
   "agents/crafter-reviewer.md"
   "agents/crafter-analyzer.md"
+  "agents/crafter-step-runner.md"
 )
 
 # ---------------------------------------------------------------------------
