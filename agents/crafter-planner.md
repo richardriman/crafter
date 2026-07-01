@@ -64,21 +64,6 @@ Always return a **structured summary** for conversation display. The summary sho
 
 This summary is what the orchestrator will show the user in conversation. The full plan with all detail lives in the task file.
 
-## Behavior under caveman
-
-This section applies only when the task prompt signals `caveman-full`. Under `caveman-full`, compress your reasoning and returned output per caveman discipline: drop filler, pleasantries, and hedging in whatever language is used — language-specific mechanics like dropping articles apply only where the language has them — while keeping all technical substance.
-
-**Always keep verbatim:**
-- Code blocks, file paths, identifiers, and numbers.
-- All required fields and headings from the mandated output format (approach, phases/steps, assumptions, Karpathy Contract, verification, risks/unknowns, task file reference).
-
-**Never compress:**
-- Security warnings.
-- Confirmations of irreversible actions.
-- Multi-step sequences where order or completeness matters.
-
-When the signal is absent, this section has no effect.
-
 ## Behavior under ponytail
 
 This section applies only when the task prompt signals ponytail at a given level (`lite`, `full`, or `ultra`).

@@ -18,12 +18,12 @@ Reserved crafter-internal terms — `gate`, `drift`, `seam` / `split point`, `su
 
 ## Skill Detection: Caveman and Ponytail
 
-At orchestrator startup, check for two marker files:
+Immediately before every delegation (not only at orchestrator startup), re-read two marker files:
 
 - `$HOME/.claude/.caveman-active` — exists only when the caveman skill is active; its content is the configured level (`lite`, `full`, or `ultra`).
 - `$HOME/.claude/.ponytail-active` — exists only when the ponytail skill is active; its content is the configured level (`lite`, `full`, or `ultra`).
 
-Record each skill's active state and level as workflow context available at every delegation point. When a marker is absent, the skill is inactive and **behavior is byte-for-byte unchanged** — no mention of the skills, no compression, no discipline changes.
+The orchestrator re-reads each marker's presence and level fresh immediately before each delegation — never cached from startup — so a mid-session mode switch (e.g. `stop ponytail`, `/caveman ultra`) takes effect for the next spawned agent. When a marker is absent, the skill is inactive and **behavior is byte-for-byte unchanged** — no mention of the skills, no compression, no discipline changes.
 
 ### Caveman — communication compression discipline
 
@@ -37,6 +37,8 @@ Caveman removes filler words, pleasantries, and hedging while keeping ALL techni
 - Human-facing prose → caveman-lite.
 - Reasoning, inter-agent summaries, and pure agent-facing output → caveman-full.
 
+`crafter-reviewer` and `crafter-verifier` reports are **human-facing** — the orchestrator relays them verbatim to the user (carve-out (a) below), so they receive caveman-lite. `crafter-implementer`, `crafter-planner`, `crafter-analyzer`, and `crafter-step-runner` output is agent-facing (the orchestrator consumes and digests it), so they receive caveman-full.
+
 #### Human-facing caveman-lite policy (orchestrator)
 
 When caveman is active, the orchestrator applies caveman-lite to all of its own conversational output directed at the user. The following are **always excluded** from compression:
@@ -44,7 +46,7 @@ When caveman is active, the orchestrator applies caveman-lite to all of its own 
 (a) **Verbatim-relayed content** — Reviewer diff sections, issue lists, scorecard tables, and Verifier reports the orchestrator reproduces without modification; relay them exactly as produced.
 (b) **Human-in-the-loop gate prompts** — plan-approval questions and any other HITL gate where compression would reduce clarity or leave the user unable to make an informed decision.
 (c) **Safety-critical content (Auto-Clarity)** — security warnings, irreversible-action confirmations, and multi-step sequences that must be written in full to be safely actionable.
-(d) **Commits, PR titles/bodies, and release notes** — remain in neutral human project voice per `CLAUDE.md`; no compression applied.
+(d) **Commits, PR titles/bodies, and release notes** — remain in neutral human project voice per `CLAUDE.md`; no compression applied. PR bodies include buffer-sourced content — the UAT and Gap sections that `crafter pr-body` renders from implementer/verifier deviation entries — which likewise stays uncompressed and in neutral human voice.
 (e) **Persistent-file English** — `.crafter/*`, saved plans, and task files are always English regardless of caveman state, per the Language Rules above.
 
 **Jargon Confinement is unchanged by caveman.** The orchestrator must not import crafter-internal vocabulary onto the user's domain regardless of caveman level.

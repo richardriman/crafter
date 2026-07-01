@@ -55,19 +55,27 @@ If the CLI binary does not exist, skip skillbook injection silently.
 
 ## Skill Directives — Caveman and Ponytail
 
-Before spawning any agent via the Task tool, check the caveman and ponytail active state established at startup (see `rules/core.md` — **Skill Detection: Caveman and Ponytail**):
+Before spawning any agent via the Task tool, re-read the caveman and ponytail markers immediately before spawning the agent — a fresh read, not the startup-cached state (see `rules/core.md` — **Skill Detection: Caveman and Ponytail**):
 
-1. **Caveman (all agents):** If caveman is active, append the following directive to the agent's task prompt:
+1. **Caveman (all agents, audience-based level):** If caveman is active, append the directive below, choosing the level by the agent's audience:
+   - **caveman-full** for `crafter-implementer`, `crafter-planner`, `crafter-analyzer`, and `crafter-step-runner` — their output is agent-facing (the orchestrator consumes/digests it).
+   - **caveman-lite** for `crafter-reviewer` and `crafter-verifier` — their reports are relayed verbatim to the user (see `rules/core.md` carve-out (a)), so they are human-facing and must stay in the lighter register.
+
+   Append (replace `<LEVEL>` with `full` or `lite` per the above):
 
    ```
    ## Active skill directives
 
-   **caveman-full** is active — apply caveman-full discipline to your reasoning and returned report (drop filler/hedging, maximize density, keep all technical substance verbatim). Definition: `rules/core.md` § Caveman.
+   **caveman-<LEVEL>** is active — apply caveman-<LEVEL> discipline to your reasoning and returned report. Drop filler, pleasantries, and hedging in whatever language you use (language-specific mechanics like dropping articles apply only where the language has them). Keep ALL technical substance verbatim: code, file paths, identifiers, numbers, and every required field, heading, and table of your mandated output format — compress only the free-text prose within them.
+
+   **Never compress:** security warnings; confirmations of irreversible actions; multi-step sequences where order or completeness matters; and any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines) — that text is rendered into the PR body by `crafter pr-body` and must stay in neutral human voice.
    ```
 
-2. **Ponytail (`crafter-implementer` and `crafter-planner` only):** If ponytail is active and the target agent is `crafter-implementer` or `crafter-planner`, append (or extend the block above with):
+2. **Ponytail (`crafter-implementer` and `crafter-planner` only):** If ponytail is active and the target agent is `crafter-implementer` or `crafter-planner`, add the ponytail line below. If the caveman directive above already emitted the `## Active skill directives` block, append this line to that same block (do not repeat the header). Otherwise emit the block yourself — the `## Active skill directives` header followed by this line:
 
    ```
+   ## Active skill directives
+
    **ponytail** is active at level `<LEVEL>` — apply YAGNI / the-ladder / shortest-working-diff discipline. Definition: `rules/core.md` § Ponytail.
    ```
 

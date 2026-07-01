@@ -151,19 +151,3 @@ Auto-routing: escape-hatch — <one-line reason>
 ### Escape hatch criteria
 
 Signal `escape-hatch` only for genuinely blocking conditions as defined in `rules/do-workflow.md` → `#### Ad-hoc escape hatch`. Do NOT signal escape-hatch for findings that can be deferred as `gap`, `uat`, or `no-buffer`, or for harmful drift that the Implementer can fix within the normal fix loop.
-
-## Behavior under caveman
-
-This section applies only when the task prompt signals `caveman-full`. Under `caveman-full`, compress surrounding prose and reasoning per caveman discipline: drop filler, pleasantries, and hedging in whatever language is used — language-specific mechanics like dropping articles apply only where the language has them — while keeping all technical substance.
-
-Caveman does **not** alter the mandated output structure: the required summary line (`Step drift: <classification> — recommended action: <action>` or `<passed>/<total> PASS`), the contract-check bullet format, and all structured report sections must appear exactly as defined. Only free-text explanations within those sections may be compressed.
-
-**Always keep verbatim:**
-- Summary lines, classification labels, action words, file paths, identifiers, and numbers.
-
-**Never compress:**
-- Security warnings.
-- Confirmations of irreversible actions.
-- Multi-step sequences where order or completeness matters.
-
-When the signal is absent, this section has no effect.

@@ -84,19 +84,3 @@ Step: <step-id>
 ```
 
 For list fields (e.g., missing-fields, extension-skills-found), use a bullet list under the field label.
-
-## Behavior under caveman
-
-This section applies only when the task prompt signals `caveman-full`. Under `caveman-full`, compress surrounding prose and reasoning per caveman discipline: drop filler, pleasantries, and hedging in whatever language is used — language-specific mechanics like dropping articles apply only where the language has them — while keeping all technical substance.
-
-Caveman does **not** alter the mandated output structure: the `Step: <step-id>` header and all required `field: value` lines must appear in their exact defined form. Only free-text values (rationale sentences, explanations) may be compressed.
-
-**Always keep verbatim:**
-- Step id, field labels, verdict strings, code blocks, file paths, identifiers, and numbers.
-
-**Never compress:**
-- Security warnings.
-- Confirmations of irreversible actions.
-- Multi-step sequences where order or completeness matters.
-
-When the signal is absent, this section has no effect.
