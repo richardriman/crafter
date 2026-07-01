@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-07-01
 - **Work branch:** feat/caveman-ponytail-detect
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -163,4 +163,15 @@ Extends detection into the delegated agents: caveman-full for every agent's reas
 - **Decision (Flag A5 resolved):** Shared definitions + detection live in `rules/core.md` / `rules/delegation.md` (orchestrator-side, DRY), not inlined only in SKILL.md. **Reason:** DRY + crafter-debug parity for free.
 
 ## Outcome
-_(pending)_
+
+Implemented in two phases on branch `feat/caveman-ponytail-detect`.
+
+**Phase 1 (commit `53f02d8`)** — Added a shared `## Skill Detection: Caveman and Ponytail` section to `rules/core.md`: detection via marker files `$HOME/.claude/.caveman-active` + `.ponytail-active` (presence = active, content = level); caveman is audience-based (lite for human-facing prose, full for agent-facing output; marker level presence-only, `ultra` collapses to audience-based selection; compression is language-aware); five carve-outs (verbatim relay, HITL gates, Auto-Clarity, commits/PRs/release notes, persisted English); Jargon Confinement reaffirmed. Ponytail scoped to `crafter-implementer` + `crafter-planner`, level passed through. `crafter-debug` inherits the human-facing policy for free (reads core.md first, self-declares as orchestrator) — zero duplication (Step 1.3 needed no file change). Verifier 5/5 PASS; reviewer 0 Critical/Major, 3 optional (2 fixed: ultra ambiguity + language-aware compression; 1 no-change-needed: Step 6a verbatim authority confirmed in crafter-do SKILL.md).
+
+**Phase 2 (commit `45d6512`)** — `rules/delegation.md` got one pre-spawn propagation rule (mirrors the skillbook idiom): caveman-full directive appended to every spawned agent, ponytail directive (passed-through level) only to crafter-implementer/crafter-planner; no-op when markers absent. All six `agents/*.md` gained a self-contained `## Behavior under caveman` section (fixed-format agents — reviewer/verifier/step-runner — explicitly preserve mandated output structure); crafter-implementer + crafter-planner additionally gained `## Behavior under ponytail` with safety carve-outs intact. Verifier 4/4 PASS; reviewer 0 Critical/Major, 2 optional (both fixed: analyzer Mode-B parenthetical made mode-agnostic; "drop articles" made language-aware across all six files).
+
+**Invariant held throughout:** when neither marker is present, behavior is byte-for-byte unchanged. Purely additive Markdown; no Go/CLI/installer changes.
+
+**Files changed:** `rules/core.md`, `rules/delegation.md`, `agents/crafter-implementer.md`, `agents/crafter-planner.md`, `agents/crafter-analyzer.md`, `agents/crafter-reviewer.md`, `agents/crafter-verifier.md`, `agents/crafter-step-runner.md`.
+
+**Deferred (out of scope):** local `.claude/` install marker detection (A6 — global `$HOME/.claude/` only); no automated test coverage for prompt files (documentation review + optional manual smoke is the guard).

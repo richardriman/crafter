@@ -145,6 +145,10 @@ Distribution: cross-compiled for darwin-arm64, darwin-amd64, linux-amd64, linux-
 
 Under `--auto`, Step 9b (defined in `skills/crafter-do/SKILL.md → ## Step 9b`) closes the run by opening a GitHub PR. The orchestrator composes a baseline body (Summary + Test plan) from the task file's `## Plan → Approach` and `## Outcome` sections, then invokes `crafter pr-body --run-dir .crafter/run/<task-id>/ --task-file …` to render three appended sections (`## Manual QA Plan`, `## Known Gaps`, `## Decisions`) from the per-run NDJSON buffers. The two parts are concatenated and passed to `gh pr create`. On success the run directory is deleted; on failure the run directory is preserved and the ad-hoc escape hatch is triggered. This mirrors the GH#16 buffer pattern — deterministic rendering is delegated to the Go binary, not inlined as LLM prose.
 
+### Skill Adaptation — Caveman and Ponytail
+
+When the external `caveman` or `ponytail` skills are active in a session, the orchestrator detects them via marker files (`$HOME/.claude/.caveman-active` / `.ponytail-active`) at startup, because subagents run in fresh contexts and never receive those skills' own SessionStart injection. Detection and the human-facing caveman-lite policy live in `rules/core.md`; a single pre-spawn propagation rule in `rules/delegation.md` appends the appropriate directive to every agent's task prompt. Caveman mode is audience-driven: lite for orchestrator prose to the user, full for agent reasoning and returned reports. Ponytail (YAGNI / shortest-working-diff discipline) is scoped to `crafter-implementer` and `crafter-planner` only — the two roles that author code or plans. Each agent file carries a `## Behavior under caveman` section; `crafter-implementer` and `crafter-planner` also carry `## Behavior under ponytail`.
+
 ### Skillbook — Project-Level Learning
 
 The skillbook system lets agents learn from experience across sessions. After each task, the orchestrator reflects on what happened and captures observations via `crafter skillbook add`. Before spawning an agent, the orchestrator calls `crafter skillbook get` and appends the output to the agent's task prompt.
