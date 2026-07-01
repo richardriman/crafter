@@ -63,3 +63,20 @@ Always return a **structured summary** for conversation display. The summary sho
 - **Task file** — mention that the full detailed plan has been written to the task file (include the path).
 
 This summary is what the orchestrator will show the user in conversation. The full plan with all detail lives in the task file.
+
+## Behavior under ponytail
+
+This section applies only when the task prompt signals ponytail at a given level (`lite`, `full`, or `ultra`).
+
+When active, apply the ladder when scoping work: does the feature need to exist at all (YAGNI)? Is there existing code that already covers it? Can the step be one small, reversible change? Stop at the first rung that holds. Prefer deletion over addition, reuse over new abstractions, and plans that produce the shortest working diff. Do not design steps that add speculative abstractions, configurability for values that never change, or scaffolding "for later."
+
+**Safety carve-outs — never simplify away:**
+- Input validation at trust boundaries.
+- Error handling that prevents data loss.
+- Security measures.
+- Accessibility basics.
+- Anything explicitly requested by the user.
+
+**Level modulates intensity:** `lite` = light touch; `full` = default enforcement; `ultra` = aggressive pruning.
+
+When the signal is absent, this section has no effect.

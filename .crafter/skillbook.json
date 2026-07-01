@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-11T14:32:24Z",
+  "updatedAt": "2026-07-01T12:18:21Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -241,6 +241,28 @@
       "sourceTask": "20260611-fix-release-skill-protected-main.md",
       "confidence": "low",
       "addedAt": "2026-06-11T14:32:24Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "92bf61b96b6e5402",
+      "agent": "planner",
+      "rule": "For behavior that must apply to BOTH orchestrators (crafter-do and crafter-debug), place shared definitions/policy in rules/core.md or rules/delegation.md rather than a single SKILL.md — both orchestrators load those rules, so this is DRY and gives crafter-debug parity for free.",
+      "rationale": "Caveman/ponytail detection task: putting the policy in shared core.md let crafter-debug inherit the human-facing caveman policy with zero duplication (Step 1.3 needed no file change).",
+      "sourceTask": "20260701-feat-caveman-ponytail-detect.md",
+      "confidence": "low",
+      "addedAt": "2026-07-01T12:18:21Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "84c6ac894625f33e",
+      "agent": "implementer",
+      "rule": "When adding a new orchestrator-signaled agent behavior, mirror the existing '## Behavior under --auto' section pattern in agents/*.md and inject the signal via one pre-spawn rule in rules/delegation.md (same idiom as the skillbook 'Learned Guidelines' injection) — do not scatter per-step edits across SKILL.md.",
+      "rationale": "Phase 2 propagated caveman/ponytail cleanly by reusing the --auto mirror pattern + delegation.md skillbook injection idiom; one rule covered all spawn points.",
+      "sourceTask": "20260701-feat-caveman-ponytail-detect.md",
+      "confidence": "low",
+      "addedAt": "2026-07-01T12:18:21Z",
       "appliedCount": 0,
       "deprecated": false
     }
