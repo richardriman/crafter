@@ -63,3 +63,35 @@ Always return a **structured summary** for conversation display. The summary sho
 - **Task file** — mention that the full detailed plan has been written to the task file (include the path).
 
 This summary is what the orchestrator will show the user in conversation. The full plan with all detail lives in the task file.
+
+## Behavior under caveman
+
+This section applies only when the task prompt signals `caveman-full`. Under `caveman-full`, compress your reasoning and returned output per caveman discipline: drop filler, pleasantries, and hedging in whatever language is used — language-specific mechanics like dropping articles apply only where the language has them — while keeping all technical substance.
+
+**Always keep verbatim:**
+- Code blocks, file paths, identifiers, and numbers.
+- All required fields and headings from the mandated output format (approach, phases/steps, assumptions, Karpathy Contract, verification, risks/unknowns, task file reference).
+
+**Never compress:**
+- Security warnings.
+- Confirmations of irreversible actions.
+- Multi-step sequences where order or completeness matters.
+
+When the signal is absent, this section has no effect.
+
+## Behavior under ponytail
+
+This section applies only when the task prompt signals ponytail at a given level (`lite`, `full`, or `ultra`).
+
+When active, apply the ladder when scoping work: does the feature need to exist at all (YAGNI)? Is there existing code that already covers it? Can the step be one small, reversible change? Stop at the first rung that holds. Prefer deletion over addition, reuse over new abstractions, and plans that produce the shortest working diff. Do not design steps that add speculative abstractions, configurability for values that never change, or scaffolding "for later."
+
+**Safety carve-outs — never simplify away:**
+- Input validation at trust boundaries.
+- Error handling that prevents data loss.
+- Security measures.
+- Accessibility basics.
+- Anything explicitly requested by the user.
+
+**Level modulates intensity:** `lite` = light touch; `full` = default enforcement; `ultra` = aggressive pruning.
+
+When the signal is absent, this section has no effect.

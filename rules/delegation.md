@@ -52,3 +52,25 @@ Before spawning any agent via the Task tool, check if the `crafter` CLI binary i
 6. If the command fails (non-zero exit), log a warning but proceed with agent spawning — skillbook is optional.
 
 If the CLI binary does not exist, skip skillbook injection silently.
+
+## Skill Directives — Caveman and Ponytail
+
+Before spawning any agent via the Task tool, check the caveman and ponytail active state established at startup (see `rules/core.md` — **Skill Detection: Caveman and Ponytail**):
+
+1. **Caveman (all agents):** If caveman is active, append the following directive to the agent's task prompt:
+
+   ```
+   ## Active skill directives
+
+   **caveman-full** is active — apply caveman-full discipline to your reasoning and returned report (drop filler/hedging, maximize density, keep all technical substance verbatim). Definition: `rules/core.md` § Caveman.
+   ```
+
+2. **Ponytail (`crafter-implementer` and `crafter-planner` only):** If ponytail is active and the target agent is `crafter-implementer` or `crafter-planner`, append (or extend the block above with):
+
+   ```
+   **ponytail** is active at level `<LEVEL>` — apply YAGNI / the-ladder / shortest-working-diff discipline. Definition: `rules/core.md` § Ponytail.
+   ```
+
+   Replace `<LEVEL>` with the level read from `$HOME/.claude/.ponytail-active`. Do not append this line for any other agent (reviewer, verifier, analyzer, step-runner).
+
+3. **No-op:** When both markers are absent, append nothing and do not mention the skills.

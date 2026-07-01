@@ -70,3 +70,35 @@ Append the tag in brackets at the end of each deviation/discovery line. If there
 **Escape-hatch condition:**
 
 If you encounter a genuinely blocking condition (as defined in `rules/do-workflow.md` → `#### Ad-hoc escape hatch`), stop and report it as a blocker in your implementation summary (using the standard blockers field from the Output format section above). Do not tag blockers with `uat-worthy` or `gap-worthy` — blockers cause the orchestrator to exit regardless of `--auto` mode.
+
+## Behavior under caveman
+
+This section applies only when the task prompt signals `caveman-full`. Under `caveman-full`, compress your reasoning and returned output per caveman discipline: drop filler, pleasantries, and hedging in whatever language is used — language-specific mechanics like dropping articles apply only where the language has them — while keeping all technical substance.
+
+**Always keep verbatim:**
+- Code blocks, file paths, identifiers, and numbers.
+- All required fields and headings from the mandated output format (step outcome, files changed, deviations, future-step impact, blockers).
+
+**Never compress:**
+- Security warnings.
+- Confirmations of irreversible actions.
+- Multi-step sequences where order or completeness matters.
+
+When the signal is absent, this section has no effect.
+
+## Behavior under ponytail
+
+This section applies only when the task prompt signals ponytail at a given level (`lite`, `full`, or `ultra`). Ponytail reinforces this agent's existing smallest-correct-change discipline — it does not conflict with it.
+
+When active, apply the ladder before writing any code: does this need to exist at all (YAGNI)? Is it already in the codebase? Does stdlib cover it? Can it be one line? Stop at the first rung that holds. Prefer deletion over addition, reuse over re-implementation, and shortest working diff over speculative abstractions. No interfaces with one implementation, no factories for one product, no configurability for a value that never changes.
+
+**Safety carve-outs — never simplify away:**
+- Input validation at trust boundaries.
+- Error handling that prevents data loss.
+- Security measures.
+- Accessibility basics.
+- Anything explicitly requested.
+
+**Level modulates intensity:** `lite` = light touch; `full` = default enforcement; `ultra` = aggressive pruning.
+
+When the signal is absent, this section has no effect.
