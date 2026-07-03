@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-01T12:18:21Z",
+  "updatedAt": "2026-07-03T22:20:02Z",
   "skills": [
     {
       "id": "7b91fbef8829ffe0",
@@ -263,6 +263,28 @@
       "sourceTask": "20260701-feat-caveman-ponytail-detect.md",
       "confidence": "low",
       "addedAt": "2026-07-01T12:18:21Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "14a811237f41766c",
+      "agent": "planner",
+      "rule": "For changes to orchestrator spawn/delegation behavior, target skills/crafter-do/SKILL.md — the orchestrator executes all Task spawns there. rules/do/step-*.md are read internally by delegated agents, never by the orchestrator at spawn time; editing them looks like a fix but leaves orchestrator-side bugs live.",
+      "rationale": "Bug ticket pointed at rules/do/step-*.md as the spawn sites; actual spawn instructions all live in SKILL.md. Editing step modules would not have fixed the adherence gap.",
+      "sourceTask": "20260703-fix-skill-directive-propagation.md",
+      "confidence": "low",
+      "addedAt": "2026-07-03T22:20:02Z",
+      "appliedCount": 0,
+      "deprecated": false
+    },
+    {
+      "id": "9012a7a663df520c",
+      "agent": "reviewer",
+      "rule": "When auditing SKILL.md spawn-site coverage, count prose re-delegations too (e.g. 're-delegate to the Implementer'), not only literal 'Spawn the ... agent' instructions — a grep-by-'Spawn the' trace misses them and they are real Task spawns needing the same per-spawn treatment.",
+      "rationale": "Two implementer re-delegations at Step 5 / Step 5a were phrased as prose, so the trace table and the gate scope both missed them, leaving the wrong nearest directive level (lite/no-ponytail) at an implementer spawn.",
+      "sourceTask": "20260703-fix-skill-directive-propagation.md",
+      "confidence": "low",
+      "addedAt": "2026-07-03T22:20:02Z",
       "appliedCount": 0,
       "deprecated": false
     }
