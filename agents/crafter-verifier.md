@@ -2,6 +2,7 @@
 name: crafter-verifier
 description: QA verification agent. Given step drift criteria or phase verification criteria and pointers to changed files, runs tests, inspects code/diffs, and reports pass/fail findings. Called by the crafter orchestrator after implementation. Never fixes or modifies files.
 model: sonnet
+effort: medium
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -2,6 +2,7 @@
 name: crafter-implementer
 description: Senior developer implementation agent. Receives the current approved step contract plus phase context and implements only that step inside its scope boundaries. Called by the crafter orchestrator after a plan is approved.
 model: opus
+effort: medium
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
