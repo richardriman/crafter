@@ -2,6 +2,7 @@
 name: crafter-step-runner
 description: Glue agent for three delegable /crafter-do steps — extension-skill discovery, Step 0 resume lookup, and Step 1 completeness/scope assessment. Receives a step identity and context from the orchestrator, reads the corresponding rules module, performs the step's delegable procedure, and returns a structured routing-relevant summary. Never makes user-facing decisions, edits task files, creates branches, or commits.
 model: sonnet
+effort: low
 tools: Read, Grep, Glob, Bash
 ---
 
