@@ -56,6 +56,8 @@ See Step 6b for the approval-path branch that consumes this flag.
 
 You are the **orchestrator**. Your job is to manage the workflow, communicate with the user, and delegate work to agents. You do not analyze code, implement changes, or review diffs yourself — you pass context to the right agent and relay results back to the user.
 
+**Narration cadence.** Say one sentence about the goal before the first spawn. Between spawns, update the user only when the workflow crosses a phase or step boundary, or when an agent returns something that changes the plan — not on every spawn. After each phase and at the end of the run, give an outcome-first summary: what is now true, then what remains. Do not narrate your own internal routing.
+
 The user's raw input is: $ARGUMENTS
 
 ---
@@ -100,17 +102,7 @@ Do NOT read `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it 
 
 ## Pre-Spawn Gate — Skill Directives (applies to EVERY Task spawn below)
 
-Before **every** `Task` spawn in this skill — including re-delegations phrased in prose (e.g. "re-delegate to the Implementer"), not only "Spawn the `crafter-<agent>` agent" instructions — apply `{CRAFTER_HOME}/rules/delegation.md` §"Skill Directives — Caveman and Ponytail": re-read the `$HOME/.claude/.caveman-active` and `.ponytail-active` markers fresh at that moment, then append the `## Active skill directives` block to the task prompt per the audience policy there — or append nothing when both markers are absent. Do not rely on markers cached at session start. This gate is the source of enforcement; each spawn instruction below carries only a short level marker as a reminder, not a restatement of the rule.
-
-## Extension Skills
-
-*(Skill directive level for this spawn: caveman-full; no ponytail — see Pre-Spawn Gate above.)*
-
-Spawn the **`crafter-step-runner`** agent. Pass: step id `extension-skills`, and `{PROJECT_PATH}`. The agent internally reads `{CRAFTER_HOME}/rules/do/extension-skills.md`, performs the discovery scan across all three priority locations — (1) project-local (`{PROJECT_PATH}/.claude/crafter/skills/`), (2) parent-project (walk up parent directories for the first `../.claude/crafter/skills/` found), and (3) global (`{CRAFTER_HOME}/skills/`) — and returns a structured summary listing any compatible extension skills found (name, location, `When-Applies` clause) and confirming the supplemental-only invariant.
-
-Act on the returned summary: record the discovered extension skills (if any) for use as supplemental context in Steps 1, 4, and 6. Do not invoke extension skills yourself — pass their names and capabilities to the relevant agent when delegating those steps.
-
----
+Before **every** `Task` spawn in this skill — including re-delegations phrased in prose (e.g. "re-delegate to the Implementer"), not only "Spawn the `crafter-<agent>` agent" instructions — apply `{CRAFTER_HOME}/rules/delegation.md` §"Skill Directives — Caveman and Ponytail" at that moment: **re-read the `$HOME/.claude/.caveman-active` and `.ponytail-active` markers fresh at that moment — never cached from session start** — then append the `## Active skill directives` block it defines (or nothing, when both markers are absent). The rest of the marker-reading rules live in `{CRAFTER_HOME}/rules/core.md` — **Skill Detection: Caveman and Ponytail**. This gate is the source of enforcement; each spawn instruction below carries only a short level marker as a reminder, not a restatement of the rule.
 
 ## Workflow Master Plan (navigation map)
 
@@ -122,27 +114,26 @@ Use this section to route the entire workflow without loading any step module in
 |------|---------|-----------|
 | Flag Validation | Reject invalid flag combos (e.g. `--auto` + `--fast`), set active flags | Project Resolution |
 | Project Resolution | Resolve `PROJECT_PATH` and `CRAFTER_DIR` | Read project context |
-| Read project context | Load `STATE.md` (full) and `PROJECT.md` (Stack + How to Run only) | Extension-skill discovery |
-| Extension-skill discovery | Discover and load any extension skill; apply supplemental-only rule | Step 0 |
-| **Step 0** — Resume Detection | Detect active task file; determine resume entry point (see below) | Step 1 (new run or plan pending), Step 3 (draft plan), or Step 4 (approved plan) |
-| **Step 1** — Completeness & Scope | Lightweight completeness check; classify scope (Small/Medium/Large) | Step 2 (if gaps remain) or Step 3 (if complete enough to plan) |
+| Read project context | Load `STATE.md` (full) and `PROJECT.md` (Stack + How to Run only) | Startup |
+| **Startup** | One `crafter-step-runner` spawn: extension-skill discovery → resume detection → scope assessment (assessment skipped on resume draft/approved) | Step 2 (gaps remain), Step 3 (complete enough to plan, or draft plan), or Step 4 (approved plan) |
 | **Step 2** — Discuss / Research | Resolve gaps via clarifying questions or `crafter-analyzer` delegation | Step 3 (once complete enough to plan) |
-| **Step 3** — Plan + Approval Gate | Delegate planning to `crafter-planner`; present plan summary; await explicit user approval; change status to `approved` | Step 4 |
-| **Step 4** — Execute (one step at a time) | Delegate one plan step to `crafter-implementer`; after each step → Step 5; after all steps in a phase pass → Step 5a then Step 6 | Step 5 (after each step) |
-| **Step 5** — Step Drift Check | Delegate to `crafter-verifier` (mode: step drift check); handle recommended action (see routing chains below) | Step 4 next step (continue / record & continue / fix & re-check) or Step 3 (replan) |
-| **Step 5a** — Phase Verification | Delegate to `crafter-verifier` (mode: phase verification); if fails → discuss + re-delegate or adjust plan | Step 6 (on pass) |
-| **Step 6** — Review + Fix Loop | Delegate to `crafter-reviewer`; run fix loop for Critical/Major (up to 5 iterations); re-runs Step 5a then Step 6 per iteration | Step 6b (on clean) |
+| **Step 3** — Plan + Approval Gate | Delegate planning to `crafter-planner`; present plan summary; await explicit user approval (max 3 revisions); change status to `approved` | Step 4 |
+| **Step 4** — Execute | Delegate to `crafter-implementer` — **whole phase per spawn for Small/Medium**, **one step per spawn for Large** | Step 5a (Small/Medium) or Step 5 (Large, after each step) |
+| **Step 5** — Step Drift Check | **Large only**, and never for a single-step phase. Delegate to `crafter-verifier` (mode: step drift check); handle recommended action (see routing chains below) | Step 4 next step (continue / record & continue / fix & re-check) or Step 3 (replan) |
+| **Step 5a** — Phase Check | Delegate to `crafter-verifier` (mode: phase check) — per-step drift classification + phase criteria in one pass; batch-tick clean steps | Step 6 (on pass) |
+| **Step 6** — Review + Fix Loop | Delegate to `crafter-reviewer`; run fix loop for Critical/Major (up to 5 iterations, counted from loop entry); every pass runs targeted re-check + delta review | Step 6b (on clean) |
 | **Step 6b** — Phase Summary + Commit | Choose approval path (see flag branching below); commit on approval | Step 6a (Medium/Large, non-last phase) or Steps 7–9 (Small scope or last phase) |
-| **Step 6a** — Session Break | Medium/Large only: suggest `/clear` + re-invoke for next phase; Step 0 resumes at next unchecked step | Step 4 (next phase), or Steps 7–9 (plan complete) |
+| **Step 6a** — Session Break | Medium/Large only: suggest `/clear` + re-invoke for next phase; Startup resumes at next unchecked step | Step 4 (next phase), or Steps 7–9 (plan complete) |
 | **Steps 7–9** — Post-Change | Docs check, consolidated end-of-task commit, `STATE.md` update, task-file completion, session wrap-up | Step 9b (`--auto` only) or session wrap-up |
 | **Step 9b** — PR Composition | `--auto` only, after Steps 7–9: compose PR body, open PR via `gh pr create`, print PR URL | Session wrap-up |
 
 ### Scope branching
 
-| Scope | Step 6a behavior |
-|-------|-----------------|
-| **Small** | Skip Step 6a entirely — go straight from Step 6b to Steps 7–9 |
-| **Medium / Large** | Run Step 6a between phases; suggest `/clear` + re-invoke |
+| Scope | Step 4 execution | Step 5 (step drift check) | Step 6a behavior |
+|-------|------------------|---------------------------|-----------------|
+| **Small** | Whole phase in one Implementer spawn | Not run — Step 5a covers per-step drift | Skip Step 6a entirely — go straight from Step 6b to Steps 7–9 |
+| **Medium** | Whole phase in one Implementer spawn | Not run — Step 5a covers per-step drift | Run Step 6a between phases; suggest `/clear` + re-invoke |
+| **Large** | One step per Implementer spawn | Run after each step — except in a single-step phase, which goes straight to Step 5a | Run Step 6a between phases; suggest `/clear` + re-invoke |
 
 ### Flag branching
 
@@ -155,50 +146,54 @@ Use this section to route the entire workflow without loading any step module in
 
 **Step 9b (`--auto` only):** runs ONLY when `auto: true`. Non-`--auto` runs never execute Step 9b.
 
-### Resume entry points (from Step 0)
+### Resume entry points (from Startup)
 
 | Task-file plan status | Resume at |
 |-----------------------|-----------|
-| Plan section still `_(pending)_` | **Step 1** (scope / completeness check) |
+| Plan section still `_(pending)_` | Startup's own scope assessment decides: **Step 2** (gaps) or **Step 3** (complete enough to plan) |
 | `**Plan status:** draft` | **Step 3** (present plan summary, await approval) |
 | `**Plan status:** approved` | **Step 4**, at the first unchecked step — unless all steps in the current phase are checked and a phase verification / review gate is pending, in which case resume at that gate |
+
+Under Small/Medium scope, steps are checked off in a batch after the phase check, so an interrupted run leaves the whole phase unchecked and resumes at Step 4 for that phase. That is expected — the Implementer is told the outcomes may already partly exist.
 
 ### High-risk routing chains
 
 - **Step 5 drift → replan:** Step 5 Verifier recommends `replan` → return to **Step 3** with the new discovery.
-- **Step 6 fix loop:** Critical/Major found → re-delegate fix to `crafter-implementer` → re-run **Step 5a** (phase re-verification) → re-run **Step 6** (review from top) → increment iteration count → if 5 iterations exhausted with findings still present → present options (manual override / accept-without-commit / replan-and-abort) or exit with state under `--auto`; if Verifier in fix-loop iteration recommends `replan` → return to **Step 3**.
-- **Step 6b → Step 6a (Medium/Large, non-last phase):** after commit, run Step 6a session break; Step 0 resumes at next unchecked step or pending gate when re-invoked.
+- **Step 6 fix loop:** Critical/Major found → increment iteration count (first pass = 1) → re-delegate fix to `crafter-implementer` → Verifier `targeted re-check` → Reviewer delta review → back to loop entry with the remaining findings; if 5 iterations exhausted with findings still present → present options (manual override / accept-without-commit / replan-and-abort) or exit with state under `--auto`; if a fix reached outside the delta, the next pass widens to a full **Step 5a** + **Step 6**; if the Verifier recommends `replan` → return to **Step 3**.
+- **Step 6b → Step 6a (Medium/Large, non-last phase):** after commit, run Step 6a session break; Startup resumes at next unchecked step or pending gate when re-invoked.
 - **Step 6a → next Step 4 or Steps 7–9:** if the phase is complete and plan is complete → proceed to **Steps 7–9**; otherwise → Step 4 (next phase's first step).
 
 ---
 
-## Step 0 — Resume Detection
+## Startup — extension skills, resume detection, scope
 
 *(Skill directive level for this spawn: caveman-full; no ponytail — see Pre-Spawn Gate above.)*
 
-Spawn the **`crafter-step-runner`** agent. Pass: step id `step-0-resume`, `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` path, the effective `$ARGUMENTS` (after `--project` extraction), and the current branch name. The agent internally reads `{CRAFTER_HOME}/rules/do/step-0-resume.md` and `{CRAFTER_HOME}/rules/task-lifecycle.md`, searches for active task files (using the resume-intent word list and the `^- \*\*Status:\*\* active$|^\*\*Status:\*\* active$` grep pattern — two alternatives, the second handles task files whose `Status:` line is not a list item), applies the branch-sanity and main/master guards, and returns a structured summary: resume-status (`new-run` / `resume-pending` / `resume-draft` / `resume-approved`), active task file path (if any), plan status, next unchecked step (if resuming), branch mismatch details (if any), and any branch/guard question that requires the user's response.
+**One spawn.** Spawn the **`crafter-step-runner`** agent with step id `startup`. Pass: `{PROJECT_PATH}`, `{PROJECT_PATH}/{CRAFTER_DIR}` and its `tasks/` path, the effective `$ARGUMENTS` (after `--project` extraction), the current branch name, and the `STATE.md` / `PROJECT.md` excerpts already in context. The agent internally reads `{CRAFTER_HOME}/rules/do/extension-skills.md`, `{CRAFTER_HOME}/rules/do/step-0-resume.md`, `{CRAFTER_HOME}/rules/task-lifecycle.md`, and `{CRAFTER_HOME}/rules/do/step-1-scope.md`, and runs three procedures in order:
 
-Act on the returned summary:
-- If the summary includes a **branch mismatch or guard question**: stop and ask the user as described; wait for their instruction before continuing.
-- `new-run` or `resume-pending` (plan section still `_(pending)_`): continue to **Step 1**.
-- `resume-draft` (`**Plan status:** draft`): skip to **Step 3** (present plan summary, await approval).
-- `resume-approved` (`**Plan status:** approved`): skip to **Step 4** at the first unchecked step (or the pending phase gate if all steps in the current phase are checked).
+1. **Extension-skill discovery** — scan the three priority locations (project-local, parent-project, global `{CRAFTER_HOME}/skills/`) and list compatible skills with their `When-Applies` clauses.
+2. **Resume detection** — find active task files, apply the branch-sanity and main/master guards, determine resume status.
+3. **Scope assessment** — completeness check and Small/Medium/Large classification. On `resume-draft` / `resume-approved` the agent does not re-assess: it reads the `**Scope:**` metadata field from the task file and reports that value instead (or `unknown` for a legacy task file without the field).
 
-## Step 1 — Completeness and scope
+It returns one combined structured summary covering all three.
 
-*(Skill directive level for this spawn: caveman-full; no ponytail — see Pre-Spawn Gate above.)*
+Act on the returned summary, **guard questions first**:
 
-Spawn the **`crafter-step-runner`** agent. Pass: step id `step-1-scope`, the effective `$ARGUMENTS`, the `STATE.md` and `PROJECT.md` excerpts already in context, the list of discovered extension skills (from the Extension Skills step), and `{PROJECT_PATH}/{CRAFTER_DIR}`. The agent internally reads `{CRAFTER_HOME}/rules/do/step-1-scope.md`, runs the lightweight completeness check, classifies scope (Small/Medium/Large), applies the extension-skill supplemental-only check, and returns a structured summary: completeness verdict, scope classification, missing fields (if any), and whether the request is complete enough to plan.
+- If the summary includes a **branch mismatch or guard question**: stop and ask the user; wait for their instruction before continuing. Nothing else in the summary is acted on until this is resolved.
+- Record the discovered extension skills (if any) as supplemental context for Steps 4 and 6. Do not invoke extension skills yourself — pass their names and capabilities to the relevant agent when delegating.
+- Then route on resume status:
+  - `resume-draft` (`**Plan status:** draft`): go to **Step 3** (present plan summary, await approval).
+  - `resume-approved` (`**Plan status:** approved`): go to **Step 4** at the first unchecked step (or the pending phase gate if all steps in the current phase are checked).
+  - `new-run` or `resume-pending`, and the request is **not complete enough to plan**: go to **Step 2**.
+  - `new-run` or `resume-pending`, and the request **is complete enough to plan**: create the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md` — writing the reported scope into the `**Scope:**` metadata field, and respecting the main/master guard (use the approved topic branch, not `main/master`) — then go to **Step 3**.
 
-Act on the returned summary:
-- If **missing fields** exist (request not complete enough to plan): continue to **Step 2**.
-- If **complete enough to plan**: create the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md` (respecting the main/master guard — use the approved topic branch, not `main/master`), then continue to **Step 3**.
+Carry the scope classification forward — it selects the execution and verification branches in Steps 4, 5, 5a, and 6a. If the summary reports `scope: unknown` (a legacy task file with no `**Scope:**` field), do not guess: ask the user which scope applies, or re-spawn the step-runner to assess it. Once resolved, write it into the task file's `**Scope:**` field so later resumes find it.
 
 ## Step 2 — DISCUSS / RESEARCH (when incomplete or uncertain)
 
 *(Skill directive level for this spawn: caveman-full; no ponytail — see Pre-Spawn Gate above.)*
 
-Spawn the **`crafter-analyzer`** agent. Pass: the effective `$ARGUMENTS`, the missing completeness fields identified in Step 1, and high-level pointers to relevant areas of the codebase. Do not inject file contents — the Analyzer uses its own Read/Grep/Glob tools. The agent internally reads `{CRAFTER_HOME}/rules/do/step-2-discuss.md`, resolves gaps via targeted clarifying questions or codebase exploration, and returns a structured summary of findings and any remaining open questions.
+Spawn the **`crafter-analyzer`** agent. Pass: the effective `$ARGUMENTS`, the missing completeness fields identified at Startup, and high-level pointers to relevant areas of the codebase. Do not inject file contents — the Analyzer uses its own Read/Grep/Glob tools. The agent internally reads `{CRAFTER_HOME}/rules/do/step-2-discuss.md`, resolves gaps via targeted clarifying questions or codebase exploration, and returns a structured summary of findings and any remaining open questions.
 
 Act on the returned summary: present the Analyzer's findings to the user to inform the discussion. Do not proceed to planning until the request is complete enough to plan. Once complete, create the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md` and continue to **Step 3**.
 
@@ -212,25 +207,38 @@ Spawn the **`crafter-planner`** agent. Pass: the complete user request, the comp
 
 1. Present the Planner's structured summary to the user.
 2. **Wait for explicit user approval before proceeding.** Silence is not approval.
-3. If the user requests changes, re-spawn the Planner with the revised request and the same task file path; repeat until approved. *(Skill directive level for this re-spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
+3. If the user requests changes, re-spawn the Planner with the revised request and the same task file path; repeat until approved, **up to 3 revisions**. If the plan is still not approved after the third revision, stop re-spawning and ask the user how to proceed. *(Skill directive level for this re-spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
 4. Once the user approves, use the **Edit tool directly** to change `**Plan status:** draft` to `**Plan status:** approved` in the task file's `## Plan` section.
-5. Continue to **Step 4**. If the approved plan contains phases, execute one step at a time.
+5. Continue to **Step 4**. If the approved plan contains phases, execute one phase at a time — as a single Implementer spawn under Small/Medium scope, or step by step under Large.
 
 ## Step 4 — EXECUTE
 
-**Orchestrator-only pre-check (NOT delegated):** Before delegating, check whether any extension skill discovered at startup has a `When-Applies` clause matching the current step. If any match, include their names and capabilities in the context provided to the Implementer as supplemental domain-specialist context. Extension skills cannot replace the Implementer as writer or decision-maker for any step.
+**Orchestrator-only pre-check (NOT delegated):** Before delegating, check whether any extension skill discovered at startup has a `When-Applies` clause matching the work being delegated — the whole phase for Small/Medium, the current step for Large. If any match, include their names and capabilities in the context provided to the Implementer as supplemental domain-specialist context. Extension skills cannot replace the Implementer as writer or decision-maker.
+
+Branch on the scope classified at Startup:
 
 *(Skill directive level for this spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
 
-Spawn the **`crafter-implementer`** agent. Pass: the current step contract, phase context, relevant areas, non-goals, drift criteria, verification evidence, accepted deviations, stop conditions, and the names/capabilities of any matching extension skills. Do not inject file contents — the Implementer uses its own Read/Grep/Glob tools. The agent internally reads `{CRAFTER_HOME}/rules/do/step-4-execute.md` and returns an implementation summary.
+**Small / Medium — one spawn for the whole phase.** Spawn the **`crafter-implementer`** agent. Pass the **full phase contract**: every step of the phase in order with its outcome, scope boundary, non-goals, drift criteria, verification evidence and stop conditions, plus phase context, relevant areas, accepted deviations, and the names/capabilities of any matching extension skills. Ask for a **per-step report** — status, files changed, and deviations for each step separately. Include this line verbatim in the task prompt:
+
+> Some outcomes may already exist from an interrupted run — inspect the current state first, complete what remains, and do not redo work that is already done.
+
+*(Skill directive level for this spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
+
+**Large — one spawn per step.** Spawn the **`crafter-implementer`** agent with the current step contract, phase context, relevant areas, non-goals, drift criteria, verification evidence, accepted deviations, stop conditions, and matching extension skills.
+
+In both cases: do not inject file contents — the Implementer uses its own Read/Grep/Glob tools. The agent internally reads `{CRAFTER_HOME}/rules/do/step-4-execute.md` and returns an implementation summary.
 
 **Orchestrator-only residue (NOT delegated):**
 
 - If the agent reports a **blocker**: stop and discuss it with the user before continuing.
-- After each step: run **Step 5** (drift check).
-- After all steps in a phase pass drift checks: run **Step 5a** (phase verification) then **Step 6** (phase review).
+- **Small / Medium:** do not check off any step yet — go straight to **Step 5a** (phase check), which classifies drift per step and tells you which steps to tick.
+- **Large:** after each step run **Step 5** (drift check) and tick that step; after the last step of the phase run **Step 5a**. A phase with a single step skips Step 5 and goes straight to Step 5a.
+- After Step 5a passes: run **Step 6** (phase review).
 
-## Step 5 — STEP DRIFT CHECK
+## Step 5 — STEP DRIFT CHECK (Large scope only)
+
+**Large scope only.** Small and Medium scope never run this step — per-step drift is classified retroactively by the phase check in Step 5a. Neither does a phase containing a single step, at any scope: it goes straight to Step 5a so the same diff is never verified twice.
 
 *(Skill directive level for this spawn: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*
 
@@ -240,17 +248,25 @@ Spawn the **`crafter-verifier`** agent. Pass: mode `step drift check`, the curre
 
 - **continue:** check off the completed step in the task file and continue.
 - **record decision and continue:** append a `Decision (Orchestrator Accepted)` entry to the task file's `## Decisions` section and continue.
-- **fix current step:** re-delegate the current step to the `crafter-implementer` agent before continuing. *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*
+- **fix current step:** re-delegate the current step to the `crafter-implementer` agent *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*, then spawn the `crafter-verifier` in mode `targeted re-check`, scoped to that step's contract and the fix diff — not another full step drift check *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*. On pass, tick the step and continue. **Cap: at most 2 re-delegations for the same drift** — if the third check still reports it, stop re-delegating and ask the user (accept / revise scope / replan); under `--auto`, exit via the Ad-hoc escape hatch instead.
 - **ask user:** stop and ask the user whether to accept the drift, revise scope, or replan; wait for the user's response. If accepted, append a `Decision (User Accepted)` entry.
 - **replan:** return to **Step 3** with the new discovery.
 
-## Step 5a — PHASE VERIFICATION
+## Step 5a — PHASE CHECK
 
 *(Skill directive level for this spawn: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*
 
-Spawn the **`crafter-verifier`** agent. Pass: mode `phase verification`, the approved phase contract, phase verification criteria, accepted deviations, and the list of changed files. Include the reminder in the task prompt: "Write your verification report as plain text in your response. Do not create any files." The agent internally reads `{CRAFTER_HOME}/rules/do/step-5a-phase-verification.md` and returns a verification report.
+Spawn the **`crafter-verifier`** agent. Pass: mode `phase check`, the approved phase contract **with every step contract in it**, the phase verification criteria, accepted deviations, the Implementer's per-step report, the list of changed files, and **which steps already passed a Step 5 drift check** — name them on the Large path, or state that none were checked individually on the Small/Medium path. Omit this and the Verifier re-classifies every step from scratch, losing the de-redundancy. Include the reminder in the task prompt: "Write your verification report as plain text in your response. Do not create any files." The agent internally reads `{CRAFTER_HOME}/rules/do/step-5a-phase-verification.md` and returns one report: a per-step drift classification with a recommended action for each step, plus PASS/FAIL per phase criterion.
 
-**Orchestrator-only residue (NOT delegated):** Present the verification report. If phase verification fails, discuss the result with the user and decide whether to re-delegate to the Implementer *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*, adjust the plan, or re-run a specific step drift check.
+**Orchestrator-only residue (NOT delegated):** Present the report — copy the per-step drift table as-is. Then:
+
+1. **Batch-tick.** Check off every step whose recommended action is `continue`, in one pass over the task file. Leave the rest unchecked. A step reported as `already checked` carries `continue` and counts as clean — under Large it was ticked after its own Step 5 drift check, so there is nothing left to tick.
+2. **Handle each remaining step's recommended action** using the same rules as Step 5: `record decision and continue` → append a `Decision (Orchestrator Accepted)` entry and tick the step; `ask user` → stop and ask; `replan` → return to **Step 3**; `fix current step` → run the fix-and-re-verify cycle below.
+   - **Fix-and-re-verify cycle.** Re-delegate that step to the Implementer, passing the step contract and the drift the Verifier reported *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*. Then spawn the `crafter-verifier` in mode `targeted re-check`, scoped to that step's contract and the fix diff *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*. On pass, tick the step. If it still reports the same drift, repeat — **at most 2 re-delegations per step**, then stop and ask the user (accept / revise scope / replan), or exit via the Ad-hoc escape hatch under `--auto`.
+3. **Failed phase criteria:** discuss the result with the user and decide whether to re-delegate to the Implementer *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*, adjust the plan, or accept.
+4. Under `--auto`, route each drift item by the Verifier's `Auto-routing` line **per item** — the routing vocabulary (`gap` / `uat` / `no-buffer` / `escape-hatch`) is unchanged.
+
+Continue to **Step 6** only when every step of the phase is ticked and every phase criterion passes.
 
 ## Step 6 — REVIEW
 
@@ -277,8 +293,8 @@ c. After the user responds:
    - If there are **no Critical or Major issues** (only Minor/Suggestion or none): proceed to **Step 6b**.
    - If there are **Critical or Major issues**: on user acknowledgement, enter the fix loop — there is no "Proceed anyway" choice for those severities. Go to sub-step (d).
 
-d. Fix loop for Critical/Major issues:
-   1. Check the iteration count. If 5 iterations have already been completed, do NOT start a 6th. Present all remaining Critical/Major findings and ask the user to choose one of:
+d. Fix loop for Critical/Major issues. The full phase check and full review that opened the loop are the baseline, so **every** pass of the loop re-verifies narrowly: targeted re-check + delta review.
+   1. **Increment the iteration count at loop entry** — the first pass is iteration 1. If the incremented value would exceed 5, do NOT start that pass. Present all remaining Critical/Major findings and ask the user to choose one of:
       - **(a) manual override** — authorize manual iteration beyond the cap; re-enter the fix loop only on explicit user instruction.
       - **(b) accept-without-commit** — accept unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
       - **(c) replan-and-abort** — abandon the current phase and return to planning.
@@ -286,8 +302,9 @@ d. Fix loop for Critical/Major issues:
       Do not continue to sub-step (d.2) until the user has chosen (non-`--auto`).
    2. Spawn the `crafter-implementer` agent. Pass: the list of Critical/Major issues (severity, file, line, description), the approved phase contract, and accepted deviations. The Implementer reads files itself. *(Skill directive level for this spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
    3. Receive the fix summary. If the Implementer reports a blocker, stop and discuss with the user.
-   4. Re-run **Step 5a (PHASE VERIFICATION)** on the newly changed files.
-   5. Increment the iteration count, then re-run **Step 6 (REVIEW)** from the top (go back to sub-step above).
+   4. **Targeted re-check.** Spawn the `crafter-verifier` in mode `targeted re-check`, passing only the files the fix changed and the criteria/steps they could affect. *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*
+   5. **Delta review.** Spawn the `crafter-reviewer` with the files changed by the fix plus the prior findings list, asking for the status of each. Recall stays full within the delta — every severity in those files is still reported — and the verbatim table relay still applies. Relay the result per sub-step (a), then: if no Critical/Major findings remain, the loop is closed → **Step 6b**; otherwise go back to sub-step (d.1) with the findings that remain. *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*
+   6. **Widening.** If a fix touched files outside the delta, the next pass runs the full **Step 5a (PHASE CHECK)** and a full **Step 6 (REVIEW)** instead of the narrow pair, then returns to the narrow pair afterwards. The iteration count and the 5-cap are unaffected.
 
 e. After review completes, record any notable decisions in the task file's `## Decisions` section per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
@@ -334,13 +351,14 @@ On approval (any path), run the commit per `{CRAFTER_HOME}/rules/post-change.md`
 
 **Fully orchestrator-side — do NOT delegate.** Skip this step for Small scope — proceed directly to Steps 7–9.
 
-Apply these routing rules:
+This step is reached only from **Step 6b**, after the phase has been checked, reviewed, and committed. So the phase behind you is always complete — the only question is what comes next:
 
-1. If this was the **last step in the current phase**: proceed to **Step 5a** (Phase Verification) and **Step 6** (Review).
-2. If this was the **last step in the entire plan** and phase verification/review are complete: proceed directly to **Steps 7–9**.
-3. Otherwise: suggest the user run `/clear` and re-invoke `/crafter-do` to continue with the next step in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next plan step.
+1. If the committed phase was the **last phase in the plan**: proceed directly to **Steps 7–9**.
+2. Otherwise: suggest the user run `/clear` and re-invoke `/crafter-do` to start the next phase in a fresh context. If the user prefers to continue without clearing, go back to **Step 4 (EXECUTE)** for the next phase.
 
-The resume detection in Step 0 will pick up the active task file and continue from the next unchecked step or pending phase gate.
+Phase boundaries are the only break points — under Small/Medium the phase runs in one Implementer spawn, and under Large the mid-phase steps stay in the same context so their drift checks share it.
+
+Resume detection at Startup will pick up the active task file and continue from the next unchecked step or pending phase gate.
 
 ## Steps 7–9 — Post-Change
 
@@ -397,3 +415,11 @@ The final per-phase commit has already landed via Step 6b. These steps cover end
 On **failure** of `gh pr create`: record a `Decision (Auto-Recorded): PR creation failed — <error>` entry in the task file's `## Decisions` section; do NOT run the cleanup hook (preserve the run directory for retry/debug); exit via the Ad-hoc escape hatch (`rules/do-workflow.md → #### Ad-hoc escape hatch`).
 
 On **success**: print the PR URL as a one-line notice (`PR opened: <URL>`); run the cleanup hook (`rm -rf .crafter/run/<task-id>/`); proceed to the session wrap-up (Step 7–9 item 5).
+
+---
+
+## Reminder — keep your own output short
+
+You are a dispatcher. Your messages to the user are routing and outcomes, not restatements of agent work: no re-explaining a step you just delegated, no recapping context the user already has, no preamble before a spawn. Prefer the shortest form that leaves the user able to decide.
+
+**Exempt — never compress:** the verbatim relay of the Reviewer's and Verifier's tables and report sections (Steps 5, 5a, and 6). Those are copied as-is, always.

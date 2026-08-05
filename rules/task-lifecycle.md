@@ -16,7 +16,7 @@ Runs at workflow start, before scope detection.
 
 1. Get the current git branch name from the project directory: `git -C {PROJECT_PATH} branch --show-current`.
 2. **Use Grep to search efficiently.** Run a Grep for active task metadata lines only: `^- \*\*Status:\*\* active$|^\*\*Status:\*\* active$` across all files in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`. This returns only files whose metadata marks them active — do not read every file individually, and do not match examples or historical plan prose. Then Read only the matched files to determine the task details (request, plan status, checkboxes). Do not skip this step or assume no tasks exist without searching.
-3. If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: "continue", "resume", "pokracuj", "dál", "further", "next step", "carry on" — treat resume detection as **high priority**. If no active tasks are found on the first scan, try reading the directory listing again and check all task files more carefully before concluding there are none. Only after confirming no active tasks exist should you fall through to scope detection.
+3. If the user's request (`$ARGUMENTS`) contains resume-intent words — including but not limited to: "continue", "resume", "pokracuj", "dál", "further", "next step", "carry on" — treat resume detection as **high priority**. Only when the scan in step 2 returns no active task files should you fall through to scope detection.
 4. Prefer active task files whose metadata contains `**Work branch:** <current branch>`. This exact branch metadata match is the deterministic primary match.
 5. If no active task has a matching `Work branch`, fall back to legacy matching: if on a feature branch, match files whose topic part corresponds to the sanitized branch name; if on main/master, show all active task files and let the user choose.
 6. If a match is found: read the task file, present its contents to the user, and ask whether to resume or start fresh.
@@ -37,7 +37,7 @@ Runs at workflow start, before scope detection.
 Runs after the first user-interaction gate (completeness/scope in `/crafter-do`, symptom collection in `/crafter-debug`).
 
 1. Create the `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/` directory if it does not exist.
-2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active` and set `Work branch` to the exact current git branch from `git -C {PROJECT_PATH} branch --show-current`.
+2. Create the task file from the `TASK.md` template with Metadata and Request filled in. Set Status to `active`, set `Work branch` to the exact current git branch from `git -C {PROJECT_PATH} branch --show-current`, and set `Scope` to the classification from the scope assessment (`Small` / `Medium` / `Large`). The `Scope` field is what a later resume reads to recover the classification without re-assessing — never leave it blank.
 3. For fresh work, if the current branch is still `main` or `master`, stop and ask the user how to proceed instead of writing `main/master` into `Work branch`. Fresh tasks should normally move to an approved topic branch first.
 
 ## Task File Updates
@@ -45,7 +45,11 @@ Runs after the first user-interaction gate (completeness/scope in `/crafter-do`,
 Runs at each gate, silently — no user interaction needed.
 
 - **After planning:** The Planner agent writes the full plan directly to the Plan section (with checkboxes for each step) and sets `**Plan status:** draft`. After the user approves the plan, the orchestrator changes the status to `**Plan status:** approved` (administrative edit via Edit tool). These are the only two valid states for the plan status field.
-- **After each step's Execute → Step Drift Check cycle:** Check off the corresponding step — use a targeted Edit on just the checkbox line (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
+- **After execution, checking off steps (scope-conditional):**
+  - **Large scope** — per step: after each step's Execute → Step Drift Check cycle, check off that step immediately.
+  - **Small / Medium scope** — batched: the Implementer executes the whole phase in one spawn, so nothing is checked off until the phase check returns. Then check off every step the phase check classified as clean, in one pass. Steps that came back with unresolved drift stay unchecked until the drift is handled.
+  - In both cases use a targeted Edit on just the checkbox line(s) (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
+  - The orchestrator remains the only writer of the task file; agents never tick checkboxes.
 - **After phase verification:** Mark the phase verification gate complete in the Plan section (for example, change `- [ ] Phase verification` to `- [x] Phase verification`).
 - **After phase review:** Mark the phase review gate complete in the Plan section (for example, change `- [ ] Phase review` to `- [x] Phase review`). A phase is complete only when all step checkboxes and both phase gates are checked.
 - **After accepted local beneficial drift:** Append to the Decisions section using `Decision (Orchestrator Accepted)` when the drift is local, beneficial, does not affect scope or later steps, and meets the workflow rules.

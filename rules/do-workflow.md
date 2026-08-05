@@ -23,16 +23,19 @@
 - Never change architecture without prior discussion.
 - If something unexpected is discovered mid-execution that would materially change the plan, stop and inform the user before continuing.
 - Avoid speculative additions ("while we're here" features, abstractions, configurability) unless explicitly approved.
-- Execute one step at a time. Do not implement future steps early.
+- Delegate execution in units set by scope: **Small/Medium — the phase as a whole**, in one Implementer spawn with the full phase contract; **Large — one step at a time**. Never implement beyond the contract that was handed over.
+- On resume, outcomes from an interrupted run may already exist. Inspect the current state first, finish what remains, and do not redo completed work.
 
 ### VERIFY
-- After each step, run a lightweight step drift check against that step's Karpathy Contract.
-- Step drift checks classify drift as: no drift, harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery.
-- Harmful drift blocks the next step until the current step is fixed.
+- Verification is driven by the **phase check**: one Verifier pass over the phase diff covering per-step drift and the phase verification criteria. Small and Medium scope run only this, so its per-step part classifies every step of the phase.
+- **Large scope** additionally runs a per-step drift check after each step — except in a phase that has a single step, which goes straight to the phase check so the same diff is never verified twice. Steps already cleared that way are not re-classified by the phase check: for them its per-step part narrows to **cross-step drift** the individual checks could not see (a later step undoing an earlier one, competing implementations of the same outcome, drift visible only in the whole-phase diff). The spawn must tell the Verifier which steps were already checked.
+- Drift is classified per step as: no drift, harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery.
+- Harmful drift blocks the phase from advancing until the affected step is fixed. A step may be re-delegated at most twice for the same drift; after that, ask the user (or exit via the escape hatch under `--auto`).
 - Scope drift requires user approval or replanning.
 - Beneficial local drift may continue only when recorded as an accepted decision.
-- After all steps in a phase pass drift checks, run phase verification against the phase verification criteria.
-- **Under `--auto`:** drift handling has three branches; default and `--fast` drift handling are unchanged.
+- Simplicity is not a verification check — the Implementer applies it while writing and the Reviewer scores it afterwards.
+- Steps are checked off after the phase check under Small/Medium (batched, clean steps only) and after each step's drift check under Large.
+- **Under `--auto`:** drift handling has three branches, applied **per drift item** in the phase-check report; default and `--fast` drift handling are unchanged.
   - **Drift that does NOT threaten green commits** — record as a Decision (Orchestrator Accepted) or Gaps buffer entry (see `skills/crafter-buffer/SKILL.md`) and continue without pausing.
   - **Drift that DOES threaten green commits** — treat as a fix-loop trigger (re-delegate to the Implementer); if the verifier further classifies the drift as plan-obsoleting, route to the Ad-hoc escape hatch exit (see the `### --auto (unattended orchestration)` section).
   - **Verifier "ask user" recommendation** — if non-blocking, downgrade to "record and continue" (Decision or Gaps buffer entry); if blocking, route to the Ad-hoc escape hatch exit.
@@ -41,7 +44,7 @@
 - Verify goals, not just activity: each criterion must map to observable evidence.
 
 ### REVIEW
-- Run full review after phase verification passes, not after every step.
+- Run full review after the phase check passes, not after every step.
 - Run full review after an individual step only when the step is high-risk: security/auth, data migration, public API, architecture, concurrency, destructive behavior, or a verifier concern.
 - **Output format is mandatory** — reproduce the Reviewer's **Diff summary** and **Issues found** tables directly. Copy the markdown tables as-is. **Never** convert tables to prose, bullet lists, or any other format. Expected structure:
 
@@ -73,6 +76,8 @@
 - The `crafter-reviewer` agent produces a diff summary and issue report as part of its review output.
 - Issues are categorized by severity (Critical, Major, Minor, Suggestion).
 - Only Critical and Major issues trigger the fix loop.
+- The review-fix loop re-verifies narrowly on every pass. The full phase check and full review that opened the loop are the baseline, so each pass runs a **targeted re-check** (Verifier, only the criteria and steps the fix could affect) and a **delta review** (Reviewer, only the files the fix changed plus the status of the prior findings). Recall inside the delta stays full — no "high-severity only" filtering — and the verbatim table format is unchanged. If a fix reaches outside the delta, the next pass widens back to a full phase check and full review, then returns to the narrow pair.
+- The iteration count is incremented at loop entry: the first pass is iteration 1.
 - The review-fix loop runs a maximum of 5 iterations — a 6th iteration never starts automatically. If the cap is reached with Critical/Major findings still present, the orchestrator stops and asks the user to choose:
   - **(a) manual override** — authorize manual iteration beyond the cap; the orchestrator re-enters the fix loop only on explicit user instruction.
   - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing this phase; record a Decision entry noting the unresolved findings and that the green-commit invariant is deliberately broken for this phase.
@@ -168,8 +173,8 @@ Each run that reaches execution gets a dedicated scratch directory: `.crafter/ru
 
 | Scope | Characteristics | Workflow |
 |---|---|---|
-| **Small** | 1–3 files, clear intent, isolated change | Completeness check → contract plan → execute step(s) → drift check per step → phase verification → phase review (with fix loop) → commit |
-| **Medium** | Multiple files, clear intent, cross-cutting | Completeness check → contract plan with vertical phase(s) → execute one step at a time → drift check per step → phase verification and review per phase |
-| **Large** | Incomplete/vague request, architectural impact, many files, or unfamiliar territory | Completeness check → research/discuss until complete → contract plan with vertical phases → execute one step at a time → drift check per step → phase verification and review per phase |
+| **Small** | 1–3 files, clear intent, isolated change | Completeness check → contract plan → execute the phase in one Implementer spawn → phase check → phase review (with fix loop) → commit |
+| **Medium** | Multiple files, clear intent, cross-cutting | Completeness check → contract plan with vertical phase(s) → execute each phase in one Implementer spawn → phase check and review per phase |
+| **Large** | Incomplete/vague request, architectural impact, many files, or unfamiliar territory | Completeness check → research/discuss until complete → contract plan with vertical phases → execute one step at a time → drift check per step → phase check and review per phase |
 
 When scope is ambiguous, ask the user rather than guessing. However, if the user has already provided a clear, detailed request, do not ask them to repeat or clarify what they have already stated. Scope ambiguity means you cannot determine whether the change is Small/Medium/Large — it does not mean you need more information about the user's intent.

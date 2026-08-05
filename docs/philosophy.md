@@ -41,12 +41,12 @@ This matters because running planning, implementation, verification, and review 
 Five roles cover the full workflow:
 
 - **Planner** — proposes the implementation plan
-- **Implementer** — implements the current approved step
+- **Implementer** — implements the approved contract it was handed (a whole phase, or one step)
 - **Verifier** — checks verification criteria, step drift, and regressions
 - **Reviewer** — reviews the completed phase for bugs, security issues, and unapproved contract deviations
 - **Analyzer** — reads and maps the codebase for research and architecture work
 
-Step drift checks run after each step. Full Review normally runs after phase verification passes, so review focuses on a coherent phase rather than every small implementation step. High-risk steps can still trigger immediate review when needed.
+Under Large scope, a step drift check runs after each step. Every phase, at any scope, ends with a **phase check** — one Verifier pass that classifies drift per step and evaluates the phase criteria together. Full Review normally runs after the phase check passes, so review focuses on a coherent phase rather than every small implementation step. High-risk steps can still trigger immediate review when needed.
 
 ---
 
