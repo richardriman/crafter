@@ -257,7 +257,7 @@ Completed in two phases on branch `refactor/deprecate-skillbook` (stacked on PR 
 - **Phase 1 — `3ad6a6c`:** six agents moved to native per-agent memory (`memory: project` + `## Memory` discipline block with per-agent carve-outs); skillbook injection and Update Skillbook flow removed from `rules/`; `.claude/agent-memory/` gitignored. Review: 2 fix-loop iterations, 17 findings fixed/dispositioned, 0 unresolved.
 - **Phase 2 — `3a66b47`:** skillbook Go CLI (11 files), feature spec, index entry, handbook example, bootstrapper reference, and tracked `.crafter/skillbook.json` deleted; ARCHITECTURE.md section replaced; curated 26→21 entry migration into `.claude/agent-memory/crafter-{implementer,reviewer,planner,verifier}/MEMORY.md`. Review: clean after 1 fix-loop iteration.
 - Go build/tests and `tests/test_install.sh` (64/64) green throughout; `crafter --help` no longer lists `skillbook`.
-- **Deferred UAT:** after merge + reinstall, spawn a no-`Write` agent (verifier or step-runner) in a project and confirm `.claude/agent-memory/<agent>/` is created and MEMORY.md loads.
+- **Deferred UAT — PASSED 2026-08-06:** after reinstall, a spawned `crafter-verifier` (no `Write`/`Edit` in `tools:`) confirmed its system prompt contains a "Persistent Agent Memory" section quoting `.claude/agent-memory/crafter-verifier/MEMORY.md` verbatim (both migrated entries present), was given the memory directory path explicitly, and successfully appended a probe line via the auto-enabled Edit tool. Probe line removed after the test. The `memory: project` mechanism works exactly as the docs promised, including for read-only agents.
 
 ### Migration note
 
