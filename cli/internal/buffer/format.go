@@ -19,9 +19,8 @@ const GapMarkerLine = `{"_marker":"gaps-buffer","_format":"ndjson-v1"}` + "\n"
 // Decision (Implementer Recorded — Phase 2 Step 2): ID generation scheme —
 // 12-char hex from crypto/rand. Chosen for simplicity: no new dependencies
 // (crypto/rand is in the standard library), sufficient uniqueness for a
-// per-run append-only log (2^48 ≈ 281 trillion distinct values), and matches
-// the existing skillbook.NewID pattern (which uses 8 bytes / 16 chars; we use
-// 6 bytes / 12 chars to keep entries shorter).
+// per-run append-only log (2^48 ≈ 281 trillion distinct values), and short
+// enough to keep entries readable.
 func NewID() (string, error) {
 	b := make([]byte, 6)
 	if _, err := rand.Read(b); err != nil {

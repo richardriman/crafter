@@ -151,7 +151,7 @@ Data / tests:
   - *Stop conditions:* none expected.
 
 - [x] **Phase verification** — `grep -rn -i skillbook rules/ skills/ agents/` empty; six agent files carry `memory: project` + the discipline block; evidence that memory fires for a no-Write agent; `bash tests/test_install.sh` passes; `git diff --stat` shows only the six agent files and the five prompt files.
-- [ ] **Phase review**
+- [x] **Phase review** — clean after 2 fix-loop iterations; committed as 3ad6a6c
 
 ---
 
@@ -169,7 +169,7 @@ Data / tests:
 
 **Steps**
 
-- [ ] **Step 2.1 — Remove the skillbook Go code.** Delete `cli/cmd/skillbook.go`, `skillbook_add.go`, `skillbook_get.go`, `skillbook_init.go` and the whole `cli/internal/skillbook/` package including its three test files.
+- [x] **Step 2.1 — Remove the skillbook Go code.** Delete `cli/cmd/skillbook.go`, `skillbook_add.go`, `skillbook_get.go`, `skillbook_init.go` and the whole `cli/internal/skillbook/` package including its three test files.
   - *Outcome:* `crafter` builds and tests green with no `skillbook` subcommand.
   - *Scope boundary:* those files only.
   - *Non-goals:* no other command touched; `cmd/root.go` should not need an edit — if it does, that is a discovery to report.
@@ -178,7 +178,7 @@ Data / tests:
   - *Verification evidence:* `mise exec -- go build ./...`, `mise exec -- go test ./...`, and `--help` output without `skillbook`.
   - *Stop conditions:* a non-obvious dependency on the package surfaces → report rather than refactor around it.
 
-- [ ] **Step 2.2 — Clear the two dangling code comments.** Update the comments in `cli/internal/buffer/format.go` and `cli/internal/claudesettings/store.go` that cite the skillbook package as a precedent, so they no longer point at deleted code.
+- [x] **Step 2.2 — Clear the two dangling code comments.** Update the comments in `cli/internal/buffer/format.go` and `cli/internal/claudesettings/store.go` that cite the skillbook package as a precedent, so they no longer point at deleted code.
   - *Outcome:* no comment references a package that no longer exists.
   - *Scope boundary:* those two comments.
   - *Non-goals:* no behavior change, no refactor of the surrounding functions.
@@ -187,7 +187,7 @@ Data / tests:
   - *Verification evidence:* `mise exec -- go test ./...` still passes; the diff shows comment-only lines.
   - *Stop conditions:* none expected.
 
-- [ ] **Step 2.3 — Remove the skillbook from the documentation set.** Delete `doc/spec/features/skillbook-learning-system.md`, remove its entry from `doc/00-index.md`, and stop using its filename as the naming example in `doc/documentation-handbook.md`.
+- [x] **Step 2.3 — Remove the skillbook from the documentation set.** Delete `doc/spec/features/skillbook-learning-system.md`, remove its entry from `doc/00-index.md`, and stop using its filename as the naming example in `doc/documentation-handbook.md`.
   - *Outcome:* the docs tree has no skillbook spec and no link to one.
   - *Scope boundary:* those three files.
   - *Non-goals:* no new feature spec written to replace it; no reorganization of `doc/`.
@@ -196,7 +196,7 @@ Data / tests:
   - *Verification evidence:* `grep -rn -i skillbook doc/` empty; `doc/00-index.md` contains no dead link.
   - *Stop conditions:* none expected.
 
-- [ ] **Step 2.4 — Bring ARCHITECTURE.md in line (delegated).** Via the Implementer, remove the four skillbook lines from the source tree diagram, the `internal/skillbook/` line, the three `crafter skillbook …` subcommand bullets, and § "Skillbook — Project-Level Learning"; replace that section with a short description of native per-agent memory (`memory: project` frontmatter → `.claude/agent-memory/<agent>/MEMORY.md`, agent-curated, project-scoped), sized like the neighbouring § "Skill Adaptation — Caveman and Ponytail".
+- [x] **Step 2.4 — Bring ARCHITECTURE.md in line (delegated).** Via the Implementer, remove the four skillbook lines from the source tree diagram, the `internal/skillbook/` line, the three `crafter skillbook …` subcommand bullets, and § "Skillbook — Project-Level Learning"; replace that section with a short description of native per-agent memory (`memory: project` frontmatter → `.claude/agent-memory/<agent>/MEMORY.md`, agent-curated, project-scoped), sized like the neighbouring § "Skill Adaptation — Caveman and Ponytail".
   - *Outcome:* the architecture document describes the mechanism that now exists.
   - *Scope boundary:* `.crafter/ARCHITECTURE.md` only.
   - *Non-goals:* no other architecture sections touched; no restatement of the agent-side curation rules (they live in the agent files).
@@ -205,7 +205,7 @@ Data / tests:
   - *Verification evidence:* `grep -n -i skillbook .crafter/ARCHITECTURE.md` empty; the new section names the frontmatter field and the memory path and nothing else.
   - *Stop conditions:* the ARCHITECTURE.md check surfaces other stale content — report it, do not fix it in this task.
 
-- [ ] **Step 2.5 — Retire the data file and write the migration paragraph.** Remove the tracked `.crafter/skillbook.json` and record, in this task file's `## Outcome` section, a short migration paragraph the release notes can reuse: skillbook is removed; anyone with a `.crafter/skillbook.json` (or legacy `.planning/skillbook.json`) should copy any entries still worth keeping into `.claude/agent-memory/<agent>/MEMORY.md` in that project, then delete the JSON; nothing is migrated automatically and nothing breaks if it is ignored.
+- [x] **Step 2.5 — Retire the data file and write the migration paragraph.** Remove the tracked `.crafter/skillbook.json` and record, in this task file's `## Outcome` section, a short migration paragraph the release notes can reuse: skillbook is removed; anyone with a `.crafter/skillbook.json` (or legacy `.planning/skillbook.json`) should copy any entries still worth keeping into `.claude/agent-memory/<agent>/MEMORY.md` in that project, then delete the JSON; nothing is migrated automatically and nothing breaks if it is ignored.
   - *Outcome:* no dead data in the repo, and the one-time manual step is written down in prose the release flow already consumes.
   - *Scope boundary:* `.crafter/skillbook.json` and the `## Outcome` section of this task file.
   - *Non-goals:* no automated migrator; no new migration guide under `doc/`; no changes to other task files.
@@ -214,8 +214,8 @@ Data / tests:
   - *Verification evidence:* the file is gone from `git ls-files`; the `## Outcome` paragraph names both the old and new locations and states that migration is manual and optional.
   - *Stop conditions:* the open decision about migrating this repo's own entries has not been answered → apply the default (delete without migrating) and note it, or ask if the user is available.
 
-- [ ] **Phase verification** — `mise exec -- go build ./...` and `mise exec -- go test ./...` pass; `--help` has no `skillbook`; `grep -rn -i skillbook` over tracked sources excluding `cli/bin/`, `.claude/crafter/`, `.crafter/tasks/` history and STATE.md history rows returns nothing; `bash tests/test_install.sh` passes; `git status` shows the deletions staged.
-- [ ] **Phase review**
+- [x] **Phase verification** — `mise exec -- go build ./...` and `mise exec -- go test ./...` pass; `--help` has no `skillbook`; `grep -rn -i skillbook` over tracked sources excluding `cli/bin/`, `.claude/crafter/`, `.crafter/tasks/` history and STATE.md history rows returns nothing; `bash tests/test_install.sh` passes; `git status` shows the deletions staged. *(All criteria carry fresh verifier evidence from the two Phase 2 step drift checks, which re-ran every listed command; a separate identical verifier pass was consolidated away — orchestrator decision.)*
+- [x] **Phase review** — clean after 1 fix-loop iteration (9 optional findings dispositioned, 0 Critical/Major)
 
 ---
 
@@ -246,5 +246,12 @@ Data / tests:
 - **Decision (User Accepted):** Phase 1 review finding #6 (`.ai/local/bootstrapper-context.yaml` references the spec file deleted in Phase 2) is deferred into Phase 2 Step 2.3 scope. Findings #1-#5 and #7-#12 are fixed in the Phase 1 fix loop. **Reason:** #6 only dangles once Phase 2 deletes the spec; fixing it belongs with that deletion.
 - **Decision (User Accepted):** Iteration-1 review Major #1 (no in-environment proof that `memory: project` creates `.claude/agent-memory/<agent>/`) is accepted as a deferred UAT item, not a code fix: live verification requires merging this change and reinstalling crafter, then spawning a no-Write agent (verifier or step-runner) and checking the directory + MEMORY.md load. Official docs (code.claude.com/docs/en/sub-agents.md § Enable persistent memory) confirm the mechanism, including auto-enabled Read/Write/Edit for memory files independent of `tools:`. **Reason:** environment constraint — agent definitions register at session start and the installed copy predates this change; the risk is documented, not removable in-session.
 - **Decision (Tech Debt — recorded):** Suggestion — the downstream "add `.claude/agent-memory/` to `.gitignore`" MUST in `rules/delegation.md` has no enforcing actor; consider install-time scaffolding of both `.crafter/run/` and `.claude/agent-memory/` gitignore entries in a future task.
+- **Decision (Tech Debt — recorded):** `doc/documentation-handbook.md` lines 20-21 still describe a `doc/spec/` structure (including a never-existing `nonfunctional.md`) that no longer has any backing files after the spec deletion; handbook restructure is out of this task's scope.
+- **Decision (User Accepted):** Phase 2 review findings #1, #3, #4, #8 fixed in the fix loop; #7 handled in the Steps 7-9 STATE.md update; #2 covered by the recorded install-scaffolding tech debt; #5/#6 recorded as tech debt above; #9 left as-is (dropped entries recoverable from git history of the deleted JSON). **Reason:** user approved this disposition.
+- **Decision (Orchestrator Accepted):** Phase 2 phase-verification gate satisfied by the two step drift checks instead of a fourth verifier spawn — both drift checks re-ran every phase criterion (Go build+test, `--help`, exclusion-grep, `tests/test_install.sh`, staged deletions) with fresh evidence; a separate pass would have executed identical commands. **Reason:** avoids a redundant verification run; all criteria have cited evidence in this task's step records.
 
 ## Outcome
+
+### Migration note
+
+The skillbook is removed — the `crafter skillbook` subcommands, the prompt injection, and the post-task update step are all gone. Agents now learn through native Claude Code per-agent memory (`memory: project` frontmatter → `.claude/agent-memory/<agent>/MEMORY.md`, agent-curated and project-scoped). If a project has a `.crafter/skillbook.json` (or a legacy `.planning/skillbook.json`), copy any entries still worth keeping into `.claude/agent-memory/<agent>/MEMORY.md` in that project — mapping the entry's `agent` field to the matching agent name, e.g. `implementer` → `crafter-implementer` — then delete the JSON file. Nothing is migrated automatically, and nothing breaks if the file is simply left in place or ignored: it is dead data that is no longer read. Downstream projects should also add `.claude/agent-memory/` to their `.gitignore` — agent memory is per-developer and is not meant to be committed.
