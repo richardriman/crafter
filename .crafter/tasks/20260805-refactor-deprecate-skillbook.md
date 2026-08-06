@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-08-05
 - **Work branch:** refactor/deprecate-skillbook
-- **Status:** active
+- **Status:** completed
 - **Scope:** Large
 
 ## Request
@@ -251,6 +251,13 @@ Data / tests:
 - **Decision (Orchestrator Accepted):** Phase 2 phase-verification gate satisfied by the two step drift checks instead of a fourth verifier spawn — both drift checks re-ran every phase criterion (Go build+test, `--help`, exclusion-grep, `tests/test_install.sh`, staged deletions) with fresh evidence; a separate pass would have executed identical commands. **Reason:** avoids a redundant verification run; all criteria have cited evidence in this task's step records.
 
 ## Outcome
+
+Completed in two phases on branch `refactor/deprecate-skillbook` (stacked on PR #54):
+
+- **Phase 1 — `3ad6a6c`:** six agents moved to native per-agent memory (`memory: project` + `## Memory` discipline block with per-agent carve-outs); skillbook injection and Update Skillbook flow removed from `rules/`; `.claude/agent-memory/` gitignored. Review: 2 fix-loop iterations, 17 findings fixed/dispositioned, 0 unresolved.
+- **Phase 2 — `3a66b47`:** skillbook Go CLI (11 files), feature spec, index entry, handbook example, bootstrapper reference, and tracked `.crafter/skillbook.json` deleted; ARCHITECTURE.md section replaced; curated 26→21 entry migration into `.claude/agent-memory/crafter-{implementer,reviewer,planner,verifier}/MEMORY.md`. Review: clean after 1 fix-loop iteration.
+- Go build/tests and `tests/test_install.sh` (64/64) green throughout; `crafter --help` no longer lists `skillbook`.
+- **Deferred UAT:** after merge + reinstall, spawn a no-`Write` agent (verifier or step-runner) in a project and confirm `.claude/agent-memory/<agent>/` is created and MEMORY.md loads.
 
 ### Migration note
 
