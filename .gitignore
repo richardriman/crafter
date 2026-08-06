@@ -1,6 +1,8 @@
 tmp/
 # Per-run scratch dir for crafter-buffer (UAT/Gaps buffers)
 .crafter/run/
+# Per-developer agent memory (native Claude Code per-agent memory)
+.claude/agent-memory/
 # Local crafter install (binary + deployed trees)
 .claude/crafter/
 # Go build artifact: `go build .` inside cli/ emits a binary named after the dir

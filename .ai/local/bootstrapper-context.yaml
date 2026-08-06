@@ -81,10 +81,7 @@ artifacts:
   documentation_handbook:
     status: written
     path: doc/documentation-handbook.md
-  feature_specs:
-    - name: Skillbook Learning System
-      status: written
-      path: doc/spec/features/skillbook-learning-system.md
+  feature_specs: []
   overview_docs:
     - name: North Star
       status: written

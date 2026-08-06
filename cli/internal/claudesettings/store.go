@@ -105,7 +105,7 @@ func (s *Settings) Marshal() ([]byte, error) {
 }
 
 // Save atomically writes the settings to path as 2-space-indented JSON with a
-// trailing newline, via a temp file + rename (mirroring the skillbook store).
+// trailing newline, via a temp file + rename.
 func Save(path string, s *Settings) error {
 	data, err := s.Marshal()
 	if err != nil {

@@ -1,6 +1,6 @@
 # Step 9b — PR Composition (`--auto` only)
 
-**Trigger:** Runs ONLY under `--auto` (`auto: true` in frontmatter), and ONLY after Steps 7–9 complete (which may or may not have produced a consolidated end-of-task commit). The latest commit on the work branch will be either the consolidated commit OR the final per-phase commit, depending on whether PROJECT.md / ARCHITECTURE.md / skillbook / STATE.md updates were needed. By the time this step runs, STATE.md is updated and the task file's `## Outcome` section is filled in. Non-`--auto` runs do not execute this step; the user composes the PR manually by invoking `gh pr create` themselves.
+**Trigger:** Runs ONLY under `--auto` (`auto: true` in frontmatter), and ONLY after Steps 7–9 complete (which may or may not have produced a consolidated end-of-task commit). The latest commit on the work branch will be either the consolidated commit OR the final per-phase commit, depending on whether PROJECT.md / ARCHITECTURE.md / STATE.md updates were needed. By the time this step runs, STATE.md is updated and the task file's `## Outcome` section is filled in. Non-`--auto` runs do not execute this step; the user composes the PR manually by invoking `gh pr create` themselves.
 
 This step is the concrete implementation of the `Plan → Execute → Verify → Review → PR end-to-end` promise documented in `rules/do-workflow.md → ### --auto (unattended orchestration)`.
 

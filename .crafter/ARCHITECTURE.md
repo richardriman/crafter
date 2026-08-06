@@ -24,10 +24,6 @@ crafter/
 │   │   ├── buffer_gap.go        # `crafter buffer gap` — append Gap entry to gaps-buffer.jsonl
 │   │   ├── buffer_uat.go        # `crafter buffer uat` — append UAT entry to uat-buffer.jsonl
 │   │   ├── pr_body.go           # `crafter pr-body` — render PR body sections from buffers + task file
-│   │   ├── skillbook.go         # `crafter skillbook` parent command
-│   │   ├── skillbook_add.go     # `crafter skillbook add`
-│   │   ├── skillbook_get.go     # `crafter skillbook get`
-│   │   ├── skillbook_init.go    # `crafter skillbook init`
 │   │   ├── statusline.go        # `crafter statusline` — render the full status panel (plan │ model │ vcs │ ctx │ cost)
 │   │   ├── check_update.go      # `crafter check-update` — SessionStart hook: print update notice + spawn background refresh
 │   │   ├── install.go           # `crafter install` — installer-machinery parent command
@@ -37,7 +33,6 @@ crafter/
 │   ├── internal/buffer/         # Buffer logic (types, store with O_APPEND atomic write, format)
 │   ├── internal/claudesettings/ # settings.json load/mutate/save + statusLine reconcile logic
 │   ├── internal/prbody/         # PR body renderer (reads NDJSON buffers + task file, emits markdown sections)
-│   ├── internal/skillbook/      # Skillbook logic (types, store, jaccard, format)
 │   ├── internal/statusline/     # Statusline logic (task resolve, plan parse, per-section panel render)
 │   ├── Makefile                 # Cross-compilation targets
 │   ├── go.mod                   # Go module definition
@@ -127,9 +122,6 @@ A Go CLI binary (`crafter`) provides deterministic utilities that LLMs handle po
 Current subcommands:
 - `crafter buffer uat` — append a UAT entry (NDJSON line) to `<run-dir>/uat-buffer.jsonl`, creating the file with a marker line if missing
 - `crafter buffer gap` — append a Gap entry (NDJSON line) to `<run-dir>/gaps-buffer.jsonl`, creating the file with a marker line if missing
-- `crafter skillbook get` — read skillbook, filter/sort skills, format as markdown, increment appliedCount
-- `crafter skillbook add` — add observation with Jaccard dedup and confidence promotion
-- `crafter skillbook init` — create empty skillbook
 - `crafter update` — fetch and run the official installer to update global or local Crafter installations
 - `crafter pr-body` — read per-run NDJSON buffers and task file, render `## Manual QA Plan`, `## Known Gaps`, and `## Decisions` sections for the PR body
 - `crafter statusline` — render the full status panel for Claude Code's status bar: up to five sections joined by ` │ ` in the order `plan │ model │ vcs │ ctx │ cost`. **plan** is the plan position (active task on the current branch → full plan-progress segment e.g. `Phase 2/3 · 7/12 [█████░░░░░] 58%`, else the cascade `✓ done` / `N active elsewhere`, else dropped); **model** is `display_name` + capacity + `(effort)` e.g. `Opus 4.8 1M (high)`; **vcs** is the group `<project> ⎇ <branch> +N/-N` (branch icon configurable via `CRAFTER_STATUSLINE_BRANCH_ICON`, default `⎇`); **ctx** is a progress bar + `%` from `context_window.used_percentage`; **cost** is `$X.XX` from `cost.total_cost_usd`. Each section degrades independently and is omitted when it has no data; always exits 0 and never collapses to empty merely because no task is active
@@ -149,13 +141,9 @@ Under `--auto`, Step 9b (defined in `skills/crafter-do/SKILL.md → ## Step 9b`)
 
 When the external `caveman` or `ponytail` skills are active in a session, the orchestrator detects them via marker files (`$HOME/.claude/.caveman-active` / `.ponytail-active`) at startup, because subagents run in fresh contexts and never receive those skills' own SessionStart injection. Detection and the human-facing caveman-lite policy live in `rules/core.md`; a single pre-spawn propagation rule in `rules/delegation.md` appends the appropriate directive to every agent's task prompt. Caveman mode is audience-driven: lite for orchestrator prose to the user, full for agent reasoning and returned reports. Ponytail (YAGNI / shortest-working-diff discipline) is scoped to `crafter-implementer` and `crafter-planner` only — the two roles that author code or plans. Each agent file carries a `## Behavior under caveman` section; `crafter-implementer` and `crafter-planner` also carry `## Behavior under ponytail`.
 
-### Skillbook — Project-Level Learning
+### Agent Memory — Project-Level Learning
 
-The skillbook system lets agents learn from experience across sessions. After each task, the orchestrator reflects on what happened and captures observations via `crafter skillbook add`. Before spawning an agent, the orchestrator calls `crafter skillbook get` and appends the output to the agent's task prompt.
-
-Key mechanics: Jaccard keyword-overlap deduplication (threshold 0.6), three confidence tiers (low/medium/high) with promotion on repeated observations, top-10 skill selection sorted by confidence then usage count, atomic file writes.
-
-The skillbook file (`{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json`, with `.crafter` preferred and `.planning` as legacy fallback) is project-level — agents learn project-specific patterns, not general knowledge.
+Project-level learning uses native Claude Code subagent memory instead of a custom store. Each `agents/crafter-*.md` file declares `memory: project` in its frontmatter, which gives the agent a project-scoped memory file at `.claude/agent-memory/<agent>/MEMORY.md`, auto-loaded when the agent is spawned. Agents curate their own file; the curation rules live in each agent prompt. The orchestrator has no role in reading or writing memory.
 
 ## Conventions
 

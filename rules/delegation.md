@@ -6,7 +6,9 @@ Use the Task tool to spawn agents. Each agent is defined in the `agents/` direct
 - Runs as a native agent with its own tools (Read, Grep, Glob, Bash, etc.)
 - Receives a task description and high-level pointers — it explores the codebase itself
 - Returns a structured result to the orchestrator
-- Has no memory of previous steps or other agents
+- Has no memory of this run's other steps or agents, beyond its own project-scoped `.claude/agent-memory/<agent>/MEMORY.md`
+
+**Git hygiene.** Agent memory is per-developer and must never appear in commits. The Crafter repo's own `.gitignore` already includes `.claude/agent-memory/`. Downstream projects MUST add `.claude/agent-memory/` to their `.gitignore`.
 
 The orchestrator is a **dispatcher** only: it manages workflow, communicates with the user, and delegates. It never reads code, never implements, and never reviews. It only holds: the current plan, the status of each step, and result summaries from agents.
 
@@ -39,21 +41,6 @@ Always include the `model` parameter in every Task tool invocation. Do not rely 
 The `Effort` column is **documentary only** — the Task tool has no `effort` parameter. Each agent's effort is honored automatically from the `effort:` field in its own frontmatter (`agents/crafter-*.md`); the column records the intended tier so the two stay in sync. Do not attempt to pass effort at spawn time.
 
 Agent files also include a fallback `model` for direct invocation (`/agents` without orchestrator). Orchestrator-provided `model` still takes precedence and remains the source of truth.
-
-## Skillbook — Learned Guidelines
-
-Before spawning any agent via the Task tool, check if the `crafter` CLI binary is available at `{CRAFTER_HOME}/bin/crafter` (or `.claude/crafter/bin/crafter` for local installs). If available:
-
-1. Resolve `SKILLBOOK_FILE`:
-   - Prefer `{PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json` when `CRAFTER_DIR` is available.
-   - Fallback for older contexts: if `CRAFTER_DIR` is not resolved, use `{PROJECT_PATH}/.crafter/skillbook.json` if that directory exists; otherwise use `{PROJECT_PATH}/.planning/skillbook.json`.
-2. Run via Bash: `{CRAFTER_HOME}/bin/crafter skillbook get --agent <agent-short-name> --file <SKILLBOOK_FILE>`
-3. Agent name mapping: strip the `crafter-` prefix (e.g., `crafter-implementer` -> `implementer`, `crafter-planner` -> `planner`).
-4. If the command produces output (non-empty stdout), append it verbatim to the agent's task prompt. The output is already formatted as a "Learned Guidelines" markdown section.
-5. If the command produces no output, the agent has no learned guidelines — proceed normally without mentioning it.
-6. If the command fails (non-zero exit), log a warning but proceed with agent spawning — skillbook is optional.
-
-If the CLI binary does not exist, skip skillbook injection silently.
 
 ## Skill Directives — Caveman and Ponytail
 

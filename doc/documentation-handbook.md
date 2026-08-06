@@ -39,7 +39,7 @@ When a section is unknown, use `TODO:` with owner/context instead of guessing.
 - use lowercase kebab-case filenames
 - keep names descriptive and stable
 - feature spec filenames should match feature intent
-  - example: `skillbook-learning-system.md`
+  - example: `run-directory-lifecycle.md`
 
 ## 5) Required Content by Document Type
 
