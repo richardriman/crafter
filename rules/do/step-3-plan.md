@@ -15,8 +15,8 @@ Delegate planning to the **`crafter-planner`** agent:
    - A note that the full detailed plan is in the task file (mention the path)
 5. **Wait for explicit user approval before proceeding.**
 
-If the user requests changes, send the revised request back to the Planner (with the same task file path) and repeat until approved.
+If the user requests changes, send the revised request back to the Planner (with the same task file path) and repeat until approved. **Cap: at most 3 planner revisions.** If the plan is still not approved after the third revision, stop re-spawning and ask the user how to proceed — the disagreement is about the request, not the plan.
 
 Once the user approves, use the Edit tool directly to change `**Plan status:** draft` to `**Plan status:** approved` in the task file's `## Plan` section (this is an administrative update, like checking off completed steps).
 
-If the approved plan contains **phases** (groups of steps under phase headings), execute one step at a time. Phase boundaries determine when phase verification and full review run.
+If the approved plan contains **phases** (groups of steps under phase headings), execute one phase at a time — as a single Implementer spawn under Small/Medium scope, or step by step under Large. Phase boundaries determine when the phase check and full review run.

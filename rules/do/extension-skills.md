@@ -4,9 +4,9 @@ An **extension skill** is any Crafter-compatible skill — beyond the core agent
 
 **v1 invariant — supplemental only.** Extension skills in v1 are advisory. They may contribute observations, checklists, or domain-specific findings, but all workflow decisions (plan approval, commit approval, phase gates) remain exclusively with the core orchestrator and core agents.
 
-### Discovery
+### Discovery (startup procedure 1)
 
-When the workflow starts, scan these `skills/` directories in priority order (most specific to least):
+The first of the three procedures the `crafter-step-runner` runs under the `startup` step, before resume detection and scope assessment. Scan these `skills/` directories in priority order (most specific to least):
 
 | Priority | Location | Scope |
 |---|---|---|
@@ -24,8 +24,8 @@ Every extension skill must satisfy the full safety envelope defined in `docs/ski
 
 Compatible extension skills may be considered at three workflow phases:
 
-- **Step 1 (Completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
-- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation.
+- **Startup (completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
+- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation; matching is against the whole phase for Small/Medium and the current step for Large.
 - **Step 6 (Review)** — a skill may provide additional review criteria beyond the core Reviewer's checklist.
 
 In all cases the core agent for that phase runs first and is authoritative. Extension skill findings are supplemental context.

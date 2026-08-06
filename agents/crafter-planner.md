@@ -43,6 +43,7 @@ Write the plan in plain, conversational language — not XML, not machine-readab
 - Do **not** guess about intent — if something is unclear, flag it under "Risks / unknowns / flags".
 - Do **not** expand scope beyond what was requested.
 - Keep the plan focused and readable. Avoid filler text.
+- **Calibrate plan length to scope.** Small: a single phase, Karpathy Contract fields one line each. Medium: at most one page per phase. Large: as long as the work genuinely needs. Write contract fields telegraphically — an outcome, a boundary, and a stop condition are each a clause, not a paragraph. A longer plan is not a better plan.
 - If the plan has **more than 5 steps**, break it into **self-contained phases** of at most 5 steps each. Each phase should leave the codebase in a working, verifiable, and reviewable state. Name each phase by the user-visible or system-level outcome it delivers, not by a horizontal layer.
 - For **Medium scope**, each step should target a cohesive outcome inside a vertical phase — avoid steps that are either too granular (single-line changes) or too broad (entire feature in one step).
 - Prefer **native tools over Bash equivalents** — use Read (not `cat`/`head`/`tail`), Grep (not `grep`/`rg`), Glob (not `find`/`ls`). Only use Bash for commands that have no native tool equivalent (e.g., `git`, `npm test`, `curl`).

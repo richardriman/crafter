@@ -132,7 +132,7 @@ This matters because running planning, implementation, verification, and review 
 | Agent | Role | Used in |
 |---|---|---|
 | **Planner** | Tech lead — writes the execution contract | `/crafter-do` PLAN step |
-| **Implementer** | Senior developer — implements the current approved step | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
+| **Implementer** | Senior developer — implements the approved contract it was handed (a whole phase, or one step) | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
 | **Verifier** | QA engineer — checks step drift, criteria, and regressions | `/crafter-do` VERIFY, `/crafter-debug` verification |
 | **Reviewer** | Code reviewer — looks for bugs, security issues, unapproved deviations | `/crafter-do` REVIEW step |
 | **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter-map-project`, Large scope research, `/crafter-debug` hypothesis |
@@ -141,7 +141,7 @@ Agents for each role are defined as native Claude Code agents in `~/.claude/agen
 
 ### Vertical Verification
 
-`/crafter-do` executes one step at a time. After each step, the Verifier performs a lightweight drift check against the approved contract. Once all steps in a phase pass, phase verification runs, then full review checks the coherent phase diff. High-risk steps can still trigger immediate review when needed.
+`/crafter-do` executes a phase at a time. Under Small and Medium scope the Implementer receives the whole phase contract in one pass; under Large it works step by step, and the Verifier runs a lightweight drift check against the approved contract after each step. Every phase then ends with a **phase check** — one Verifier pass that classifies drift per step and evaluates the phase criteria together — followed by full review of the coherent phase diff. High-risk steps can still trigger immediate review when needed.
 
 ## Philosophy
 

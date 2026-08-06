@@ -1,4 +1,6 @@
-# Step 0 — Resume Detection
+# Resume Detection (startup procedure 2)
+
+The second of the three procedures the `crafter-step-runner` runs under the `startup` step, after extension-skill discovery and before scope assessment.
 
 Follow the resume detection procedure in `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
@@ -6,12 +8,14 @@ Follow the resume detection procedure in `{CRAFTER_HOME}/rules/task-lifecycle.md
 
 If resuming an active task, first check the plan status in the task file:
 - If the task file contains `**Work branch:** <branch>` and `<branch>` differs from the current branch, do not resume silently. Tell the user the expected branch and ask whether to switch branches, continue anyway, or start fresh.
-- If the `## Plan` section still contains `_(pending)_` (no actual steps written yet) — go to Step 1 (scope detection).
-- If `**Plan status:** draft` — go to Step 3 to present the plan summary and wait for user approval.
-- If `**Plan status:** approved` — the task file's checkboxes are the source of truth. The first unchecked step (`- [ ]`) is the next step to execute — go to Step 4 to execute that plan step.
+- If the `## Plan` section still contains `_(pending)_` (no actual steps written yet) — resume-status is `resume-pending`; the scope assessment procedure runs next.
+- If `**Plan status:** draft` — resume-status is `resume-draft`; the orchestrator goes to Step 3 to present the plan summary and wait for user approval. Scope assessment is skipped.
+- If `**Plan status:** approved` — resume-status is `resume-approved`; the task file's checkboxes are the source of truth. The first unchecked step (`- [ ]`) is the next step to execute — the orchestrator goes to Step 4. Scope assessment is skipped.
 - Otherwise (Plan section contains unrecognized content) — present the task file to the user and ask how to proceed.
 
-If not resuming, continue to Step 1.
+Under Small/Medium scope, steps are checked off in a batch after the phase check, so an interrupted run leaves the whole phase unchecked and resumes at the start of that phase. This is expected: the Implementer is told that some outcomes may already exist and must inspect the current state before editing.
+
+If not resuming, resume-status is `new-run` and the scope assessment procedure runs next.
 
 **Branch sanity guard (mandatory):** When starting fresh on a non-main/master branch and no active task match was found, do not assume the current branch is correct just because it is not main/master. Apply the branch/request relevance check from `task-lifecycle.md`. If there is reasonable suspicion that the request does not belong to the current branch, ask the user how to proceed and wait for their instruction before scope detection.
 

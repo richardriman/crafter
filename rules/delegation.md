@@ -15,26 +15,28 @@ The orchestrator is a **dispatcher** only: it manages workflow, communicates wit
 | Agent | Role |
 |---|---|
 | `crafter-planner` | Researcher + architect — explores enough context to produce vertical execution contracts with outcomes, boundaries, drift criteria, and verification evidence |
-| `crafter-implementer` | Executor — implements the current approved step inside its contract and reports deviations/discoveries |
+| `crafter-implementer` | Executor — implements the approved contract it was given (one step for Large scope, a whole phase for Small/Medium) and reports deviations/discoveries |
 | `crafter-analyzer` | Investigator — project mapping or research/investigation tasks |
-| `crafter-verifier` | QA — checks verification criteria |
+| `crafter-verifier` | QA — checks drift and verification criteria in one of three named modes (step drift check, phase check, targeted re-check) |
 | `crafter-reviewer` | Code reviewer — reviews changes against plan and conventions |
-| `crafter-step-runner` | Glue delegate for three `/crafter-do` steps — extension-skill discovery, Step 0 resume lookup, Step 1 scope assessment — returns a structured routing-relevant summary; never edits task files, branches, or commits |
+| `crafter-step-runner` | Glue delegate for the `/crafter-do` `startup` step — extension-skill discovery, resume lookup, scope assessment in one pass — returns a structured routing-relevant summary; never edits task files, branches, or commits |
 
 ## Model Configuration
 
 When spawning agents via the Task tool, pass the `model` parameter according to this table:
 
-| Agent | Model | Rationale |
-|---|---|---|
-| `crafter-planner` | `opus` | Deep reasoning for plan quality |
-| `crafter-implementer` | `sonnet` | Good balance of code quality and speed |
-| `crafter-verifier` | `sonnet` | Needs reliable instruction-following for output constraints |
-| `crafter-reviewer` | `opus` | Thorough code analysis |
-| `crafter-analyzer` | `sonnet` | Adaptive — use `opus` for large scope tasks that require deeper research |
-| `crafter-step-runner` | `sonnet` | Lightweight instruction-following for structured lookup and assessment steps |
+| Agent | Model | Effort | Rationale |
+|---|---|---|---|
+| `crafter-planner` | `opus` | high | Deep reasoning for plan quality |
+| `crafter-implementer` | `opus` | medium | Implementation defects are the most expensive to iterate on |
+| `crafter-verifier` | `sonnet` | medium | Needs reliable instruction-following for output constraints |
+| `crafter-reviewer` | `opus` | high | Thorough code analysis |
+| `crafter-analyzer` | `opus` | medium | Research quality drives plan quality |
+| `crafter-step-runner` | `sonnet` | low | Lightweight instruction-following for structured lookup and assessment steps |
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
+
+The `Effort` column is **documentary only** — the Task tool has no `effort` parameter. Each agent's effort is honored automatically from the `effort:` field in its own frontmatter (`agents/crafter-*.md`); the column records the intended tier so the two stay in sync. Do not attempt to pass effort at spawn time.
 
 Agent files also include a fallback `model` for direct invocation (`/agents` without orchestrator). Orchestrator-provided `model` still takes precedence and remains the source of truth.
 
@@ -55,7 +57,7 @@ If the CLI binary does not exist, skip skillbook injection silently.
 
 ## Skill Directives — Caveman and Ponytail
 
-Before spawning any agent via the Task tool, re-read the caveman and ponytail markers immediately before spawning the agent — a fresh read, not the startup-cached state (see `rules/core.md` — **Skill Detection: Caveman and Ponytail**):
+Before spawning any agent via the Task tool, re-read the caveman and ponytail markers per `rules/core.md` — **Skill Detection: Caveman and Ponytail** (canonical), then:
 
 1. **Caveman (all agents, audience-based level):** If caveman is active, append the directive below, choosing the level by the agent's audience:
    - **caveman-full** for `crafter-implementer`, `crafter-planner`, `crafter-analyzer`, and `crafter-step-runner` — their output is agent-facing (the orchestrator consumes/digests it).
