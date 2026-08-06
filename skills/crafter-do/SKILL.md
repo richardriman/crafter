@@ -369,7 +369,7 @@ The final per-phase commit has already landed via Step 6b. These steps cover end
 **MANDATORY CHECKLIST — do not skip any item:**
 
 1. **Check docs** — review whether `{PROJECT_PATH}/{CRAFTER_DIR}/PROJECT.md` or `ARCHITECTURE.md` need updates (delegate ARCHITECTURE.md check to Implementer as described above).
-2. **Consolidated end-of-task commit** — if any PROJECT.md/ARCHITECTURE.md updates, a skillbook entry, or STATE.md changes exist, bundle them into one single consolidated commit per `{CRAFTER_HOME}/rules/post-change.md`; if none of those updates are needed, no follow-up commit is created.
+2. **Consolidated end-of-task commit** — if any PROJECT.md/ARCHITECTURE.md updates or STATE.md changes exist, bundle them into one single consolidated commit per `{CRAFTER_HOME}/rules/post-change.md`; if none of those updates are needed, no follow-up commit is created.
 3. **Update STATE.md** — update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues) and include this update in the consolidated commit.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps (file is in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`).
 5. **Suggest session wrap-up** — if there is more to do, suggest the user run `/clear` and start the next task with `/crafter-do` or `/crafter-debug`.

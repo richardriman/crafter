@@ -40,44 +40,14 @@ Show the user what was updated.
 
 If a task file exists for the current workflow (in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`), complete it per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
 
-## Update Skillbook
-
-After completing the task file, reflect on the task and extract observations for the project's skillbook. Only do this if the `crafter` CLI binary is available at `{CRAFTER_HOME}/bin/crafter`.
-
-1. Review what happened during the task: Did the implementer struggle with something project-specific? Did the reviewer flag a recurring pattern? Did the planner miss something about the project structure?
-2. Formulate 0-3 observations (only if genuinely useful — do not force observations for trivial tasks). Each observation needs:
-   - **agent**: which agent this applies to (implementer, reviewer, planner, verifier, analyzer)
-   - **rule**: the learned guideline, written as an instruction
-   - **rationale**: what happened that led to this observation
-   - Prefer mapping observations to one of these buckets: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution.
-3. For each observation, run via Bash:
-   ```
-   # Resolve SKILLBOOK_FILE with .crafter preferred and .planning as legacy fallback
-   # (or use {PROJECT_PATH}/{CRAFTER_DIR}/skillbook.json when CRAFTER_DIR is available)
-   {CRAFTER_HOME}/bin/crafter skillbook add \
-     --agent "<agent>" \
-     --rule "<rule text>" \
-     --rationale "<rationale text>" \
-     --task "<task-filename>" \
-     --file <SKILLBOOK_FILE>
-   ```
-4. The CLI handles deduplication and confidence promotion automatically. If a similar skill already exists, it will be merged and promoted.
-5. Briefly tell the user what was learned (e.g., "Added 2 observations to the project skillbook: ...").
-6. If the CLI binary is not available or the command fails, skip silently — skillbook is optional.
-
-Focus on project-specific patterns, not general programming knowledge:
-- Good: "This project uses X pattern for Y", "Tests need Z setup", "The review found A was a recurring issue"
-- Bad: "Always use descriptive variable names" (too generic), "Fixed a typo" (not a pattern)
-
 ## Consolidated End-of-Task Commit
 
 After the final phase's per-phase commit has landed, the orchestrator may produce one **consolidated follow-up commit** covering end-of-task housekeeping:
 
 - PROJECT.md / ARCHITECTURE.md updates
-- skillbook entry updates
 - STATE.md update
 
-If any of these updates exist, bundle them into a **single** commit using conventional commits format. Do not create separate commits for docs, skillbook, and STATE.md. If none of these updates are needed, no follow-up commit is created.
+If any of these updates exist, bundle them into a **single** commit using conventional commits format. Do not create separate commits for docs and STATE.md. If none of these updates are needed, no follow-up commit is created.
 
 This commit shares the same constraints as the per-phase commit: automatic, no push to remote, conventional commits format.
 
