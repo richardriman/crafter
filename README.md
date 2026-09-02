@@ -144,6 +144,6 @@ Agents for each role are defined as native Claude Code agents in `~/.claude/agen
 
 ## Philosophy
 
-Crafter is built on a simple principle: **you are the craftsman, AI is your tool**. The developer stays in control at every decision point — no auto-commits, no silent refactors, no guessing.
+Crafter is built on a simple principle: **you are the craftsman, AI is your tool**. The developer stays in control at every decision point — plans are approved by a human, work only a human can verify waits for explicit consent, and a commit lands on its own only after the check pass closes clean or with nothing worse than Minor findings recorded as tech debt. No silent refactors, no guessing.
 
 Read more in [docs/philosophy.md](docs/philosophy.md).

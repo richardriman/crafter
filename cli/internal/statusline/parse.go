@@ -91,14 +91,19 @@ var (
 	// `.**` sits between `Check` and the separator and breaks the match.
 	//
 	// A word directly after `Check` (e.g. "Check docs for stale references") is
-	// NOT a gate, so ordinary steps keep counting as steps. The residual
-	// false positives are the whole separator surface: any step body of the
-	// form `Check-in with the team`, `Check: docs`, or `Check (docs)` also
-	// matches as a gate, because `-`, `:`, and `(` are all accepted
-	// separators. This is accepted: `templates/TASK.md` prescribes a `Step N:`
-	// prefix for work steps, which anchors the body away from `^Check`, so the
-	// collision only occurs in plans that ignore the template.
-	reGateCheck = regexp.MustCompile(`(?i)^Check[.*]*(\s*[—–:(-].*)?$`)
+	// NOT a gate, so ordinary steps keep counting as steps. The dash and paren
+	// separators additionally require leading whitespace, so hyphenated step
+	// bodies like `Check-in with the team` or `Check-list docs` stay steps; only
+	// the colon may sit flush against `Check`, matching the `Check: clean` form
+	// real task files use. The flip side: the colon branch *requires* that flush
+	// position, so a spaced `Check : clean` is not a gate and counts as a step.
+	// That is accepted — no template or task file writes the spaced form.
+	// The residual false-positive surface is a step body
+	// of the form `Check: docs` or `Check — docs`, which is accepted:
+	// `templates/TASK.md` prescribes a `Step N:` prefix for work steps, which
+	// anchors the body away from `^Check`, so the collision only occurs in
+	// plans that ignore the template.
+	reGateCheck = regexp.MustCompile(`(?i)^Check[.*]*(\s+[—–(-].*|:.*)?$`)
 )
 
 // checkboxBody extracts the text after the `- [ ] ` or `- [x] ` prefix,

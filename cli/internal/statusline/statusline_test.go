@@ -327,14 +327,15 @@ func TestParsePlan_GateExclusion_CheckGate(t *testing.T) {
 - [x] Step 1: Real work step one
 - [x] Step 2: Check docs for stale references
 - [ ] Step 3: Real work step three
+- [ ] Check-in with the API team
 - [x] **Check** — crafter-checker: no findings.
 - [ ] Check
 `
 	path := writePlanFile(t, planBody)
 	info := parsePlan(path)
 
-	if info.totalSteps != 3 {
-		t.Errorf("totalSteps: got %d, want 3 (Check gate lines must not be counted)", info.totalSteps)
+	if info.totalSteps != 4 {
+		t.Errorf("totalSteps: got %d, want 4 (Check gate lines must not be counted)", info.totalSteps)
 	}
 	if info.doneSteps != 2 {
 		t.Errorf("doneSteps: got %d, want 2", info.doneSteps)
