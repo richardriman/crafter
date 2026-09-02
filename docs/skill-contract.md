@@ -100,7 +100,7 @@ The safety envelope is the set of guarantees that extension skills must not weak
 
 An extension skill must never:
 
-1. **Replace or shadow a core agent** — Skills must not impersonate, override, or silently substitute for the Analyzer, Planner, Implementer, Verifier, or Reviewer. Core-agent identities are fixed in `skills/crafter-do/SKILL.md`.
+1. **Replace or shadow a core agent** — Skills must not impersonate, override, or silently substitute for the Analyzer, Planner, Implementer, or Checker. Core-agent identities are fixed in `skills/crafter-do/SKILL.md`.
 
 2. **Bypass plan-approval or commit-approval gates** — Skills must not advance workflow state past an approval gate without a recorded human (or authorized `--auto`) decision. The APPROVE gate and the green-commit invariant are defined in `rules/do-workflow.md`.
 
@@ -108,11 +108,11 @@ An extension skill must never:
 
 4. **Rewrite or replace an approved plan** — Once the APPROVE gate closes, the plan is sealed. Skills must not alter plan content, reorder steps, or amend phase contracts without re-entering the PLAN → APPROVE cycle.
 
-5. **Disable, skip, or short-circuit drift checks, phase verification, or review** — The VERIFY and REVIEW gates in `rules/do-workflow.md` are mandatory. Skills must not suppress drift classifications, skip verification evidence, or omit the Reviewer's diff summary and issue tables.
+5. **Disable, skip, or short-circuit the check pass** — The CHECK gate in `rules/do-workflow.md` is mandatory. Skills must not suppress drift classifications, skip verification evidence, or omit the Checker's diff summary and issue tables.
 
 6. **Perform destructive git operations** — Skills must not force-push, rewrite history (`git rebase -i`, `git reset --hard` on shared branches), delete remote branches, or perform any operation that would break the green-commit invariant defined in `rules/do-workflow.md`.
 
-7. **Override or contradict Karpathy guardrails** — Skills must not introduce speculative abstractions, make surgical-change violations, or skip goal-driven verification. The guardrails (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) are defined in `rules/core.md`.
+7. **Override or contradict the Change Guardrails** — Skills must not introduce speculative abstractions, make surgical-change violations, or skip goal-driven verification. The guardrails (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) are defined in `rules/core.md`.
 
 8. **Write persistent files in a language other than English** — All content written to `.crafter/*`, plans, skill contracts, and similar persistent artifacts must be in English. The language rules are defined in `rules/core.md`.
 
@@ -128,9 +128,9 @@ An extension skill must always:
 
 4. **Forward blocker signals to the orchestrator** — When a skill hits an irrecoverable state it cannot resolve internally, it must emit a blocker signal and halt rather than guessing, fabricating data, or continuing into a corrupted state.
 
-5. **Maintain the green-commit invariant** — Skills must not commit, push, or create a PR unless the orchestrator has authorized it after all VERIFY and REVIEW gates passed. The invariant is binding for all `--auto` runs and defined in `rules/do-workflow.md`.
+5. **Maintain the green-commit invariant** — Skills must not commit, push, or create a PR unless the orchestrator has authorized it after the CHECK gate passed. The invariant is binding for all `--auto` runs and defined in `rules/do-workflow.md`.
 
-6. **Respect the active step contract's scope** — Skills must not implement future steps, adjacent improvements, or speculative features beyond the outcome declared in the current Karpathy Contract. The scope boundary and non-goals fields are authoritative.
+6. **Respect the active contract's scope** — Skills must not implement future steps, adjacent improvements, or speculative features beyond the outcome declared in the contract of the current execution unit. The scope boundary and non-goals fields are authoritative.
 
 7. **Apply language rules uniformly** — Skills must produce English output in all persistent artifacts and match the user's language in live conversational output, as defined in `rules/core.md`.
 

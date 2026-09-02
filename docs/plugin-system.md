@@ -9,7 +9,7 @@ Crafter is a general-purpose AI development methodology. Some extensions don't b
 
 ### Use Cases
 
-1. **Project-specific review rules** — The core Reviewer agent is intentionally generic. Projects with specific stacks (Rails, React, Go, etc.) need stricter or more targeted review criteria. A plugin can bundle review rules for a given stack (e.g., N+1 query detection, framework-specific security patterns).
+1. **Project-specific review rules** — The core Checker agent is intentionally generic. Projects with specific stacks (Rails, React, Go, etc.) need stricter or more targeted review criteria. A plugin can bundle review rules for a given stack (e.g., N+1 query detection, framework-specific security patterns).
 
 2. **External task management integration** — Connecting Crafter's task lifecycle (`.planning/tasks/`) with an external system via MCP server. This requires additional rules for task synchronization and possibly new commands. It is not a general open-source feature, so it does not belong in core.
 
@@ -183,7 +183,7 @@ rails-review/
 ```markdown
 # Rails Review
 
-> Adds Rails-specific review criteria to the Reviewer agent.
+> Adds Rails-specific review criteria to the Checker agent.
 
 ## Provides
 

@@ -22,7 +22,7 @@ No auto-commits. No silent refactors. No guessing when the request is ambiguous.
 Plans are written in plain language, for a human reader. Not XML. Not structured task objects. Not pipe-delimited fields. If you can't explain the plan clearly in a few paragraphs, the plan isn't ready yet.
 
 ### Vertical execution contracts
-Plans describe outcomes, boundaries, and verification evidence — not line-by-line implementation recipes. Work is organized as vertical phases with step-level drift checks. A phase is reviewed only after its steps satisfy the contract, which keeps review focused without allowing implementation drift to accumulate.
+Plans describe outcomes, boundaries, and verification evidence — not line-by-line implementation recipes. Small and Medium tasks get one contract for the whole task; Large work is organized as vertical phases with one contract per phase. Each execution unit is implemented in a single pass and then checked as a whole, which keeps the check focused on a coherent unit of work rather than on every small implementation step.
 
 ### Adaptive
 One command (`/crafter-do`) adapts to the size of the task. A one-line fix and a cross-cutting refactor both go through the same command — the workflow adjusts to match the scope automatically.
@@ -36,21 +36,20 @@ Three living documents in `.crafter/` give Crafter workflows persistent project 
 
 Crafter commands run as orchestrators: the main context window manages the workflow and communicates with the developer, while specialized agents do the actual work in fresh, isolated context windows.
 
-This matters because running planning, implementation, verification, and review all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
+This matters because running planning, implementation, and checking all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
 
-Five roles cover the full workflow:
+Four roles cover the full workflow:
 
 - **Planner** — proposes the implementation plan
-- **Implementer** — implements the approved contract it was handed (a whole phase, or one step)
-- **Verifier** — checks verification criteria, step drift, and regressions
-- **Reviewer** — reviews the completed phase for bugs, security issues, and unapproved contract deviations
+- **Implementer** — implements the approved contract it was handed (the whole task, or a whole phase)
+- **Checker** — checks drift against the contract and reviews the code for bugs, security issues, and unapproved deviations — in one pass
 - **Analyzer** — reads and maps the codebase for research and architecture work
 
-Under Large scope, a step drift check runs after each step. Every phase, at any scope, ends with a **phase check** — one Verifier pass that classifies drift per step and evaluates the phase criteria together. Full Review normally runs after the phase check passes, so review focuses on a coherent phase rather than every small implementation step. High-risk steps can still trigger immediate review when needed.
+Each execution unit ends with one Checker pass: the whole task for Small and Medium, each phase for Large. Drift and code review are covered together in a single fresh-context pass, so there is no separate verification stage. When findings need fixing, the follow-up passes are narrowed to the files the fix touched.
 
 ---
 
-## Karpathy-Inspired Guardrails
+## Change Guardrails
 
 Every change passes through four checkpoints before it is considered done:
 
@@ -59,9 +58,9 @@ Every change passes through four checkpoints before it is considered done:
 - **Surgical Changes** — every changed line must trace to the approved request; no drive-by refactors
 - **Goal-Driven Execution** — convert work into verifiable criteria and iterate until each criterion is satisfied
 
-In `/crafter-do`, these guardrails are captured in each phase and step as a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions.
+In `/crafter-do`, these guardrails are carried by the plan's contract: outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions — defined once for the whole task (Small/Medium) or once per phase (Large).
 
-These apply across planning, implementation, and review — not just at one stage.
+These apply across planning, implementation, and checking — not just at one stage.
 
 ---
 
@@ -70,7 +69,7 @@ These apply across planning, implementation, and review — not just at one stag
 - **Context files** — PROJECT, ARCHITECTURE, STATE as the foundation of persistent context
 - **Verification criteria in planning** — define how you'll know it's done before you start
 - **Fresh context per task** — re-read context files at the start of every command
-- **Agent specialization** — different roles for planning, execution, verification, and review
+- **Agent specialization** — different roles for planning, execution, and checking
 
 ## What We Left Behind from GSD
 

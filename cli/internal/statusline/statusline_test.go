@@ -318,6 +318,55 @@ func TestParsePlan_GateExclusion_WorkStepWithReviewWord(t *testing.T) {
 	}
 }
 
+// TestParsePlan_GateExclusion_CheckGate verifies that the standalone `Check`
+// gate of a flat checklist is excluded from the step count, while a work step
+// that merely starts with the word "Check" is still counted.
+func TestParsePlan_GateExclusion_CheckGate(t *testing.T) {
+	planBody := `**Plan status:** approved
+
+- [x] Step 1: Real work step one
+- [x] Step 2: Check docs for stale references
+- [ ] Step 3: Real work step three
+- [x] **Check** — crafter-checker: no findings.
+- [ ] Check
+`
+	path := writePlanFile(t, planBody)
+	info := parsePlan(path)
+
+	if info.totalSteps != 3 {
+		t.Errorf("totalSteps: got %d, want 3 (Check gate lines must not be counted)", info.totalSteps)
+	}
+	if info.doneSteps != 2 {
+		t.Errorf("doneSteps: got %d, want 2", info.doneSteps)
+	}
+}
+
+// TestParsePlan_GateExclusion_CheckGateSeparators verifies that the Check gate
+// is still recognised when its note is introduced by a parenthesis, a colon or
+// an en dash, and when the trailing period sits inside the bold wrapper
+// (`**Check.** — note`), while a work step keeping the template's `Step N:` prefix is
+// counted as a step even when its text starts with "Check —".
+func TestParsePlan_GateExclusion_CheckGateSeparators(t *testing.T) {
+	planBody := `**Plan status:** approved
+
+- [ ] Step 1: Real work step one
+- [ ] Step 2: Check — verify docs
+- [x] **Check** (2 minor findings recorded)
+- [x] Check: clean
+- [x] **Check** – crafter-checker: no findings.
+- [x] **Check.** — crafter-checker: no findings.
+`
+	path := writePlanFile(t, planBody)
+	info := parsePlan(path)
+
+	if info.totalSteps != 2 {
+		t.Errorf("totalSteps: got %d, want 2 (only the two `Step N:` lines are steps)", info.totalSteps)
+	}
+	if info.doneSteps != 0 {
+		t.Errorf("doneSteps: got %d, want 0", info.doneSteps)
+	}
+}
+
 // TestRenderExecuting_MalformedPlan_CurrentPhaseZero verifies the fix #4 guard:
 // when currentPhase is 0 (malformed plan — work-step before first Phase heading),
 // the renderer degrades silently by omitting the Phase X/Y prefix rather than

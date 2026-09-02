@@ -13,11 +13,10 @@ If nothing needs updating, move on silently.
 
 ## COMMIT
 
-The orchestrator commits **automatically** — no user prompt for the commit itself — when all three preconditions are met:
+The orchestrator commits **automatically** — no user prompt for the commit itself — when both preconditions are met:
 
-1. **Phase verification passed** — the Verifier has signed off on the phase.
-2. **Clean review** — the review fix loop has closed with no Critical or Major findings remaining.
-3. **Approval signal received** — the orchestrator has received an approval signal via one of the three paths defined in the phase summary approval gate in `{CRAFTER_HOME}/skills/crafter-do/SKILL.md` (auto-approve on clean summary | silence-approve when the `--fast` flag is set | explicit user approval as default).
+1. **Check passed** — the Checker's pass closed with no Critical or Major findings and no unresolved drift; remaining Minor/Suggestion findings are recorded as tech-debt Decisions.
+2. **Approval signal received** — via one of the paths defined in the phase summary approval gate in `{CRAFTER_HOME}/skills/crafter-do/SKILL.md` (auto-commit by default | explicit user approval when the manual-verification exception applies).
 
 Use conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`
 

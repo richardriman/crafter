@@ -5,7 +5,7 @@ description: "Append a UAT or Gap entry to the current run's buffer (.crafter/ru
 
 ## What this skill does
 
-This skill appends a single NDJSON entry to a per-run buffer file under `.crafter/run/<task-id>/`. Sub-agents (implementer, verifier, reviewer) use it to record findings that should not block the current run — UAT items (manual QA that humans must validate) or Gap items (deferred tech-debt / out-of-scope follow-ups). It is most relevant under `--auto` mode (see GH#15 / `skills/crafter-do/SKILL.md`) where blocking on unresolvable findings would defeat unattended orchestration, but it is equally useful in standard mode whenever a finding should be persistent rather than embedded in chat. The run-directory lifecycle (creation, persistence, cleanup) is defined in `rules/do-workflow.md` → `### Run directory lifecycle`.
+This skill appends a single NDJSON entry to a per-run buffer file under `.crafter/run/<task-id>/`. Sub-agents (implementer, checker) use it to record findings that should not block the current run — UAT items (manual QA that humans must validate) or Gap items (deferred tech-debt / out-of-scope follow-ups). It is most relevant under `--auto` mode (see GH#15 / `skills/crafter-do/SKILL.md`) where blocking on unresolvable findings would defeat unattended orchestration, but it is equally useful in standard mode whenever a finding should be persistent rather than embedded in chat. The run-directory lifecycle (creation, persistence, cleanup) is defined in `rules/do-workflow.md` → `### Run directory lifecycle`.
 
 ## Operations
 
@@ -49,7 +49,7 @@ Appends one NDJSON line to `<run-dir>/gaps-buffer.jsonl`. Creates the file (with
 
 ## Entry shape
 
-The subcommand generates `id`, `kind`, and `created_at` at append time. The caller provides `--created-by` (the calling agent or skill name, e.g. `crafter-implementer`, `crafter-reviewer`, `crafter-do`) and `--task-id` (the task-file basename without extension, e.g. `20260509-feat-gh-16-buffer-skill`), as well as `--title`, `--source`, and the kind-specific value flags.
+The subcommand generates `id`, `kind`, and `created_at` at append time. The caller provides `--created-by` (the calling agent or skill name, e.g. `crafter-implementer`, `crafter-checker`, `crafter-do`) and `--task-id` (the task-file basename without extension, e.g. `20260509-feat-gh-16-buffer-skill`), as well as `--title`, `--source`, and the kind-specific value flags.
 
 ### UAT entry (annotated)
 
@@ -150,7 +150,7 @@ crafter buffer gap \
   --run-dir .crafter/run/20260509-feat-gh-16-buffer-skill \
   --title "Rate-limit middleware not applied to internal endpoints" \
   --source "middleware/ratelimit.go:67" \
-  --created-by "crafter-reviewer" \
+  --created-by "crafter-checker" \
   --task-id "20260509-feat-gh-16-buffer-skill" \
   --detail "$(cat <<'EOF'
 The rate-limit middleware wraps public API routes but is skipped for
@@ -167,7 +167,7 @@ EOF
 Resulting NDJSON line:
 
 ```
-{"id":"c3d4e5f6a7b8","kind":"gap","created_at":"2026-05-09T14:32:00Z","created_by":"crafter-reviewer","task_id":"20260509-feat-gh-16-buffer-skill","title":"Rate-limit middleware not applied to internal endpoints","source":"middleware/ratelimit.go:67","detail":"The rate-limit middleware wraps public API routes but is skipped for\n/internal/* endpoints.\n\nThis was intentional during prototyping (internal callers are trusted)\nbut should be revisited before production: a compromised internal\nservice could abuse the endpoints without throttling.","followup":"Apply rate-limit middleware to /internal/* or add an explicit allow-list with documented justification."}
+{"id":"c3d4e5f6a7b8","kind":"gap","created_at":"2026-05-09T14:32:00Z","created_by":"crafter-checker","task_id":"20260509-feat-gh-16-buffer-skill","title":"Rate-limit middleware not applied to internal endpoints","source":"middleware/ratelimit.go:67","detail":"The rate-limit middleware wraps public API routes but is skipped for\n/internal/* endpoints.\n\nThis was intentional during prototyping (internal callers are trusted)\nbut should be revisited before production: a compromised internal\nservice could abuse the endpoints without throttling.","followup":"Apply rate-limit middleware to /internal/* or add an explicit allow-list with documented justification."}
 ```
 
 ## Examples
@@ -179,7 +179,7 @@ Realistic entries as they appear in the buffer files (single lines; wrapped here
 **UAT example 1 — fenced code block in `verify`:**
 
 ```
-{"id":"d4e5f6a7b8c9","kind":"uat","created_at":"2026-05-09T15:00:00Z","created_by":"crafter-verifier","task_id":"20260509-feat-gh-16-buffer-skill","title":"Confirm export CSV survives special characters in column headers","source":"export/csv_writer.go:89","verify":"Generate a report where a column header contains a comma, a double-quote, and a newline. Download the CSV and open it in Excel and LibreOffice Calc:\n\n```bash\ncurl -s 'http://localhost:8080/export?fmt=csv&report=special-chars' -o /tmp/test.csv\nopen /tmp/test.csv\n```\n\nConfirm both apps parse the file without corruption and the header row shows exactly the expected strings.","why_manual":"Spreadsheet rendering is application-level behaviour that cannot be asserted by the Go test suite."}
+{"id":"d4e5f6a7b8c9","kind":"uat","created_at":"2026-05-09T15:00:00Z","created_by":"crafter-checker","task_id":"20260509-feat-gh-16-buffer-skill","title":"Confirm export CSV survives special characters in column headers","source":"export/csv_writer.go:89","verify":"Generate a report where a column header contains a comma, a double-quote, and a newline. Download the CSV and open it in Excel and LibreOffice Calc:\n\n```bash\ncurl -s 'http://localhost:8080/export?fmt=csv&report=special-chars' -o /tmp/test.csv\nopen /tmp/test.csv\n```\n\nConfirm both apps parse the file without corruption and the header row shows exactly the expected strings.","why_manual":"Spreadsheet rendering is application-level behaviour that cannot be asserted by the Go test suite."}
 ```
 
 **UAT example 2 — multi-line `verify` with blank line:**
@@ -193,7 +193,7 @@ Realistic entries as they appear in the buffer files (single lines; wrapped here
 **Gap example 1 — multi-line `detail`:**
 
 ```
-{"id":"f6a7b8c901aa","kind":"gap","created_at":"2026-05-09T15:10:00Z","created_by":"crafter-reviewer","task_id":"20260509-feat-gh-16-buffer-skill","title":"Database migrations lack a rollback path","source":"db/migrations/0042_add_audit_log.sql","detail":"Migration 0042 adds an audit_log table and a trigger. The up migration is clean, but there is no corresponding down migration.\n\nIn a rollback scenario the trigger would be left dangling, which breaks the schema version check on startup and prevents the previous binary from running.","followup":"Add a down migration for 0042 that drops the trigger before dropping the table. Consider making the CI pipeline enforce that every up migration has a matching down migration."}
+{"id":"f6a7b8c901aa","kind":"gap","created_at":"2026-05-09T15:10:00Z","created_by":"crafter-checker","task_id":"20260509-feat-gh-16-buffer-skill","title":"Database migrations lack a rollback path","source":"db/migrations/0042_add_audit_log.sql","detail":"Migration 0042 adds an audit_log table and a trigger. The up migration is clean, but there is no corresponding down migration.\n\nIn a rollback scenario the trigger would be left dangling, which breaks the schema version check on startup and prevents the previous binary from running.","followup":"Add a down migration for 0042 that drops the trigger before dropping the table. Consider making the CI pipeline enforce that every up migration has a matching down migration."}
 ```
 
 **Gap example 2 — fenced code block in `detail`:**

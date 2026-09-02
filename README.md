@@ -109,7 +109,7 @@ The installer no longer needs `node` to edit `settings.json` — all JSON mutati
 | `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
 | `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
 
-`/crafter-do` enforces Karpathy-inspired guardrails across planning, implementation, verification, and review: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**. Plans are vertical execution contracts with step-level drift checks and phase-level review.
+`/crafter-do` enforces change guardrails across planning, implementation, and checking: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**. Plans are execution contracts — one contract for the whole task under Small and Medium scope, one per vertical phase under Large — and each execution unit ends with a single check pass covering drift and code review together.
 
 ## Project Context Files
 
@@ -127,21 +127,20 @@ If an existing project still uses legacy `.planning/`, Crafter can run with fall
 
 Crafter commands run as **orchestrators**: the main context window manages the workflow and communicates with you, while specialized agents do the actual work in fresh context windows.
 
-This matters because running planning, implementation, verification, and review all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
+This matters because running planning, implementation, and checking all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
 
 | Agent | Role | Used in |
 |---|---|---|
-| **Planner** | Tech lead — writes the execution contract | `/crafter-do` PLAN step |
-| **Implementer** | Senior developer — implements the approved contract it was handed (a whole phase, or one step) | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
-| **Verifier** | QA engineer — checks step drift, criteria, and regressions | `/crafter-do` VERIFY, `/crafter-debug` verification |
-| **Reviewer** | Code reviewer — looks for bugs, security issues, unapproved deviations | `/crafter-do` REVIEW step |
+| **Planner** | Tech lead — writes the execution contract | `/crafter-do` PLAN step (Medium and Large; Small is planned inline) |
+| **Implementer** | Senior developer — implements the approved contract it was handed (the whole task, or a whole phase) and runs the relevant tests | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
+| **Checker** | QA engineer and code reviewer in one — checks drift against the contract and looks for bugs, security issues, and unapproved deviations | `/crafter-do` CHECK step, `/crafter-debug` verification |
 | **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter-map-project`, Large scope research, `/crafter-debug` hypothesis |
 
 Agents for each role are defined as native Claude Code agents in `~/.claude/agents/`. The orchestrator spawns agents by name and provides each one with only the context it needs.
 
-### Vertical Verification
+### Execution and checking
 
-`/crafter-do` executes a phase at a time. Under Small and Medium scope the Implementer receives the whole phase contract in one pass; under Large it works step by step, and the Verifier runs a lightweight drift check against the approved contract after each step. Every phase then ends with a **phase check** — one Verifier pass that classifies drift per step and evaluates the phase criteria together — followed by full review of the coherent phase diff. High-risk steps can still trigger immediate review when needed.
+`/crafter-do` delegates in units set by scope: under Small and Medium the Implementer receives the whole task in one spawn, under Large it receives one whole phase per spawn. Each unit then ends with a single `crafter-checker` pass that covers drift against the contract and code review together in a fresh context. Minor and Suggestion findings are recorded as tech-debt decisions and the run continues; Critical and Major findings, and harmful drift, stop the run and open a fix loop whose follow-up passes are narrowed to the files the fix changed.
 
 ## Philosophy
 

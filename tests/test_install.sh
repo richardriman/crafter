@@ -397,10 +397,7 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/do/step-2-discuss.md"
   "crafter/rules/do/step-3-plan.md"
   "crafter/rules/do/step-4-execute.md"
-  "crafter/rules/do/step-5-drift.md"
-  "crafter/rules/do/step-5a-phase-verification.md"
-  "crafter/rules/do/step-6-review.md"
-  "crafter/rules/do/step-6b-phase-summary.md"
+  "crafter/rules/do/step-5-check.md"
   "crafter/rules/do/step-6a-session-break.md"
   "crafter/rules/do/step-7-9-post-change.md"
   "crafter/rules/do/step-9b-pr-composition.md"
@@ -410,10 +407,8 @@ _EXPECTED_FILES_REL=(
   "crafter/templates/TASK.md"
   "agents/crafter-planner.md"
   "agents/crafter-implementer.md"
-  "agents/crafter-verifier.md"
-  "agents/crafter-reviewer.md"
+  "agents/crafter-checker.md"
   "agents/crafter-analyzer.md"
-  "agents/crafter-step-runner.md"
 )
 
 # ---------------------------------------------------------------------------

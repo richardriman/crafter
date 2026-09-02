@@ -54,6 +54,8 @@ var rePhaseHeading = regexp.MustCompile(`^#{3,4}\s+Phase\s+(\d+)`)
 //   - [x] **Phase 1 verification.**   (checked variant with bold markup)
 //   - [x] **Phase 1 review.**
 //   - [x] **Phase 1 verification.** — long note...  (real files append a note)
+//   - [ ] Check                      (current single-gate form)
+//   - [x] **Check**
 //
 // Post-change checkboxes (also excluded):
 //
@@ -73,6 +75,30 @@ var (
 	// are still detected correctly.
 	reGatePhase      = regexp.MustCompile(`(?i)^Phase(\s+\d+)?\s+(verification|review)\b`)
 	reGatePostChange = regexp.MustCompile(`(?i)^(STATE\.md|Task file completion|Follow-up note)`)
+	// reGateCheck matches the standalone `Check` gate line, optionally followed
+	// by a note introduced by a separator: a dash (-), an em dash (—), an en
+	// dash (–), a colon, or an opening parenthesis. This covers the forms real
+	// task files use — "**Check** (2 minor findings recorded)", "Check: clean",
+	// "**Check** — crafter-checker: no findings."
+	//
+	// The `[.*]*` after `Check` is a character class of the literals `.` and
+	// `*`, not "any characters". It is load-bearing: checkboxBody strips the
+	// leading `**` plus a *trailing* `**` and `.`, so those trailing strips
+	// only fire on a bare gate line — `- [x] **Check.**` normalizes fully to
+	// `Check`. A note-bearing line ends with the note instead, so nothing
+	// trailing is stripped and `- [x] **Check.** — note` reaches the regex as
+	// `Check.** — note` with residual `.**`. Without the class, that mid-string
+	// `.**` sits between `Check` and the separator and breaks the match.
+	//
+	// A word directly after `Check` (e.g. "Check docs for stale references") is
+	// NOT a gate, so ordinary steps keep counting as steps. The residual
+	// false positives are the whole separator surface: any step body of the
+	// form `Check-in with the team`, `Check: docs`, or `Check (docs)` also
+	// matches as a gate, because `-`, `:`, and `(` are all accepted
+	// separators. This is accepted: `templates/TASK.md` prescribes a `Step N:`
+	// prefix for work steps, which anchors the body away from `^Check`, so the
+	// collision only occurs in plans that ignore the template.
+	reGateCheck = regexp.MustCompile(`(?i)^Check[.*]*(\s*[—–:(-].*)?$`)
 )
 
 // checkboxBody extracts the text after the `- [ ] ` or `- [x] ` prefix,
@@ -105,7 +131,7 @@ func isGate(body string) bool {
 	b := strings.TrimRight(strings.TrimLeft(body, "*"), "*")
 	b = strings.TrimRight(b, ".:")
 	b = strings.TrimSpace(b)
-	return reGatePhase.MatchString(b) || reGatePostChange.MatchString(b)
+	return reGatePhase.MatchString(b) || reGatePostChange.MatchString(b) || reGateCheck.MatchString(b)
 }
 
 // parsePlan reads the task file at path and returns the parsed planInfo.

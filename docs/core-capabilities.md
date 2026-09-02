@@ -1,8 +1,10 @@
 # Core Capabilities — Taxonomy and Decomposition Design Note
 
-> Status: Draft
+> Status: Historical record
 > Date: 2026-05-17
 > Task: `.crafter/tasks/20260517-refactor-crafter-do-core-capabilities.md`
+
+> **Superseded snapshot.** The capability taxonomy, the deferred-slice plan, and the per-slice records below describe `skills/crafter-do/SKILL.md` as it stood during the decomposition work, before the workflow refactor that merged the Verifier and Reviewer into `crafter-checker`, removed the Step Runner, removed `--fast`, and replaced per-step execution with one execution unit per spawn. They are kept as a record of how the `rules/do/*` modules came to exist and of the runtime-path policy that still applies. For the current workflow, read `rules/do-workflow.md` and `skills/crafter-do/SKILL.md`.
 
 ## Scope of this document
 

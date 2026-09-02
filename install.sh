@@ -378,10 +378,7 @@ install_to() {
   cp "$SCRIPT_DIR/rules/do/step-2-discuss.md"         "$rules_dest/do/step-2-discuss.md"
   cp "$SCRIPT_DIR/rules/do/step-3-plan.md"            "$rules_dest/do/step-3-plan.md"
   cp "$SCRIPT_DIR/rules/do/step-4-execute.md"         "$rules_dest/do/step-4-execute.md"
-  cp "$SCRIPT_DIR/rules/do/step-5-drift.md"           "$rules_dest/do/step-5-drift.md"
-  cp "$SCRIPT_DIR/rules/do/step-5a-phase-verification.md" "$rules_dest/do/step-5a-phase-verification.md"
-  cp "$SCRIPT_DIR/rules/do/step-6-review.md"             "$rules_dest/do/step-6-review.md"
-  cp "$SCRIPT_DIR/rules/do/step-6b-phase-summary.md"     "$rules_dest/do/step-6b-phase-summary.md"
+  cp "$SCRIPT_DIR/rules/do/step-5-check.md"           "$rules_dest/do/step-5-check.md"
   cp "$SCRIPT_DIR/rules/do/step-6a-session-break.md"     "$rules_dest/do/step-6a-session-break.md"
   cp "$SCRIPT_DIR/rules/do/step-7-9-post-change.md"      "$rules_dest/do/step-7-9-post-change.md"
   cp "$SCRIPT_DIR/rules/do/step-9b-pr-composition.md"    "$rules_dest/do/step-9b-pr-composition.md"
@@ -395,10 +392,8 @@ install_to() {
   mkdir -p "$agents_dest"
   cp "$SCRIPT_DIR/agents/crafter-planner.md"     "$agents_dest/crafter-planner.md"
   cp "$SCRIPT_DIR/agents/crafter-implementer.md" "$agents_dest/crafter-implementer.md"
-  cp "$SCRIPT_DIR/agents/crafter-verifier.md"    "$agents_dest/crafter-verifier.md"
-  cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
+  cp "$SCRIPT_DIR/agents/crafter-checker.md"     "$agents_dest/crafter-checker.md"
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
-  cp "$SCRIPT_DIR/agents/crafter-step-runner.md" "$agents_dest/crafter-step-runner.md"
 
   # Resolve the {CRAFTER_HOME} placeholder to the concrete install path
   local crafter_dest_escaped

@@ -24,7 +24,7 @@ Read the project context files (if they exist):
 - `{CRAFTER_DIR}/STATE.md` (full file — your primary source of current status)
 - `{CRAFTER_DIR}/PROJECT.md` — only the **Stack** and **How to Run** sections
 
-Do NOT read `{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it to agents that need it (Analyzer, Reviewer).
+Do NOT read `{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it to agents that need it (Analyzer, Checker).
 
 The problem to debug: $ARGUMENTS
 
@@ -92,11 +92,11 @@ Delegate the fix to the **Implementer** agent:
 
 ## Step 6 — Verify
 
-Delegate verification to the **Verifier** agent:
+Delegate verification to the **Checker** agent:
 
-1. Spawn the `crafter-verifier` agent.
-2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, and any relevant test files.
-3. Remind the Verifier in the task prompt: "Write your verification report as plain text in your response. Do not create any files."
+1. Spawn the `crafter-checker` agent in mode `full pass`.
+2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, any relevant test files, and the Implementer's Evidence section if it produced one. State explicitly that the debug flow has **no approved contract and no declared seams**, so Part A (drift) is limited to what can be judged without one: whether the change does what the agreed fix said and nothing beyond it. Contract-item, seam, and stop-condition checks do not apply — the Checker must not report drift against a contract that does not exist.
+3. Remind the Checker in the task prompt: "Write your report as plain text in your response. Do not create any files."
 4. Receive and present the verification report.
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
