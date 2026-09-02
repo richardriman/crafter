@@ -88,14 +88,15 @@ Delegate the fix to the **Implementer** agent:
 
 1. Spawn the `crafter-implementer` agent.
 2. Provide it with: the approved fix description, the relevant source files.
-3. Receive the implementation summary. If the Implementer reports a blocker, discuss it with the user before continuing.
+3. Ask for an implementation summary plus an **Evidence** section listing the tests/typechecks it ran and their results, so the verification pass can check the fix against real evidence.
+4. Receive the implementation summary. If the Implementer reports a blocker, discuss it with the user before continuing.
 
 ## Step 6 — Verify
 
 Delegate verification to the **Checker** agent:
 
 1. Spawn the `crafter-checker` agent in mode `full pass`.
-2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, any relevant test files, and the Implementer's Evidence section if it produced one. State explicitly that the debug flow has **no approved contract and no declared seams**, so Part A (drift) is limited to what can be judged without one: whether the change does what the agreed fix said and nothing beyond it. Contract-item, seam, and stop-condition checks do not apply — the Checker must not report drift against a contract that does not exist.
+2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, any relevant test files, and the Implementer's **Evidence** section. State explicitly that the debug flow has **no approved contract and no declared seams**, so Part A (drift) is limited to what can be judged without one: whether the change does what the agreed fix said and nothing beyond it. Contract-item, seam, and stop-condition checks do not apply — the Checker must not report drift against a contract that does not exist.
 3. Remind the Checker in the task prompt: "Write your report as plain text in your response. Do not create any files."
 4. Receive and present the verification report.
 

@@ -4,7 +4,7 @@
 
 Crafter was born from frustration.
 
-Existing AI development frameworks are either too heavy or too hands-off. GSD has the right instincts — context engineering, task planning, verification criteria — but wraps them in an unwieldy monolith with auto-commits and machine-readable XML plans that feel more like configuring a build system than working with a collaborator.
+Existing AI development frameworks are either too heavy or too hands-off. GSD has the right instincts — context engineering, task planning, verification criteria — but wraps them in an unwieldy monolith that commits without a human-approved plan or a passed check, and in machine-readable XML plans that feel more like configuring a build system than working with a collaborator.
 
 Crafter takes the best ideas from both and strips away the overhead. It's a lightweight set of conventions, context files, and skills designed for a single experienced developer who knows what they want.
 
@@ -15,8 +15,8 @@ Crafter takes the best ideas from both and strips away the overhead. It's a ligh
 ### Craftsmanship
 You are the craftsman. Claude is your tool. The developer's judgment, taste, and intent drive every decision — Claude executes and advises, it does not decide.
 
-### Human-in-the-loop at every decision point
-No auto-commits. No silent refactors. No guessing when the request is ambiguous. Every significant action — plan approval, diff review, commit — requires explicit developer consent.
+### Human-in-the-loop at the decision points that matter
+No silent refactors. No guessing when the request is ambiguous. Plan approval is always a human gate, Critical and Major findings stop the flow until they are resolved, and work that only a human can verify waits for explicit consent. Once the check pass closes clean — or with nothing worse than Minor/Suggestion findings recorded as tech-debt decisions — the commit lands automatically, because there is nothing left for the developer to decide.
 
 ### Conversational
 Plans are written in plain language, for a human reader. Not XML. Not structured task objects. Not pipe-delimited fields. If you can't explain the plan clearly in a few paragraphs, the plan isn't ready yet.
@@ -73,7 +73,7 @@ These apply across planning, implementation, and checking — not just at one st
 
 ## What We Left Behind from GSD
 
-- Auto-commits
+- Commits without a human-approved plan or a passed check
 - XML task plans
 - Rigid, multi-phase pipeline with no escape hatches
 - Excessive ceremony for small tasks
@@ -86,6 +86,6 @@ Crafter is for an experienced developer who:
 
 - Knows what they want to build
 - Values code quality and thoughtful decisions over raw speed
-- Prefers control over automation
+- Wants control at the decision points and automation for everything else
 - Finds existing AI frameworks either too rigid or too opaque
-- Wants a collaborator, not an autopilot
+- Wants a collaborator on the decisions, not an autopilot on the judgment calls
