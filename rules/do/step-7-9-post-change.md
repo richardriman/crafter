@@ -4,12 +4,13 @@ The per-phase commit for the final phase has already landed via Step 6b. Steps 7
 
 Follow the post-change steps in `{CRAFTER_HOME}/rules/post-change.md`. The checklist below is a quick-reference summary — `post-change.md` is the source of truth for details.
 
-**MANDATORY CHECKLIST — do not skip any item:**
+**MANDATORY CHECKLIST — do not skip any item (6 items):**
 
 1. **Check docs** — review whether `{PROJECT_PATH}/{CRAFTER_DIR}/PROJECT.md` or `ARCHITECTURE.md` need updates (delegate ARCHITECTURE.md check to Implementer). If nothing needs updating, move on silently.
 2. **Consolidated end-of-task commit** — if any of the following exist: PROJECT.md/ARCHITECTURE.md updates (item 1) or STATE.md changes (item 3), bundle them all into **one single consolidated commit** using conventional commits format. This commit is automatic per `{CRAFTER_HOME}/rules/post-change.md`. Do not create separate commits for docs and STATE.md. If none of those updates are needed, no follow-up commit is created.
 3. **Update STATE.md** — update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues) and include this update in the consolidated commit (item 2). Show the user what changed.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps. The task file is in `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/`.
-5. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter-do` or `/crafter-debug` to keep context clean.
+5. **List deferred findings** — in the final summary, list every Minor/Suggestion finding recorded as `Decision (Tech Debt — auto-recorded)` during the run and offer to fix any of them now. If the user picks one, re-delegate it to the `crafter-implementer` and run a `crafter-checker` delta pass over the fix.
+6. **Suggest session wrap-up** — if there's more to do, suggest the user run `/clear` and start their next task with `/crafter-do` or `/crafter-debug` to keep context clean.
 
-**Do not end the conversation until all 5 items above are addressed.**
+**Do not end the conversation until all 6 items above are addressed.**

@@ -1,7 +1,12 @@
 # Flag Validation
 
-`--auto` and `--fast` are mutually exclusive. If both flags are active (`auto: true` AND `fast: true` in frontmatter, or equivalent invocation context indicating both are set), produce a clear error and stop immediately — do not proceed to project resolution, resume detection, or any other workflow step:
+`crafter-do` accepts exactly two flags: **`--ext`** and **`--auto`** (frontmatter: `ext: true`, `auto: true`). Both default to off. They are **independent** — any combination is valid.
 
-> Error: `--auto` and `--fast` are mutually exclusive — pass at most one. `--auto` strictly supersedes `--fast` per `rules/do-workflow.md` → `### --auto`.
+- **`--ext`** — enable extension-skill discovery and the pre-spawn extension checks. Without it, `rules/do/extension-skills.md` is never read and no discovery scan runs.
+- **`--auto`** — fully unattended orchestration. See `rules/do-workflow.md` → `### --auto (unattended orchestration)`.
 
-See `rules/do-workflow.md` → `### --auto (unattended orchestration)` for the canonical mutual-exclusion rule.
+**`--fast` was removed.** If it is passed (or `fast: true` appears in frontmatter), produce this error and stop immediately — do not proceed to project resolution or any other workflow step:
+
+> Error: `--fast` was removed; Minor findings now auto-proceed. Minor and Suggestion findings are recorded as `Decision (Tech Debt — auto-recorded)` entries and the commit continues without waiting, so silence-as-approval no longer has a purpose. Re-run without the flag.
+
+`--project <path>` is not a skill flag — it is consumed by Project Resolution (see `skills/crafter-do/SKILL.md` → **Project Resolution**), not by this check.

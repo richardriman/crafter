@@ -11,15 +11,22 @@
 
 ## Plan
 _(pending)_
-<!-- The Planner agent writes the execution contract here. Use phase headings, step checkboxes, and phase gate checkboxes such as:
+<!-- The execution contract goes here — written by the Planner agent (Medium/Large scope) or inline by the orchestrator (Small scope).
+
+Small / Medium — a flat checklist, no phase headings:
+
+- [ ] Step 1: <step outcome>
+- [ ] Step 2: <step outcome>
+- [ ] Check
+
+Large — phase headings, one contract per phase:
 
 ### Phase 1 — <outcome>
 - [ ] Step 1: <step outcome>
 - [ ] Step 2: <step outcome>
-- [ ] Phase verification
-- [ ] Phase review
+- [ ] Check
 
-Each phase and step should include its Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions.
+One contract per task (Small/Medium) or per phase (Large) — never per step. Each contract defines: outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions. Seams are the public interfaces the change happens at and is tested against.
 -->
 
 ## Decisions

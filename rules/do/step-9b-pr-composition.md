@@ -2,13 +2,13 @@
 
 **Trigger:** Runs ONLY under `--auto` (`auto: true` in frontmatter), and ONLY after Steps 7–9 complete (which may or may not have produced a consolidated end-of-task commit). The latest commit on the work branch will be either the consolidated commit OR the final per-phase commit, depending on whether PROJECT.md / ARCHITECTURE.md / STATE.md updates were needed. By the time this step runs, STATE.md is updated and the task file's `## Outcome` section is filled in. Non-`--auto` runs do not execute this step; the user composes the PR manually by invoking `gh pr create` themselves.
 
-This step is the concrete implementation of the `Plan → Execute → Verify → Review → PR end-to-end` promise documented in `rules/do-workflow.md → ### --auto (unattended orchestration)`.
+This step is the concrete implementation of the `Plan → Execute → Check → PR end-to-end` promise documented in `rules/do-workflow.md → ### --auto (unattended orchestration)`.
 
 **Inputs:**
 
-- `--run-dir`: `.crafter/run/<task-id>/` — the per-run scratch directory. The orchestrator already tracks `<task-id>` as the task-file basename without extension (e.g., `20260510-feat-gh-17-pr-composer`).
+- `--run-dir`: `{PROJECT_PATH}/.crafter/run/<task-id>/` — the per-run scratch directory. The orchestrator already tracks `<task-id>` as the task-file basename without extension (e.g., `20260510-feat-gh-17-pr-composer`).
 - `--task-file`: `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/<task-id>.md` — the task file path. Already known from the active task context.
-- **Baseline body:** a minimal Summary + Test plan block, composed by the orchestrator (LLM-generated from the task file's `## Plan` → Approach paragraph and `## Outcome` section). The Test plan derives from the task file's acceptance criteria ONLY (extracted from the `## Request` section, which quotes the issue ACs, or from the issue body if available) — NOT from phase verification criteria, which would dump dozens of items. If `## Outcome` is empty when this step is reached, that indicates Steps 7–9 did not complete correctly — do NOT proceed to PR composition; exit with state via the Ad-hoc escape hatch.
+- **Baseline body:** a minimal Summary + Test plan block, composed by the orchestrator (LLM-generated from the task file's `## Plan` → Approach paragraph and `## Outcome` section). The Test plan derives from the task file's acceptance criteria ONLY (extracted from the `## Request` section, which quotes the issue ACs, or from the issue body if available) — NOT from the contract's verification evidence, which would dump dozens of items. If `## Outcome` is empty when this step is reached, that indicates Steps 7–9 did not complete correctly — do NOT proceed to PR composition; exit with state via the Ad-hoc escape hatch.
 
 **Action:**
 
@@ -33,7 +33,7 @@ This step is the concrete implementation of the `Plan → Execute → Verify →
 2. **Invoke the rendering subcommand** to produce the appended sections:
 
    ```sh
-   crafter pr-body --run-dir .crafter/run/<task-id>/ --task-file {PROJECT_PATH}/{CRAFTER_DIR}/tasks/<task-id>.md
+   crafter pr-body --run-dir {PROJECT_PATH}/.crafter/run/<task-id>/ --task-file {PROJECT_PATH}/{CRAFTER_DIR}/tasks/<task-id>.md
    ```
 
    The subcommand outputs the three appended sections (`## Manual QA Plan`, `## Known Gaps`, `## Decisions`) in that fixed order, omitting any section whose source is empty. If all three sources are empty, the output is empty (no appended sections).
@@ -70,7 +70,7 @@ This step is the concrete implementation of the `Plan → Execute → Verify →
    ```
    PR opened: <URL>
    ```
-2. Run the cleanup hook: delete the run directory (`rm -rf .crafter/run/<task-id>/`). This is the PR-success cleanup trigger. If deletion fails, record a tech-debt note and continue — the cleanup failure is non-blocking.
-3. Proceed to the session wrap-up (Step 7–9 item 5: suggest `/clear` for the next task).
+2. Run the cleanup hook: delete the run directory (`rm -rf {PROJECT_PATH}/.crafter/run/<task-id>/`). This is the PR-success cleanup trigger. If deletion fails, record a tech-debt note and continue — the cleanup failure is non-blocking.
+3. Proceed to the session wrap-up (Step 7–9 item 6: suggest `/clear` for the next task).
 
 **Reviewer note:** `## Manual QA Plan` items in the PR body are rendered as GitHub-flavored task list checkboxes (`- [ ] **Title** — verify text`). Reviewers can check them off directly in the PR UI as they complete each manual verification step.

@@ -1,19 +1,33 @@
-# Completeness and scope (startup procedure 3)
+# Completeness and scope (inline startup procedure 2)
 
-The third of the three procedures the `crafter-step-runner` runs under the `startup` step. **Skipped entirely** when resume detection returned `resume-draft` or `resume-approved` — the plan already exists and carries its own scope.
+**Fully orchestrator-side — do NOT delegate.** This is a judgement call over context you already hold; make it yourself. **Skipped entirely** when resume detection returned `resume-draft` or `resume-approved` — the plan already exists and the task file's `**Scope:**` field carries the classification.
 
-**If the effective request contains a clear, actionable request** (not just resume-intent words), do not ask the user "What do you want to do?" or similar — the user already told you. Instead, run a lightweight completeness check.
+## Completeness — synthesize, don't interview
 
-A request is complete enough to plan when these are clear: goal, scope, non-goals, acceptance criteria, constraints, risks, and validation strategy. For trivial requests, this can be a one-sentence assessment (e.g., "Completeness check passed because the requested one-line behavior and verification are explicit."). For non-trivial requests, identify missing pieces explicitly.
+Synthesize the completeness check from what is already available: the effective request, the project context files already in context, and anything you can find in the codebase yourself. Do not ask the user for facts you can look up, and do not re-ask for anything they already stated.
 
-Based on the project context files, completeness check, and request, classify the scope:
+A request is complete enough to plan when these are clear: goal, scope, non-goals, acceptance criteria, constraints, risks, and validation strategy. For trivial requests this is a one-sentence assessment (e.g., "Complete: the requested one-line behavior and its verification are explicit."). For non-trivial requests, name the missing pieces explicitly — those, and only those, become the questions for Step 2.
+
+If the effective request contains a clear, actionable request (not just resume-intent words), never ask "What do you want to do?" or similar — the user already told you.
+
+## Scope
+
+Classify the scope from the project context, the completeness check, and the request:
 
 - **Small** — touches 1–3 files, intent is clear, change is isolated
 - **Medium** — touches multiple files, intent is clear, change is cross-cutting
 - **Large** — incomplete/vague request, architectural impact, many files, or unfamiliar territory
 
-The classification is load-bearing beyond planning: Small/Medium execute a whole phase per Implementer spawn and verify it with a single phase check, while Large executes one step per spawn with a drift check after each.
+The classification is load-bearing beyond planning:
 
-**Extension skill check (supplemental only).** Before finalising the scope classification, check for compatible extension skills discovered at startup (see `{CRAFTER_HOME}/rules/do/extension-skills.md`). If any skill's `When-Applies` matches the request, record their names and capabilities. Pass this list as supplemental context when delegating to the Analyzer in Step 2 or when building plan context in Step 3, so those agents can consult the extension skills as domain specialists. Extension skills may contribute domain-specific completeness criteria; they cannot replace the orchestrator's scope classification or scope-gate decision. See `rules/do-workflow.md` → `### Extension-skill supplemental-only invariant`.
+| Scope | Plan | Execution unit |
+|---|---|---|
+| Small | inline, 3–6 sentences in the task file — no Planner spawn | the whole task in one Implementer spawn |
+| Medium | `crafter-planner`, flat step list, one contract | the whole task in one Implementer spawn |
+| Large | `crafter-planner`, vertical phases, one contract per phase | one phase per Implementer spawn |
 
-Report the verdict, the scope, and its rationale in the startup summary and stop there. **Task-file creation is not part of this procedure** — it is the orchestrator's action after the startup summary returns: if the request is complete enough to plan, the orchestrator creates the task file per `{CRAFTER_HOME}/rules/task-lifecycle.md` (recording the reported scope in the `**Scope:**` metadata field, and respecting the main/master guard — fresh task files should normally capture the approved topic branch, not `main/master`) and continues to Step 3.
+When scope is genuinely ambiguous, ask the user rather than guessing.
+
+**Extension skill check — only when `--ext` is active.** Without the flag, skip this paragraph entirely. With it, check the extension skills discovered at startup (see `{CRAFTER_HOME}/rules/do/extension-skills.md`); if any skill's `When-Applies` matches the request, record their names and capabilities and pass them as supplemental context to the Analyzer in Step 2 or the Planner in Step 3. Extension skills may contribute domain-specific completeness criteria; they cannot replace the orchestrator's scope classification.
+
+The task file is created only once the request is **complete enough to plan** — i.e. on entry to Step 3. If gaps remain, continue to Step 2 without creating it; Step 2 creates it once the gaps are closed. If the request is already complete enough to plan, create it now per `{CRAFTER_HOME}/rules/task-lifecycle.md`, recording the scope in the `**Scope:**` metadata field and respecting the main/master guard (use the approved topic branch, not `main/master`), then continue to Step 3.

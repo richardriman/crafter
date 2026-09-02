@@ -39,11 +39,9 @@ crafter/
 │   └── go.sum                   # Dependency checksums
 ├── agents/                      # Native Claude Code agent definitions
 │   ├── crafter-analyzer.md      # Analyzer agent
+│   ├── crafter-checker.md       # Checker agent — drift + code review in one fresh-context pass (full and delta modes)
 │   ├── crafter-implementer.md   # Implementer agent
-│   ├── crafter-planner.md       # Planner agent
-│   ├── crafter-reviewer.md      # Reviewer agent
-│   ├── crafter-step-runner.md   # Step Runner agent — thin glue agent for per-step module delegation (extension-skills, step-0-resume, step-1-scope)
-│   └── crafter-verifier.md      # Verifier agent
+│   └── crafter-planner.md       # Planner agent
 ├── rules/                       # Per-concern rule fragments (loaded selectively by commands)
 │   ├── core.md                  # Universal rules (language, principles, context maintenance)
 │   ├── do-workflow.md           # Standard Change workflow rules
@@ -71,9 +69,9 @@ crafter/
 
 ### Orchestrator / Agent Model
 
-Skills act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to six specialized agents (Planner, Implementer, Verifier, Reviewer, Analyzer, Step Runner), each spawned in a fresh context window with only the information it needs.
+Skills act as orchestrators: they manage workflow and user communication but never analyze code, implement changes, or review diffs themselves. Work is delegated to four specialized agents (Planner, Implementer, Checker, Analyzer), each spawned in a fresh context window with only the information it needs.
 
-Agents are defined as native Claude Code agents in `agents/` and are invoked by name (e.g., `crafter-planner`).
+Agents are defined as native Claude Code agents in `agents/` and are invoked by name (e.g., `crafter-planner`). Startup glue (extension discovery, resume detection, scope classification) is run inline by the orchestrator rather than delegated, and Small-scope plans are written inline too.
 
 ### Skills-first
 
@@ -89,13 +87,13 @@ Agent role definitions, model tiers, and context budgets are specified in `rules
 
 ### Human-in-the-Loop Gates
 
-Every significant action requires user approval: plan approval before execution, diff review before commit. Phase-close commits are no longer gated on an explicit per-commit command — instead they are triggered automatically once phase verification passes and a clean review summary is produced. Approval follows one of three paths: (1) auto-approve when the review summary is clean and no user intervention is needed, (2) silence-approve when the `--fast` flag is set (silence is treated as approval), or (3) explicit user approval for any other case. Critical or Major review findings trigger a mandatory fix-loop with a 5-iteration cap before the commit can proceed.
+Plan approval is the one unconditional gate: execution never starts without it. After the check pass, commits are triggered automatically — the default is auto-commit once no Critical or Major findings remain, and explicit user approval is required only for the manual-verification exception (the plan states that verification needs manual testing). Minor and Suggestion findings do not gate anything: each is recorded as a `Decision (Tech Debt — auto-recorded)` entry and the run continues. Critical or Major findings, and harmful drift, stop the run and trigger a mandatory fix loop with a 5-iteration cap before the commit can proceed.
 
-A fourth mode, `--auto` (unattended orchestration), runs the full Plan → Execute → Verify → Review → PR cycle without interactive pauses. It retains four hard gates (initial clarification, plan approval, fix-loop cap reached, ad-hoc escape hatch); everything else is handled automatically. `--auto` enforces the green-commit invariant: if the fix loop cannot bring a phase to green within budget, the run exits with state rather than committing. `--auto` and `--fast` are mutually exclusive.
+Two independent flags modify the flow. `--ext` (default off) enables extension-skill discovery and the pre-spawn extension checks; without it no discovery scan runs at all. `--auto` (default off) runs the full Plan → Execute → Check → PR cycle without interactive pauses, retaining four hard gates (initial clarification, plan approval, fix-loop cap reached, ad-hoc escape hatch); everything else is handled automatically. `--auto` enforces the green-commit invariant: if the fix loop cannot bring the work to green within budget, the run exits with state rather than committing. The `--fast` flag was removed and is now rejected with an error.
 
-### Vertical Planning and Drift Checks
+### Execution Contracts and the Check Pass
 
-`/crafter-do` plans work as vertical execution contracts. Each phase and step defines a Karpathy Contract: outcome, scope boundary, non-goals, simplicity constraint, drift criteria, verification evidence, and stop conditions. The Implementer works one step at a time, the Verifier runs step drift checks before the next step, and full Review runs after phase verification unless a high-risk step requires immediate review. The phase-close flow now includes Step 6b (Phase Summary and Auto-Commit) as a standard step before moving to the next phase or to Steps 7–9.
+`/crafter-do` plans work as execution contracts. Small and Medium scope produce a flat step list under one contract for the whole task; Large groups steps into vertical phases with one contract per phase. A contract defines: outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions — there is no per-step contract. Execution follows the same units: the whole task in one Implementer spawn for Small/Medium, one whole phase per spawn for Large, with the Implementer running the relevant tests and reporting them as evidence. Each unit ends with one `crafter-checker` pass covering drift and code review together; the fix loop re-checks in delta mode over the files the fix changed, widening back to a full pass when the fix reaches outside the delta. Step 6b (Summary and Commit) closes the unit before moving to the next phase or to Steps 7–9.
 
 ### Adaptive Scope Detection
 

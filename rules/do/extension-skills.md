@@ -1,12 +1,14 @@
 # Extension Skills
 
+**This whole module is read and applied ONLY when the `--ext` flag is active.** Without `--ext` there is no discovery scan, no extension-skill matching, and no pre-spawn extension check anywhere in the workflow — the orchestrator does not read this file at all. The default is off.
+
 An **extension skill** is any Crafter-compatible skill — beyond the core agents shipped with Crafter — that declares a Skill Contract block in its own `SKILL.md`. Extension skills act as **supplemental specialists**: they advise, annotate, or enrich workflow phases, but they never replace a core agent or bypass an approval gate.
 
-**v1 invariant — supplemental only.** Extension skills in v1 are advisory. They may contribute observations, checklists, or domain-specific findings, but all workflow decisions (plan approval, commit approval, phase gates) remain exclusively with the core orchestrator and core agents.
+**v1 invariant — supplemental only.** Extension skills in v1 are advisory. They may contribute observations, checklists, or domain-specific findings, but all workflow decisions (plan approval, commit approval, the Check gate) remain exclusively with the core orchestrator and core agents.
 
-### Discovery (startup procedure 1)
+### Discovery (`--ext` only)
 
-The first of the three procedures the `crafter-step-runner` runs under the `startup` step, before resume detection and scope assessment. Scan these `skills/` directories in priority order (most specific to least):
+Run inline by the orchestrator at startup, before resume detection, and only when `--ext` is active. Scan these `skills/` directories in priority order (most specific to least):
 
 | Priority | Location | Scope |
 |---|---|---|
@@ -25,7 +27,7 @@ Every extension skill must satisfy the full safety envelope defined in `docs/ski
 Compatible extension skills may be considered at three workflow phases:
 
 - **Startup (completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
-- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation; matching is against the whole phase for Small/Medium and the current step for Large.
-- **Step 6 (Review)** — a skill may provide additional review criteria beyond the core Reviewer's checklist.
+- **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation; matching is against the execution unit (the whole task for Small/Medium, the current phase for Large).
+- **Step 5 (Check)** — a skill may provide additional review criteria beyond the core Checker's checklist.
 
 In all cases the core agent for that phase runs first and is authoritative. Extension skill findings are supplemental context.

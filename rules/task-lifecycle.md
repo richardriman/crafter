@@ -24,7 +24,7 @@ Runs at workflow start, before scope detection.
    - If resuming, determine the appropriate workflow step from the task file:
      - Request filled but Plan section still contains `_(pending)_` → go to scope detection / planning.
      - Plan filled with `**Plan status:** draft` → go to plan approval (present plan summary to user and wait for approval).
-      - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next), unless all steps in the current phase are checked and that phase has a pending verification/review gate.
+      - Plan filled with `**Plan status:** approved` → go to Execute (the first unchecked step is next), unless all steps in the current unit are checked and its check gate is still pending.
      - Otherwise (unrecognized Plan content) → present to user and ask how to proceed.
    - If starting fresh: proceed normally (the old file stays as-is; a new one will be created after scope detection).
 7. If no match is found and you are on a feature branch (not main/master): run a branch/request relevance sanity check before proceeding. Compare the effective request (`$ARGUMENTS`) with the branch topic at a high level. If there is a reasonable suspicion that the request is unrelated to the current branch (for example, stale branch context, clearly different task intent, or low topical overlap), do not proceed silently. Ask the user how to continue and wait for a decision.
@@ -44,14 +44,11 @@ Runs after the first user-interaction gate (completeness/scope in `/crafter-do`,
 
 Runs at each gate, silently — no user interaction needed.
 
-- **After planning:** The Planner agent writes the full plan directly to the Plan section (with checkboxes for each step) and sets `**Plan status:** draft`. After the user approves the plan, the orchestrator changes the status to `**Plan status:** approved` (administrative edit via Edit tool). These are the only two valid states for the plan status field.
-- **After execution, checking off steps (scope-conditional):**
-  - **Large scope** — per step: after each step's Execute → Step Drift Check cycle, check off that step immediately.
-  - **Small / Medium scope** — batched: the Implementer executes the whole phase in one spawn, so nothing is checked off until the phase check returns. Then check off every step the phase check classified as clean, in one pass. Steps that came back with unresolved drift stay unchecked until the drift is handled.
-  - In both cases use a targeted Edit on just the checkbox line(s) (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
+- **After planning:** The plan is written to the Plan section (with checkboxes for each step) with `**Plan status:** draft` — by the Planner agent under Medium/Large scope, by the orchestrator inline under Small scope. After the user approves the plan, the orchestrator changes the status to `**Plan status:** approved` (administrative edit via Edit tool). These are the only two valid states for the plan status field.
+- **After execution, checking off steps — always batched:** the Implementer executes the whole unit in one spawn (the whole task under Small/Medium, one phase under Large), so nothing is checked off until the check pass returns. Then check off every step the Checker reported clean, in one pass. Steps with unresolved drift stay unchecked until the drift is handled.
+  - Use a targeted Edit on just the checkbox line(s) (change `- [ ]` to `- [x]`) rather than rewriting the full task file. This avoids pulling the entire file into context each time.
   - The orchestrator remains the only writer of the task file; agents never tick checkboxes.
-- **After phase verification:** Mark the phase verification gate complete in the Plan section (for example, change `- [ ] Phase verification` to `- [x] Phase verification`).
-- **After phase review:** Mark the phase review gate complete in the Plan section (for example, change `- [ ] Phase review` to `- [x] Phase review`). A phase is complete only when all step checkboxes and both phase gates are checked.
+- **After the check pass:** Mark the check gate complete in the Plan section (for example, change `- [ ] Check` to `- [x] Check`). A phase is complete only when all its step checkboxes and its check gate are checked.
 - **After accepted local beneficial drift:** Append to the Decisions section using `Decision (Orchestrator Accepted)` when the drift is local, beneficial, does not affect scope or later steps, and meets the workflow rules.
 - **After user-approved drift or scope change:** Append to the Decisions section using `Decision (User Accepted)`. If the scope expands or the request is refined during discussion, also update the Request section to reflect the final agreed-upon scope before proceeding to execution. The Request should serve as an accurate record of what was actually done, not just the initial input.
 - **After fix approval (debug workflow):** Write the proposed fix to the Plan section.
@@ -64,17 +61,16 @@ Decision examples:
 
 ## Phase Gate Resume Rules
 
-- If the first unchecked item is a normal step, resume at Execute for that step.
-- If all steps in a phase are checked but `Phase verification` is unchecked, resume at phase verification.
-- If all steps and `Phase verification` are checked but `Phase review` is unchecked, resume at phase review.
-- If a task file has no explicit phase gates, use the first unchecked step as the source of truth for backward compatibility.
+- If the first unchecked item is a normal step, resume at Execute for the unit that step belongs to.
+- If all steps in a unit are checked but its `Check` gate is unchecked, resume at the check pass.
+- If a task file has no explicit gates, use the first unchecked step as the source of truth for backward compatibility.
 
 ## Task File Completion
 
 Runs during post-change, after commit.
 
 - Fill in the Outcome section with the commit SHA and a brief summary.
-- Check off any remaining plan steps and phase gates (`- [ ]` → `- [x]`).
+- Check off any remaining plan steps and gates (`- [ ]` → `- [x]`).
 - Set Status to `completed`.
 
 ## Edge Cases
