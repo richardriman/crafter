@@ -14,6 +14,8 @@ If resuming an active task, check the plan status in the task file:
 - If `**Plan status:** approved` — resume-status is `resume-approved`; the task file's checkboxes are the source of truth. The first unchecked step (`- [ ]`) is the next step to execute — go to Step 4. Skip the scope procedure and read the scope from the task file's `**Scope:**` field.
 - Otherwise (Plan section contains unrecognized content) — present the task file to the user and ask how to proceed.
 
+**Legacy plan compatibility:** An approved plan written before the single-Check-gate format may lack the gate line. Before continuing to Step 4, if a checklist does not end with a `- [ ] Check` gate line, add it — at the end of the flat checklist (Small/Medium), or at the end of each phase's checklist (Large/phased). Old `- [ ] Phase verification` / `- [ ] Phase review` gate lines, if present, are replaced by that single `Check` gate line. Do not tick anything retroactively. A legacy plan organized into phases is executed per phase (one Implementer spawn and one check pass per phase), regardless of its `**Scope:**` label.
+
 Steps are checked off in a batch after the check pass, so an interrupted run leaves the whole execution unit unchecked and resumes at its start. This is expected: the Implementer is told that some outcomes may already exist and must inspect the current state before editing.
 
 If not resuming, resume-status is `new-run` and the scope procedure runs next.
