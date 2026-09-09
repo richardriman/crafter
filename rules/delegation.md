@@ -67,3 +67,9 @@ Before spawning any agent via the Task tool, re-read the caveman and ponytail ma
    Replace `<LEVEL>` with the level read from `$HOME/.claude/.ponytail-active`. Do not append this line for any other agent (checker, analyzer).
 
 3. **No-op:** When both markers are absent, append nothing and do not mention the skills.
+
+## Report Language (always on)
+
+Independent of the caveman and ponytail markers, and emitted on **every** spawn: the orchestrator names the user's conversation language (as detected per `rules/core.md` — **Language Rules**) in the spawned agent's prompt, and the agent writes the free-text prose of its returned report — finding descriptions, recommendations, summaries — in that language.
+
+Always English regardless of the user's language: code, identifiers, file paths, required headings, table column names, status-line formats, every persistent file (`.crafter/*`, task files, plans — see `rules/task-lifecycle.md`), and — the same carve-out the caveman directive carries in item 1 above — any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines): `crafter pr-body` renders it into the PR body and the buffers under `.crafter/run/` are persistent files. Crafter targets no specific language; it follows whichever one the user writes in.

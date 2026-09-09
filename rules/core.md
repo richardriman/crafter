@@ -6,6 +6,7 @@
 - **Conversation with the user:** match the user's language — auto-detect from their input and respond in kind
 - **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
+- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents write the free-text prose of their report in it, while code, identifiers, file paths, required headings, table columns, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
 
 ## Jargon Confinement
 
