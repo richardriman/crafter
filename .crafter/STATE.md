@@ -84,6 +84,7 @@ Everything is released as of **v0.14.1** (2026-07-07). v0.14.0 shipped the cavem
 
 ## Ideas
 
+- Ponytail-lite pro `crafter-checker` — z briefu k severity kalibraci (2026-09-09), vědomě neimplementováno. Checker dnes ponytail nedostává (`rules/core.md` § Ponytail, `rules/delegation.md` item 2). Návrh: hard-coded `lite` bez ohledu na úroveň markeru — jen YAGNI půlka (nenavrhovat přidání, které nic nevyžaduje), ne "shortest working diff" (reviewer by argumentoval za menší diff místo správnosti). Zvážit až po vyhodnocení, zda reachability gate + pravidlo prázdné tabulky nestačí samy.
 - `/crafter:add-planned` — quick command for adding planned items to STATE.md
 - Wonder/Reflect pattern (inspirace OctopusGarden) — dvou-fázová diagnostika při zaseknutí: Wonder (divergentní brainstorming neobvyklých příčin) → Reflect (chirurgický konzervativní fix). Temperature control přes `claude -p` není dostupný, ale dá se nahradit prompt engineeringem. Mohlo by obohatit `crafter:debug`.
 - Holdout validation — verifier testuje proti kritériím, která implementer neviděl. Satisfaction scoring (0–100) místo binary pass/fail.
