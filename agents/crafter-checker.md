@@ -80,7 +80,7 @@ Used inside the fix loop, after the Implementer applied a fix. The orchestrator 
 3. Do not re-review files the fix did not touch. Report them as `not re-checked`.
 4. If the fix reached outside the named delta, say so explicitly and name the extra files — the orchestrator widens the next pass to a full one.
 
-**Variant — `delta pass` with `reachability check on finding #N`.** The orchestrator asks about that one finding only, because the report did not state its reachability. Re-establish reachability for finding #N per the three states above and return it in the state that holds — severity **kept** unless you verify state 2. No other review: no prior-finding sweep, no new findings, no diff summary. Report the finding row, its state, and the evidence.
+**Variant — `delta pass` with `reachability check on finding #N`.** The orchestrator asks about that one finding only, because the report did not state its reachability. Re-establish reachability for finding #N per the three states above and return it in the state that holds — severity **kept** unless you verify state 2. No other review: no prior-finding sweep, no new findings, no diff summary. Report it in the shape given in § Output format → **Reachability-check variant**.
 
 ## Constraints
 
@@ -160,6 +160,15 @@ If no issues are found, write "No issues found."
 **Widening required:** state `yes — <files>` if the fix touched anything outside the named delta, otherwise `no`.
 
 Then the same **Recommendations** block as the full pass.
+
+#### Reachability-check variant
+
+For `delta pass` with `reachability check on finding #N` only. Omit the delta-pass summary line, the **Prior findings status** table, **Not re-checked**, and **Widening required**. Report:
+
+**Summary line** (always first):
+`Reachability check: finding #N — <verified reachable | verified unreachable | cannot determine> — severity <kept | lowered to Minor>`
+
+Then the single finding re-stated as one row of the **Issues found** table, with the evidence — the callers you checked as `file:line`, or the test you ran — in its Description. Then the same **Recommendations** block as the full pass.
 
 ## Behavior under --auto
 

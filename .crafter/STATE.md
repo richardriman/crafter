@@ -90,5 +90,5 @@ Everything is released as of **v0.14.1** (2026-07-07). v0.14.0 shipped the cavem
 
 ## Known Issues
 
-- Deferred Minor/Suggestion findings from the checker-severity task (2026-09-09): ambiguous "sub-step 5 below" cross-ref in `rules/do/step-5-check.md:24`; the `reachability check on finding #N` variant has no defined output shape in `agents/crafter-checker.md`; `rules/delegation.md:75` rationale calls `.crafter/run/` buffers persistent (they are scratch); `rules/do-workflow.md:36` check-pass summary silent on the send-back; SKILL.md Pre-Spawn Gate heading no longer covers the language pointer. Nothing blocking.
+- Deferred Minor/Suggestion findings from the checker-severity task (2026-09-09): the `#### Reachability-check variant` output shape in `agents/crafter-checker.md` does not say whether the `--auto` classification table is appended; `rules/delegation.md:75` rationale calls `.crafter/run/` buffers persistent (they are scratch); `rules/do-workflow.md:36` check-pass summary silent on the send-back; SKILL.md Pre-Spawn Gate heading no longer covers the language pointer. Nothing blocking.
 - Deferred Minor/Suggestion findings from the workflow-streamlining refactor are listed in the PR description on `refactor/streamline-workflow`. Nothing blocking.
