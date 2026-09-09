@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-09-09
 - **Work branch:** fix/checker-severity-and-language
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -124,3 +124,5 @@ Acceptance: the four changes are present in the repo source files, the three pro
 - **Decision (Tech Debt — auto-recorded):** Suggestion — `.crafter/ARCHITECTURE.md` § Skill Adaptation (~line 140) describes only marker-gated caveman/ponytail propagation and claims agent files carry `## Behavior under caveman` sections (they do not); the always-on language rule and the send-back are absent. Deferred to the Steps 7–9 docs check.
 
 ## Outcome
+
+Committed as `f9367c4` on `fix/checker-severity-and-language`. All four changes landed in the five contract files (+23/−2 after the fix loop), protected lines byte-identical, `tests/test_install.sh` 64/0. Checker full pass raised 1 harmful drift (send-back had no Checker mode) and 2 Major (probe wording vs Bash-only rule; missing buffer-bound-text carve-out in the language rule) — all fixed in fix-loop iteration 1 together with 2 Minor; delta pass closed clean with 3 new Minor recorded as tech debt. The brief `crafter-checker-severity-brief.md` stays untracked. Deviation from the request as written: the orchestrator never downgrades (the request offered downgrade-or-send-back); severity is assigned and lowered by the Checker only, per user decision during plan revision 1.
