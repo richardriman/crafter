@@ -74,6 +74,8 @@ After the per-step blocks, add one **Evidence** section for the whole contract: 
 
 Do not include the full file contents — just the summary.
 
+No prose outside the mandated sections — no intro, no closing summary.
+
 ## Behavior under --auto
 
 This section applies only when the orchestrator indicates `--auto` mode in the task prompt. Under `--auto`, you must tag each item in the **deviations/discoveries** section of your output with one of the following classifications so the orchestrator can route it without pausing for human input.
