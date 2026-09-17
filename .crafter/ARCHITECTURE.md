@@ -79,7 +79,7 @@ Crafter's canonical workflow logic lives in `skills/crafter-*/SKILL.md`.
 
 ### Model Selection
 
-Each agent role has an assigned model tier (opus / sonnet) based on task complexity. Configuration lives in `rules/delegation.md` alongside other delegation rules. The Analyzer role is adaptive — it uses sonnet by default but upgrades to opus for Large scope tasks.
+All four agents run on the `fable` tier; effort is `medium` for Planner and Checker and `low` for Implementer and Analyzer (curbs verbosity and padding). The table and rationale live in `rules/delegation.md` § Model Configuration, mirrored by each agent's frontmatter. The same file gates the caveman directive to English-only conversations (§ Skill Directives, item 1); for other languages the Checker's hard output-format limits (`agents/crafter-checker.md` § Output format) keep reports terse.
 
 ### Agent Roles and Context
 

@@ -1,8 +1,8 @@
 ---
 name: crafter-planner
 description: Tech lead planning agent. Given a complete task description and high-level pointers, explores the codebase enough to produce an execution contract with outcomes, boundaries, seams, and verification evidence. Called by the crafter orchestrator before any implementation begins, for Medium and Large scope only.
-model: opus
-effort: high
+model: fable
+effort: medium
 tools: Read, Edit, Grep, Glob, Bash
 memory: project
 ---
