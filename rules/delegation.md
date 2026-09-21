@@ -27,10 +27,12 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 
 | Agent | Model | Effort | Rationale |
 |---|---|---|---|
-| `crafter-planner` | `opus` | high | Deep reasoning for plan quality |
-| `crafter-implementer` | `opus` | medium | Implementation defects are the most expensive to iterate on |
-| `crafter-checker` | `opus` | high | Thorough drift and code analysis in one pass |
-| `crafter-analyzer` | `opus` | medium | Research quality drives plan quality |
+| `crafter-planner` | `fable` | medium | Strongest tier; medium effort keeps plans dense without padding |
+| `crafter-implementer` | `fable` | low | Strongest tier; low effort curbs verbosity in reports and diffs |
+| `crafter-checker` | `fable` | medium | Strongest tier; medium effort for drift and review without invented findings |
+| `crafter-analyzer` | `fable` | low | Strongest tier; low effort keeps research output terse |
+
+`fable` replaced `opus`, which proved verbose and prone to invent findings; effort is set low/medium to curb verbosity and padding.
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 
@@ -42,7 +44,7 @@ Agent files also include a fallback `model` for direct invocation (`/agents` wit
 
 Before spawning any agent via the Task tool, re-read the caveman and ponytail markers per `rules/core.md` — **Skill Detection: Caveman and Ponytail** (canonical), then:
 
-1. **Caveman (all agents, audience-based level):** If caveman is active, append the directive below, choosing the level by the agent's audience:
+1. **Caveman (all agents, audience-based level, English only):** If caveman is active **and** the detected user conversation language (per § Report Language / `rules/core.md` — **Language Rules**) is English, append the directive below, choosing the level by the agent's audience. For any other language append nothing for caveman (ponytail is unaffected): caveman's mechanics are English-specific, and for other languages the hard output-format limits in each agent's own prompt (e.g. `agents/crafter-checker.md` § Output format) do the work.
    - **caveman-full** for `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` — their output is agent-facing (the orchestrator consumes/digests it).
    - **caveman-lite** for `crafter-checker` — its report is relayed verbatim to the user (see `rules/core.md` carve-out (a)), so it is human-facing and must stay in the lighter register.
 
@@ -70,6 +72,12 @@ Before spawning any agent via the Task tool, re-read the caveman and ponytail ma
 
 ## Report Language (always on)
 
-Independent of the caveman and ponytail markers, and emitted on **every** spawn: the orchestrator names the user's conversation language (as detected per `rules/core.md` — **Language Rules**) in the spawned agent's prompt, and the agent writes the free-text prose of its returned report — finding descriptions, recommendations, summaries — in that language.
+Independent of the caveman and ponytail markers, and emitted on **every** spawn: the orchestrator names the user's conversation language (as detected per `rules/core.md` — **Language Rules**) in the spawned agent's prompt, and the agent writes the free-text prose of its returned report — finding descriptions, recommendations, summaries — in that language. Only that final report prose switches language: the agent's reasoning, intermediate notes, tool queries, any scratch or plan text, and MEMORY.md entries stay English regardless of the user's language — English intermediate work is cheaper and terser, and translation happens once, at the report.
 
 Always English regardless of the user's language: code, identifiers, file paths, required headings, table column names, status-line formats, every persistent file (`.crafter/*`, task files, plans — see `rules/task-lifecycle.md`), and — the same carve-out the caveman directive carries in item 1 above — any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines): `crafter pr-body` renders it into the PR body and the buffers under `.crafter/run/` are persistent files. Crafter targets no specific language; it follows whichever one the user writes in.
+
+**No-filler rule (always on, language-independent).** The spawn prompt always carries the following, regardless of the caveman/ponytail markers and of the user's language — it replaces caveman for non-English users and is cheaper than a style directive:
+
+- The returned report contains no greeting, no preamble or intro sentence, no closing summary or "overall" verdict, no pleasantries, and no hedging filler.
+- Only the sections the agent's output format mandates, in order.
+- Free-text cells and paragraphs say what is needed in the fewest sentences.

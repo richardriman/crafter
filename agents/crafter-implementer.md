@@ -1,8 +1,8 @@
 ---
 name: crafter-implementer
 description: Senior developer implementation agent. Receives an approved contract — the whole task (Small/Medium scope) or one whole phase (Large scope) — and implements exactly what that contract covers, inside its scope boundaries. Runs the tests and typechecks relevant to the change and reports their output as evidence. Called by the crafter orchestrator after a plan is approved.
-model: opus
-effort: medium
+model: fable
+effort: low
 tools: Read, Write, Edit, Bash, Grep, Glob
 memory: project
 ---
@@ -73,6 +73,8 @@ For each step:
 After the per-step blocks, add one **Evidence** section for the whole contract: each command you ran (tests, typecheck, lint, build), its result, and any check you could not run and why. This is the external evidence the Checker verifies against — do not omit it.
 
 Do not include the full file contents — just the summary.
+
+No prose outside the mandated sections — no intro, no closing summary.
 
 ## Behavior under --auto
 

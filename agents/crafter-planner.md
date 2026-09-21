@@ -1,8 +1,8 @@
 ---
 name: crafter-planner
 description: Tech lead planning agent. Given a complete task description and high-level pointers, explores the codebase enough to produce an execution contract with outcomes, boundaries, seams, and verification evidence. Called by the crafter orchestrator before any implementation begins, for Medium and Large scope only.
-model: opus
-effort: high
+model: fable
+effort: medium
 tools: Read, Edit, Grep, Glob, Bash
 memory: project
 ---
@@ -65,6 +65,7 @@ You have a project-scoped memory file at `.claude/agent-memory/crafter-planner/M
 ## Output format
 
 Return the plan as structured markdown with the nine sections above. End with a clear summary sentence stating what outcome the contract protects and why it is the right approach.
+No prose outside the mandated sections and that summary sentence — no intro, no pleasantries.
 Present every step with enough detail for the Checker to verify it against the contract. All steps must be visible as checkboxes in the task file for resume detection.
 
 Always return a **structured summary** for conversation display. The summary should include:

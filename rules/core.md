@@ -6,7 +6,7 @@
 - **Conversation with the user:** match the user's language — auto-detect from their input and respond in kind
 - **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
-- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents write the free-text prose of their report in it, while code, identifiers, file paths, required headings, table columns, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
+- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents work internally in English (reasoning, notes, tool queries, memory) and write only the free-text prose of their returned report in it, while code, identifiers, file paths, required headings, table columns, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
 
 ## Jargon Confinement
 
@@ -38,7 +38,7 @@ Caveman removes filler words, pleasantries, and hedging while keeping ALL techni
 - Human-facing prose → caveman-lite.
 - Reasoning, inter-agent summaries, and pure agent-facing output → caveman-full.
 
-`crafter-checker` reports are **human-facing** — the orchestrator relays them verbatim to the user (carve-out (a) below), so the Checker receives caveman-lite. `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` output is agent-facing (the orchestrator consumes and digests it), so they receive caveman-full.
+`crafter-checker` reports are **human-facing** — the orchestrator relays them verbatim to the user (carve-out (a) below), so the Checker receives caveman-lite. `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` output is agent-facing (the orchestrator consumes and digests it), so they receive caveman-full. The directive is propagated to agents only when the detected user conversation language is English (`rules/delegation.md` § Skill Directives, item 1); for other languages no caveman directive is appended.
 
 #### Human-facing caveman-lite policy (orchestrator)
 
