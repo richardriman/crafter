@@ -83,7 +83,7 @@ All four agents run on `opus` (Opus 5.5); effort is `high` for Planner and Check
 
 ### Agent Roles and Context
 
-Agent role definitions, model tiers, and context budgets are specified in `rules/delegation.md` and `agents/*.md`.
+Agent role definitions, model tiers, and context budgets are specified in `rules/delegation.md` and `agents/*.md`. Every agent definition carries the same `## Ending your turn` section, which names the unwanted early stops and allows ending only when the assignment is complete or blocked.
 
 ### Human-in-the-Loop Gates
 
