@@ -157,7 +157,8 @@ If no issues are found, write "No issues found."
 
 **Recommendations:**
 - **Must fix (Critical/Major, and all harmful drift):** list each by number, or "None".
-- **Record and continue (beneficial local drift, Minor/Suggestion):** list each by number, or "None".
+- **Fix or defer — user decision (Minor):** list each by number, or "None".
+- **Record and continue (beneficial local drift, Suggestion):** list each by number, or "None".
 - **Needs a user decision (scope drift):** list each by number, or "None".
 - **Replan (plan-obsoleting discovery):** list each by number, or "None".
 

@@ -15,7 +15,7 @@ If nothing needs updating, move on silently.
 
 The orchestrator commits **automatically** — no user prompt for the commit itself — when both preconditions are met:
 
-1. **Check passed** — the Checker's pass closed with no Critical or Major findings and no unresolved drift; remaining Minor/Suggestion findings are recorded as tech-debt Decisions.
+1. **Check passed** — the Checker's pass closed with no Critical or Major findings and no unresolved drift; no Minor finding the user chose to fix remains; deferred Minor and remaining Suggestion findings are recorded as tech-debt Decisions.
 2. **Approval signal received** — via one of the paths defined in the phase summary approval gate in `{CRAFTER_HOME}/skills/crafter-do/SKILL.md` (auto-commit by default | explicit user approval when the manual-verification exception applies).
 
 Use conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`

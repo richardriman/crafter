@@ -16,7 +16,7 @@ Crafter takes the best ideas from both and strips away the overhead. It's a ligh
 You are the craftsman. Claude is your tool. The developer's judgment, taste, and intent drive every decision — Claude executes and advises, it does not decide.
 
 ### Human-in-the-loop at the decision points that matter
-No silent refactors. No guessing when the request is ambiguous. Plan approval is always a human gate, Critical and Major findings stop the flow until they are resolved, and work that only a human can verify waits for explicit consent. Once the check pass closes clean — or with nothing worse than Minor/Suggestion findings recorded as tech-debt decisions — the commit lands automatically, because there is nothing left for the developer to decide.
+No silent refactors. No guessing when the request is ambiguous. Plan approval is always a human gate, Critical and Major findings stop the flow until they are resolved, and work that only a human can verify waits for explicit consent. Minor findings stop for the developer's choice to fix or defer them. Once the check pass closes clean — or with only Suggestions and deferred Minor findings recorded as tech-debt decisions — the commit lands automatically, because there is nothing left for the developer to decide.
 
 ### Conversational
 Plans are written in plain language, for a human reader. Not XML. Not structured task objects. Not pipe-delimited fields. If you can't explain the plan clearly in a few paragraphs, the plan isn't ready yet.
