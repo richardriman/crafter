@@ -27,12 +27,12 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 
 | Agent | Model | Effort | Rationale |
 |---|---|---|---|
-| `crafter-planner` | `opus` | high | Opus 5.5 at high effort; dense plans without padding |
+| `crafter-planner` | `opus` | high | Opus 5.5 at high effort; plan errors propagate to every later step |
 | `crafter-implementer` | `opus` | medium | Opus 5.5 at medium effort; minimal diffs, terse reports |
 | `crafter-checker` | `opus` | high | Opus 5.5 at high effort; drift and review without invented findings |
-| `crafter-analyzer` | `opus` | high | Opus 5.5 at high effort; terse research output |
+| `crafter-analyzer` | `opus` | medium | Opus 5.5 at medium effort; research and root-cause investigation feed the plan |
 
-`opus` (Opus 5.5) replaced `fable`; effort is `high`, except `medium` for the Implementer.
+`opus` (Opus 5.5) replaced `fable`. `medium` is the Opus 5.5 default and matches Opus 5 at `high`; `high` is kept for Planner and Checker, where plan and review quality carry the most leverage.
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 
@@ -53,7 +53,7 @@ Before spawning any agent via the Task tool, re-read the caveman and ponytail ma
    ```
    ## Active skill directives
 
-   **caveman-<LEVEL>** is active — apply caveman-<LEVEL> discipline to your reasoning and returned report. Drop filler, pleasantries, and hedging in whatever language you use (language-specific mechanics like dropping articles apply only where the language has them). Keep ALL technical substance verbatim: code, file paths, identifiers, numbers, and every required field, heading, and table of your mandated output format — compress only the free-text prose within them.
+   **caveman-<LEVEL>** is active — apply caveman-<LEVEL> discipline to your returned report. Drop filler, pleasantries, and hedging in whatever language you use (language-specific mechanics like dropping articles apply only where the language has them). Keep ALL technical substance verbatim: code, file paths, identifiers, numbers, and every required field, heading, and table of your mandated output format — compress only the free-text prose within them.
 
    **Never compress:** security warnings; confirmations of irreversible actions; multi-step sequences where order or completeness matters; and any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines) — that text is rendered into the PR body by `crafter pr-body` and must stay in neutral human voice.
    ```
