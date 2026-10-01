@@ -1,8 +1,8 @@
 ---
 name: crafter-checker
 description: Combined drift-check and code-review agent. Given the approved contract, the implementer's report, and the list of changed files, checks the implementation for drift against the contract and reviews the code for bugs, security issues, and style violations — in one fresh-context pass. Called by the crafter orchestrator after implementation. Never fixes or modifies files.
-model: fable
-effort: medium
+model: opus
+effort: high
 tools: Read, Grep, Glob, Bash
 memory: project
 ---
