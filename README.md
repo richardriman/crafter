@@ -73,12 +73,12 @@ crafter update --local
 `crafter statusline` renders Crafter state as a full status panel for Claude Code's native status bar. The panel is a single line of up to five sections joined by ` │ ` (a space-padded `│`), in the order `plan │ model │ vcs │ ctx │ cost`. Each section degrades independently and is simply omitted when it has no data, so the panel always renders whatever it can:
 
 ```
-Phase 2/3 · 7/12 [█████░░░░░] 58% │ Opus 4.8 1M (high) │ crafter ⎇ feat/statusline +18/-4 │ [████░░░░░░] 43% │ $0.42
+Phase 2/3 · 7/12 [█████░░░░░] 58% │ Opus 5.5 1M (high) │ crafter ⎇ feat/statusline +18/-4 │ [████░░░░░░] 43% │ $0.42
 ```
 
 **plan** — the plan position. When an active task is on the current branch it shows the full plan-progress segment (`Phase 2/3 · 7/12 [█████░░░░░] 58%`); before an approved plan exists it shows the edge states `planning` (plan not written yet) or `plan: awaiting approval` (written but not approved). When no task is active on the current branch the section falls back through `✓ done` (a completed task on this branch) and `N active elsewhere` (active tasks on other branches; the count is not pluralized, so a single task renders `1 active elsewhere`). The section is dropped when none of these apply.
 
-**model** — `display_name` + the abbreviated context-window capacity (`1M`, `200k`) + the effort level in parentheses, e.g. `Opus 4.8 1M (high)`. The capacity is dropped when unknown and the `(level)` suffix is dropped when there is no effort level.
+**model** — `display_name` + the abbreviated context-window capacity (`1M`, `200k`) + the effort level in parentheses, e.g. `Opus 5.5 1M (high)`. The capacity is dropped when unknown and the `(level)` suffix is dropped when there is no effort level.
 
 **vcs** — a group of `<project> ⎇ <branch> +N/-N`: the project name (basename of `workspace.project_dir`, dim grey), the branch icon and branch name, and the green/red added/removed line counts. Each part appears only when its data is present. The branch icon defaults to `⎇` (U+2387) and is configurable via the `CRAFTER_STATUSLINE_BRANCH_ICON` environment variable.
 

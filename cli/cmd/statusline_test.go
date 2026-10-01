@@ -13,7 +13,7 @@ import (
 // pointer fields carry their real values.
 func TestStatuslineInput_DecodeFull(t *testing.T) {
 	raw := `{
-		"model": {"display_name": "Opus 4.8"},
+		"model": {"display_name": "Opus 5.5"},
 		"effort": {"level": "high"},
 		"context_window": {"used_percentage": 42.5, "context_window_size": 1000000},
 		"cost": {"total_cost_usd": 0.42, "total_lines_added": 120, "total_lines_removed": 30},
@@ -25,8 +25,8 @@ func TestStatuslineInput_DecodeFull(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 
-	if in.Model.DisplayName != "Opus 4.8" {
-		t.Errorf("display_name: got %q, want %q", in.Model.DisplayName, "Opus 4.8")
+	if in.Model.DisplayName != "Opus 5.5" {
+		t.Errorf("display_name: got %q, want %q", in.Model.DisplayName, "Opus 5.5")
 	}
 	if in.Effort.Level != "high" {
 		t.Errorf("effort.level: got %q, want %q", in.Effort.Level, "high")
@@ -64,7 +64,7 @@ func TestStatuslineInput_DecodeFull(t *testing.T) {
 // decodes to the zero value (empty string), distinguishing "no effort" from any
 // present level.
 func TestStatuslineInput_DecodeEffortAbsent(t *testing.T) {
-	raw := `{"model": {"display_name": "Opus 4.8"}}`
+	raw := `{"model": {"display_name": "Opus 5.5"}}`
 
 	var in statuslineInput
 	if err := json.Unmarshal([]byte(raw), &in); err != nil {
@@ -245,7 +245,7 @@ func TestRunStatusline_NeverBreaksStatusBar(t *testing.T) {
 // to the degraded cases in TestRunStatusline_NeverBreaksStatusBar.
 func TestRunStatusline_PipePath_FullPayload(t *testing.T) {
 	payload := `{
-		"model": {"display_name": "Sonnet 4.6"},
+		"model": {"display_name": "Sonnet 5.5"},
 		"effort": {"level": "normal"},
 		"context_window": {"used_percentage": 12.3, "context_window_size": 200000},
 		"cost": {"total_cost_usd": 0.05, "total_lines_added": 10, "total_lines_removed": 2},
