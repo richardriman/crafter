@@ -28,11 +28,11 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 | Agent | Model | Effort | Rationale |
 |---|---|---|---|
 | `crafter-planner` | `opus` | high | Opus 5.5 at high effort; dense plans without padding |
-| `crafter-implementer` | `opus` | high | Opus 5.5 at high effort; minimal diffs, terse reports |
+| `crafter-implementer` | `opus` | medium | Opus 5.5 at medium effort; minimal diffs, terse reports |
 | `crafter-checker` | `opus` | high | Opus 5.5 at high effort; drift and review without invented findings |
 | `crafter-analyzer` | `opus` | high | Opus 5.5 at high effort; terse research output |
 
-`opus` (Opus 5.5) at high effort replaced `fable` with low/medium effort.
+`opus` (Opus 5.5) replaced `fable`; effort is `high`, except `medium` for the Implementer.
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 
