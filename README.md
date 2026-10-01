@@ -140,10 +140,10 @@ Agents for each role are defined as native Claude Code agents in `~/.claude/agen
 
 ### Execution and checking
 
-`/crafter-do` delegates in units set by scope: under Small and Medium the Implementer receives the whole task in one spawn, under Large it receives one whole phase per spawn. Each unit then ends with a single `crafter-checker` pass that covers drift against the contract and code review together in a fresh context. Minor and Suggestion findings are recorded as tech-debt decisions and the run continues; Critical and Major findings, and harmful drift, stop the run and open a fix loop whose follow-up passes are narrowed to the files the fix changed.
+`/crafter-do` delegates in units set by scope: under Small and Medium the Implementer receives the whole task in one spawn, under Large it receives one whole phase per spawn. Each unit then ends with a single `crafter-checker` pass that covers drift against the contract and code review together in a fresh context. Suggestion findings are recorded as tech-debt decisions and the run continues; Minor findings stop the run so you choose to fix all, pick some, or defer them as tech debt (under `--auto` they are recorded without a stop); Critical and Major findings, and harmful drift, stop the run and open a fix loop whose follow-up passes are narrowed to the files the fix changed.
 
 ## Philosophy
 
-Crafter is built on a simple principle: **you are the craftsman, AI is your tool**. The developer stays in control at every decision point — plans are approved by a human, work only a human can verify waits for explicit consent, and a commit lands on its own only after the check pass closes clean or with nothing worse than Minor findings recorded as tech debt. No silent refactors, no guessing.
+Crafter is built on a simple principle: **you are the craftsman, AI is your tool**. The developer stays in control at every decision point — plans are approved by a human, work only a human can verify waits for explicit consent, and a commit lands on its own only after the check pass closes clean or with only Suggestions and Minor findings you chose to defer recorded as tech debt. No silent refactors, no guessing.
 
 Read more in [docs/philosophy.md](docs/philosophy.md).

@@ -7,6 +7,6 @@
 
 **`--fast` was removed.** If it is passed (or `fast: true` appears in frontmatter), produce this error and stop immediately — do not proceed to project resolution or any other workflow step:
 
-> Error: `--fast` was removed; Minor findings now auto-proceed. Minor and Suggestion findings are recorded as `Decision (Tech Debt — auto-recorded)` entries and the commit continues without waiting, so silence-as-approval no longer has a purpose. Re-run without the flag.
+> Error: `--fast` was removed. Commits land automatically once the check pass closes, and Minor findings stop for an explicit user decision (fix or defer), so silence-as-approval no longer has a purpose. Re-run without the flag.
 
 `--project <path>` is not a skill flag — it is consumed by Project Resolution (see `skills/crafter-do/SKILL.md` → **Project Resolution**), not by this check.

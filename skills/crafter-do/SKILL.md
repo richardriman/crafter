@@ -51,7 +51,7 @@ The user's raw input is: $ARGUMENTS
 
 The supported flags are `--ext` and `--auto`. **`--fast` was removed.** If it is passed (or `fast: true` appears in frontmatter), stop immediately with this error — do not proceed to project resolution or any other step:
 
-> Error: `--fast` was removed; Minor findings now auto-proceed. Minor and Suggestion findings are recorded as `Decision (Tech Debt — auto-recorded)` entries and the commit continues without waiting, so silence-as-approval no longer has a purpose. Re-run without the flag.
+> Error: `--fast` was removed. Commits land automatically once the check pass closes, and Minor findings stop for an explicit user decision (fix or defer), so silence-as-approval no longer has a purpose. Re-run without the flag.
 
 `--project <path>` is not a skill flag — it is consumed by Project Resolution below, not by this check.
 
@@ -104,8 +104,8 @@ Use this section to route the entire workflow without loading any step module in
 | **Step 2** — Discuss / Research | Grilling frontier rounds; `crafter-analyzer` for codebase-dependent gaps | Step 3 |
 | **Step 3** — Plan + Approval Gate | Small: write 3–6 sentences inline into the task file, no spawn. Medium/Large: `crafter-planner`. Then present, await explicit approval (max 3 revisions), set status `approved` | Step 4 |
 | **Step 4** — Execute | `crafter-implementer` — **whole task per spawn for Small/Medium**, **one whole phase per spawn for Large**. Implementer runs tests and reports evidence | Step 5 |
-| **Step 5** — Check | `crafter-checker` (full pass): drift + code review in one pass. Relay verbatim. Minor/Suggestion → auto-record and proceed. Critical/Major → STOP + fix loop (delta passes, cap 5) by default; under `--auto` routed by the Checker's classification table (`auto-fixable` → fix loop, `gap`/`uat` → buffer entry and continue, `escape-hatch` → exit with state) | Step 6b |
-| **Step 6b** — Summary + Commit | Auto-commit on zero findings or minor-only; explicit approval only for the manual-verification exception | Step 6a (Large, phases remaining) or Steps 7–9 |
+| **Step 5** — Check | `crafter-checker` (full pass): drift + code review in one pass. Relay verbatim. Suggestion → auto-record and proceed. Minor → STOP: fix all / pick / defer all (chosen → fix loop; under `--auto` auto-recorded). Critical/Major → STOP + fix loop (delta passes, cap 5) by default; under `--auto` routed by the Checker's classification table (`auto-fixable` → fix loop, `gap`/`uat` → buffer entry and continue, `escape-hatch` → exit with state) | Step 6b |
+| **Step 6b** — Summary + Commit | Auto-commit on zero findings or only auto-recorded Suggestions / user-deferred Minors; explicit approval only for the manual-verification exception | Step 6a (Large, phases remaining) or Steps 7–9 |
 | **Step 6a** — Session Break | Large only: suggest `/clear` + re-invoke for the next phase | Step 4 (next phase) or Steps 7–9 |
 | **Steps 7–9** — Post-Change | Docs check, consolidated end-of-task commit, `STATE.md` update, task-file completion, deferred-findings offer, wrap-up | Step 9b (`--auto` only) or session wrap-up |
 | **Step 9b** — PR Composition | `--auto` only: compose PR body, open PR via `gh pr create`, print PR URL | Session wrap-up |
@@ -139,7 +139,7 @@ Steps are checked off in a batch after the check pass, so an interrupted run lea
 ### High-risk routing chains
 
 - **Step 5 → replan:** the Checker reports a plan-obsoleting discovery → return to **Step 3**.
-- **Step 5 fix loop:** Critical/Major or harmful drift → increment iteration count (first pass = 1) → re-delegate the fix to `crafter-implementer` → `crafter-checker` **delta pass** → back to loop entry with remaining findings; if 5 iterations are exhausted with findings still present → present options (manual override / accept-without-commit / replan-and-abort), or exit with state under `--auto`; if the fix reached outside the delta, the next pass is a full Checker pass.
+- **Step 5 fix loop:** Critical/Major, chosen Minor, or harmful drift → increment iteration count (first pass = 1) → re-delegate the fix to `crafter-implementer` → `crafter-checker` **delta pass** → back to loop entry with remaining findings; if 5 iterations are exhausted with findings still present → present options (manual override / accept-without-commit / replan-and-abort), or exit with state under `--auto`; if the fix reached outside the delta, the next pass is a full Checker pass.
 - **Step 6b → Step 6a (Large, non-last phase):** after commit, run the session break; Startup resumes at the next unchecked step or pending gate when re-invoked.
 
 ---
@@ -218,18 +218,18 @@ Spawn the **`crafter-checker`** agent in mode `full pass`. Pass: the approved co
 
 a. **Reproduce the Checker's report verbatim, always, before any commit** — copy the **Drift findings**, **Diff summary**, **Issues found**, and **Contract deviations** sections as-is. Never convert tables to prose or bullet lists. After the tables, state the recommendation.
 
-b. **Batch-tick.** Check off the unit's steps in one pass over the task file. A step stays **unchecked** only when a Critical or Major finding, or harmful / scope / plan-obsoleting drift, is attributed to it — subject to the **buffered-finding carve-out** above, so a step whose only Critical/Major findings were buffered is ticked. Minor and Suggestion findings never block the tick — the step is checked off and the finding is recorded as tech debt per (c).
+b. **Batch-tick.** Check off the unit's steps in one pass over the task file. A step stays **unchecked** only when a Critical or Major finding, or harmful / scope / plan-obsoleting drift, is attributed to it — subject to the **buffered-finding carve-out** above, so a step whose only Critical/Major findings were buffered is ticked. Minor and Suggestion findings never block the tick — the step is checked off and the finding is handled per (c).
 
-c. **Minor / Suggestion issues and beneficial local drift — auto-proceed.** Record each as `Decision (Tech Debt — auto-recorded): <severity> — <description>` (or `Decision (Orchestrator Accepted)` for beneficial local drift) in the task file's `## Decisions` section, then complete the **Before leaving Step 5** block in (h) and continue to **Step 6b without waiting for the user**. Auto-proceed suppresses the wait, not the display in (a).
+c. **Minor issues — STOP for a user decision; Suggestion issues and beneficial local drift — auto-proceed.** For Minor findings, ask the user to choose: **fix all**, **pick numbers** to fix, or **defer all**. Chosen Minors enter the fix loop in (f) like Critical/Major findings; when the same report also has Critical/Major findings, ask in the same stop as (d). Record each deferred Minor as `Decision (Tech Debt — user-deferred): Minor — <description>`, each Suggestion as `Decision (Tech Debt — auto-recorded): Suggestion — <description>`, and beneficial local drift as `Decision (Orchestrator Accepted)`, in the task file's `## Decisions` section. If nothing remains to fix, complete the **Before leaving Step 5** block in (h) and continue to **Step 6b**. Suggestions never cause a wait; the display in (a) still applies. **Under `--auto`:** do not ask — record Minor findings as `Decision (Tech Debt — auto-recorded)` entries like Suggestions and continue without waiting.
 
 d. **Critical / Major issues or harmful drift — STOP and wait for the user's response**, then enter the fix loop in (f). There is no "proceed anyway" for those severities. **Under `--auto`:** do not wait — route every Critical and Major finding by the Checker's classification table: `auto-fixable` enters the fix loop in (f) directly; `gap` and `uat` become buffer entries and the run continues; `escape-hatch` exits with state via the **Ad-hoc escape hatch** (`rules/do-workflow.md` → `#### Ad-hoc escape hatch`).
 
-   **Reachability send-back — the orchestrator never downgrades a severity.** Only the Checker assigns or lowers one. This applies to **any new Critical or Major finding at entry to (f)** — from the first pass or from a delta pass re-entering via (f.5). A finding that names neither a trigger nor one of the Checker's three reachability states is **sent back to the `crafter-checker`**, spawned in mode `delta pass` with `reachability check on finding #N`; findings that already name a trigger, or already say "cannot determine — severity kept", go straight to (f). The send-back is a Checker-only pass — no Implementer spawn — so it does **not** increment the iteration count in (f.1) and leaves the 5-iteration cap untouched. At most one send-back per finding, tracked by the finding number in the relayed report — no separate bookkeeping file; the second report is final. It happens after the verbatim relay in (a), and the report it returns is relayed verbatim too. Identical interactive and under `--auto`.
+   **Reachability send-back — the orchestrator never downgrades a severity.** Only the Checker assigns or lowers one. This applies to **any new Critical or Major finding at entry to (f)** — from the first pass or from a delta pass re-entering via (f.5). A finding that names neither a trigger nor one of the Checker's three reachability states is **sent back to the `crafter-checker`**, spawned in mode `delta pass` with `reachability check on finding #N`; findings that already name a trigger, or already say "cannot determine — severity kept", go straight to (f). The send-back is a Checker-only pass — no Implementer spawn — so it does **not** increment the iteration count in (f.1) and leaves the 5-iteration cap untouched. At most one send-back per finding, tracked by the finding number in the relayed report — no separate bookkeeping file; the second report is final; a finding it lowers to Minor gets the same Minor choice (fix / defer), auto-recorded under `--auto` like any Minor. It happens after the verbatim relay in (a), and the report it returns is relayed verbatim too. Identical interactive and under `--auto`.
 
 e. **Scope drift** → stop and ask the user (accept / revise scope / replan); if accepted, append a `Decision (User Accepted)` entry. **Plan-obsoleting discovery** → return to **Step 3**. **Under `--auto`:** do not ask — route scope drift and any other drift by the Checker's classification table (`gap` / `uat` / `auto-fixable` / `escape-hatch`), recording `gap`/`uat` as buffer entries and continuing; a plan-obsoleting discovery always routes to `escape-hatch` and exits via the **Ad-hoc escape hatch** (`rules/do-workflow.md` → `#### Ad-hoc escape hatch`) instead of returning to Step 3.
 
 f. **Fix loop.**
-   1. **Increment the iteration count at loop entry** — the first pass is iteration 1. If the incremented value would exceed 5, do NOT start that pass. Present all remaining Critical/Major findings and ask the user to choose:
+   1. **Increment the iteration count at loop entry** — the first pass is iteration 1. If the incremented value would exceed 5, do NOT start that pass. Present all remaining Critical/Major and chosen Minor findings and ask the user to choose:
       - **(a) manual override** — authorize iteration beyond the cap; re-enter only on explicit user instruction.
       - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing; record a Decision noting that the green-commit invariant is deliberately broken here.
       - **(c) replan-and-abort** — abandon the current work and return to planning.
@@ -238,19 +238,19 @@ f. **Fix loop.**
    2. Spawn the `crafter-implementer` with the list of findings (severity, file, line, description), the approved contract, and accepted deviations. *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)*
    3. Receive the fix summary. If it reports a blocker, stop and discuss with the user.
    4. **Delta pass.** Spawn the `crafter-checker` in mode `delta pass` with the approved contract, only the files the fix changed, and the list of prior findings. Recall inside the delta stays full and the verbatim relay in (a) still applies. *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*
-   5. Relay the delta report per (a) — the verbatim relay covers the delta report's **Prior findings status**, **Not re-checked**, and **Widening required** sections as well as its new-finding tables. If no Critical/Major findings and no harmful drift remain, the loop is closed → complete the **Before leaving Step 5** block in (h) → **Step 6b**; otherwise return to (f.1) with the findings that remain.
+   5. Relay the delta report per (a) — the verbatim relay covers the delta report's **Prior findings status**, **Not re-checked**, and **Widening required** sections as well as its new-finding tables. New Minor findings get the choice in (c). If no Critical/Major findings, no chosen Minor findings, and no harmful drift remain, the loop is closed → complete the **Before leaving Step 5** block in (h) → **Step 6b**; otherwise return to (f.1) with the findings that remain.
    6. **Widening.** If the Checker reports the fix touched files outside the delta, the next pass is a full Checker pass instead of a delta pass, then delta passes resume. The iteration count and the 5-cap are unaffected.
 
 g. **`--auto` routing.** Every branch above routes through the Checker's classification table — vocabulary `gap` / `uat` / `auto-fixable` / `escape-hatch`; the per-branch handling is defined in (d) and (e). Minor/Suggestion findings need no routing — they are recorded as tech debt per (c).
 
 h. **Before leaving Step 5 — mandatory whenever leaving Step 5 toward Step 6b, regardless of which branch led there:**
-   1. **Tick the Check gate.** Every step of the unit ticked and no Critical/Major finding open — change the unit's `- [ ] Check` gate line to `- [x] Check` in the task file. The **buffered-finding carve-out** above applies.
+   1. **Tick the Check gate.** Every step of the unit ticked and no Critical/Major finding, or Minor finding the user chose to fix, open — change the unit's `- [ ] Check` gate line to `- [x] Check` in the task file. The **buffered-finding carve-out** above applies.
    2. **Record decisions.** Record any notable decisions in the task file's `## Decisions` section per `{CRAFTER_HOME}/rules/task-lifecycle.md`.
    3. Only then continue to **Step 6b**.
 
 ## Step 6b — Summary and Commit
 
-**Fully orchestrator-side — do NOT delegate.** Reached when the check closes clean — no Critical or Major findings and no unresolved drift, with the **buffered-finding carve-out** in Step 5's orchestrator-only residue applying under `--auto`.
+**Fully orchestrator-side — do NOT delegate.** Reached when the check closes clean — no Critical or Major findings, no unresolved drift, and no Minor finding the user chose to fix remaining, with the **buffered-finding carve-out** in Step 5's orchestrator-only residue applying under `--auto`.
 
 #### `--auto` branch (runs first)
 
@@ -260,7 +260,7 @@ When `--auto` is **not** set:
 
 #### (1) Auto-commit — the default
 
-Conditions: no Critical/Major findings remain, and either there are zero findings at all or the only remaining ones are Minor/Suggestion findings already recorded as `Decision (Tech Debt — auto-recorded)` entries.
+Conditions: no Critical/Major findings remain, and either there are zero findings at all or the only remaining ones are Suggestion findings recorded as `Decision (Tech Debt — auto-recorded)` or Minor findings recorded as `Decision (Tech Debt — user-deferred)` entries.
 
 Present the Phase Summary — what was implemented, findings auto-fixed in the loop, **each deferred Minor/Suggestion finding named explicitly** with its recorded Decision, and any accepted Decisions — or a one-line notice ("Clean — committing automatically.") when there was nothing at all, then commit per `{CRAFTER_HOME}/rules/post-change.md`. Do not wait for a reply.
 
@@ -295,7 +295,7 @@ The final commit has already landed via Step 6b. These steps cover end-of-task f
 2. **Consolidated end-of-task commit** — if any PROJECT.md/ARCHITECTURE.md updates or STATE.md changes exist, bundle them into one single consolidated commit per `{CRAFTER_HOME}/rules/post-change.md`; if none are needed, no follow-up commit is created.
 3. **Update STATE.md** — update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues) and include it in the consolidated commit.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps.
-5. **List deferred findings** — name every Minor/Suggestion finding recorded as `Decision (Tech Debt — auto-recorded)` during the run and offer to fix any of them now. If the user picks one, re-delegate it to the `crafter-implementer` *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)* and run a `crafter-checker` delta pass over the fix *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*.
+5. **List deferred findings** — name every finding recorded as `Decision (Tech Debt — user-deferred)` or `Decision (Tech Debt — auto-recorded)` during the run and offer to fix any of them now. If the user picks one, re-delegate it to the `crafter-implementer` *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)* and run a `crafter-checker` delta pass over the fix *(Skill directive level: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*.
 6. **Suggest session wrap-up** — if there is more to do, suggest the user run `/clear` and start the next task with `/crafter-do` or `/crafter-debug`.
 
 **Do not end the conversation until all 6 items above are addressed.**

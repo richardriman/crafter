@@ -33,18 +33,19 @@
 - Drift findings are classified as: harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery. No drift at all is the OK case.
 - Review issues carry a severity: Critical, Major, Minor, or Suggestion. The Checker reports **every** finding at every severity — filtering is the orchestrator's job, never the Checker's.
 - **The Checker's report is always reproduced in full, verbatim, before any commit.** Copy the Drift findings, Diff summary, Issues found, and Contract deviations sections as markdown tables, as-is. Never convert them to prose or bullet lists.
-- **Minor and Suggestion findings do not gate anything.** Record each one in the task file's `## Decisions` section as `Decision (Tech Debt — auto-recorded): <severity> — <description>` and continue without waiting for the user. Auto-proceed suppresses the wait, never the display.
-- **Critical and Major findings, and harmful drift, are the only STOP gate.** Present the report, wait for the user's response, then enter the fix loop — there is no "proceed anyway" for those.
+- **Minor findings stop for a user decision:** fix all, pick numbers to fix, or defer all. Chosen Minors enter the fix loop; each deferred one is recorded as `Decision (Tech Debt — user-deferred): Minor — <description>`. Under `--auto`, Minor findings are recorded as `Decision (Tech Debt — auto-recorded)` without a stop.
+- **Suggestion findings do not gate anything.** Record each one in the task file's `## Decisions` section as `Decision (Tech Debt — auto-recorded): Suggestion — <description>` and continue without waiting for the user. Auto-proceed suppresses the wait, never the display.
+- **Critical and Major findings, and harmful drift, always STOP.** Present the report, wait for the user's response, then enter the fix loop — there is no "proceed anyway" for those. Minor findings in the same report are decided in the same stop.
 - Scope drift requires user approval or replanning. Beneficial local drift may continue only when recorded as a `Decision (Orchestrator Accepted)` entry. A plan-obsoleting discovery returns to PLAN.
 - Steps are checked off after the check pass, in one batch. A step stays unchecked only when a Critical or Major finding, or harmful / scope / plan-obsoleting drift, is attributed to it; Minor and Suggestion findings never block the tick.
 - The user may ask for a deferred Minor finding to be fixed at any point — including after the commit and at the end of the run. Re-delegate it to the Implementer and run a delta Checker pass.
 
 #### Fix loop
 
-- Entry condition: Critical/Major findings or harmful drift. The iteration count is incremented at loop entry — the first pass is iteration 1.
+- Entry condition: Critical/Major findings, Minor findings the user chose to fix, or harmful drift. The iteration count is incremented at loop entry — the first pass is iteration 1.
 - Each pass: re-delegate to `crafter-implementer` with the findings → spawn `crafter-checker` in **delta pass** mode with the files the fix changed plus the list of prior findings. The Checker reports the status of each prior finding and any new findings in the delta. Recall inside the delta stays full — no high-severity filtering.
 - **Widening.** If the fix touched files outside the delta, the next pass runs a full Checker pass instead, then returns to delta passes. The iteration count and the cap are unaffected.
-- **Cap: 5 iterations.** A 6th never starts automatically. If the cap is reached with Critical/Major findings still present, stop and ask the user to choose:
+- **Cap: 5 iterations.** A 6th never starts automatically. If the cap is reached with Critical/Major or chosen Minor findings still present, stop and ask the user to choose:
   - **(a) manual override** — authorize iteration beyond the cap; re-enter the loop only on explicit user instruction.
   - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing; record a Decision noting that the green-commit invariant is deliberately broken here.
   - **(c) replan-and-abort** — abandon the current work and return to planning.
@@ -87,7 +88,7 @@ The following conditions are gates in the default flow but are **not blocking un
 - **Manual-verification exception** — recorded into the UAT buffer rather than blocking execution.
 - **Critical/Major findings the fix loop can clear within budget** — the loop fixes them and continues; what was auto-fixed is recorded in Decisions.
 - **Critical/Major review findings routed to `gap`/`uat` by the Checker** — recorded as buffer entries, the run continues. They count as handled, not open, for the step tick, the Check gate tick, and the transition to Step 6b.
-- **Minor/Suggestion findings** — recorded into Decisions as tech debt (this is the default behavior in all runs).
+- **Minor findings** — recorded into Decisions as `Decision (Tech Debt — auto-recorded)` instead of stopping for a user decision. (Suggestion findings are auto-recorded in all runs.)
 - **Drift outcomes that do not threaten green commits** — recorded into the Gaps or UAT buffer; execution continues.
 - **All phase-summary approval gates** — under `--auto`, the Phase Summary is not surfaced to the user; the commit proceeds automatically once the work is green.
 
