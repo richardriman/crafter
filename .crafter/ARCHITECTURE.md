@@ -79,7 +79,7 @@ Crafter's canonical workflow logic lives in `skills/crafter-*/SKILL.md`.
 
 ### Model Selection
 
-All four agents run on `opus` (Opus 5.5); effort is `high`, except `medium` for Implementer. The table and rationale live in `rules/delegation.md` § Model Configuration, mirrored by each agent's frontmatter. The same file gates the caveman directive to English-only conversations (§ Skill Directives, item 1); for other languages the Checker's hard output-format limits (`agents/crafter-checker.md` § Output format) keep reports terse.
+All four agents run on `opus` (Opus 5.5); effort is `high` for Planner and Checker and `medium` for Implementer and Analyzer. The table and rationale live in `rules/delegation.md` § Model Configuration, mirrored by each agent's frontmatter. The same file gates the caveman directive to English-only conversations (§ Skill Directives, item 1); for other languages the Checker's hard output-format limits (`agents/crafter-checker.md` § Output format) keep reports terse.
 
 ### Agent Roles and Context
 
