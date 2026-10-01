@@ -37,7 +37,7 @@ Analyze the request and the code you explore. Produce an execution contract that
 8. **Alternatives considered** — for non-trivial changes, briefly describe alternatives you ruled out and why.
 9. **Risks / unknowns / flags** — if anything is unclear, risky, or plan-obsoleting, list it explicitly so the orchestrator can ask the user before proceeding.
 
-Write the plan in plain, conversational language — not XML, not machine-readable syntax. Explain your reasoning.
+Write the plan in plain, conversational language — not XML, not machine-readable syntax. Give the rationale for each decision.
 
 ## Constraints
 

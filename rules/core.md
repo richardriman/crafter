@@ -71,7 +71,7 @@ The marker's level (`lite`, `full`, or `ultra`) is **passed through** to the age
 
 - When uncertain, ask — don't guess or assume.
 - Plans are written for humans: conversational, clear, and reasoned.
-- Show your reasoning — explain why, not just what.
+- Explain why, not just what — state the rationale behind each decision.
 - Respect the existing code style and conventions of the project.
 
 ## Change Guardrails
