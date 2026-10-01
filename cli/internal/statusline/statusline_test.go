@@ -1035,23 +1035,23 @@ func TestModelSection(t *testing.T) {
 	}{
 		{
 			name: "full: display + 1M + effort",
-			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000, EffortLevel: "high"},
-			want: "Opus 4.8 1M (high)",
+			p:    Payload{ModelDisplayName: "Opus 5.5", ContextWindowSize: 1_000_000, EffortLevel: "high"},
+			want: "Opus 5.5 1M (high)",
 		},
 		{
 			name: "effort absent → no parens",
-			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000},
-			want: "Opus 4.8 1M",
+			p:    Payload{ModelDisplayName: "Opus 5.5", ContextWindowSize: 1_000_000},
+			want: "Opus 5.5 1M",
 		},
 		{
 			name: "200k capacity",
-			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 200_000, EffortLevel: "medium"},
-			want: "Opus 4.8 200k (medium)",
+			p:    Payload{ModelDisplayName: "Opus 5.5", ContextWindowSize: 200_000, EffortLevel: "medium"},
+			want: "Opus 5.5 200k (medium)",
 		},
 		{
 			name: "128k capacity",
-			p:    Payload{ModelDisplayName: "Sonnet 4.8", ContextWindowSize: 128_000},
-			want: "Sonnet 4.8 128k",
+			p:    Payload{ModelDisplayName: "Sonnet 5.5", ContextWindowSize: 128_000},
+			want: "Sonnet 5.5 128k",
 		},
 		{
 			name: "sub-1000 capacity → raw integer",
@@ -1060,13 +1060,13 @@ func TestModelSection(t *testing.T) {
 		},
 		{
 			name: "capacity 0 → capacity token omitted, effort kept",
-			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 0, EffortLevel: "high"},
-			want: "Opus 4.8 (high)",
+			p:    Payload{ModelDisplayName: "Opus 5.5", ContextWindowSize: 0, EffortLevel: "high"},
+			want: "Opus 5.5 (high)",
 		},
 		{
 			name: "capacity 0 and no effort → display only",
-			p:    Payload{ModelDisplayName: "Opus 4.8"},
-			want: "Opus 4.8",
+			p:    Payload{ModelDisplayName: "Opus 5.5"},
+			want: "Opus 5.5",
 		},
 		{
 			name: "empty display_name → whole section omitted",
@@ -1078,28 +1078,28 @@ func TestModelSection(t *testing.T) {
 			// Headline fix: Claude Code embeds "(1M context)" in the display name;
 			// crafter must strip it before appending its own "1M" token.
 			name: "display_name with (1M context) parenthetical + capacity → stripped",
-			p:    Payload{ModelDisplayName: "Opus 4.8 (1M context)", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
-			want: "Opus 4.8 1M (xhigh)",
+			p:    Payload{ModelDisplayName: "Opus 5.5 (1M context)", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
+			want: "Opus 5.5 1M (xhigh)",
 		},
 		{
 			// Display name without a context parenthetical → no change in behaviour.
 			name: "display_name without parenthetical + capacity → unchanged",
-			p:    Payload{ModelDisplayName: "Opus 4.8", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
-			want: "Opus 4.8 1M (xhigh)",
+			p:    Payload{ModelDisplayName: "Opus 5.5", ContextWindowSize: 1_000_000, EffortLevel: "xhigh"},
+			want: "Opus 5.5 1M (xhigh)",
 		},
 		{
 			// Guard: when ContextWindowSize == 0, the parenthetical must NOT be
 			// stripped so the display name is preserved verbatim.
 			name: "display_name with (1M context) but capacity 0 → NOT stripped",
-			p:    Payload{ModelDisplayName: "Opus 4.8 (1M context)", ContextWindowSize: 0, EffortLevel: "xhigh"},
-			want: "Opus 4.8 (1M context) (xhigh)",
+			p:    Payload{ModelDisplayName: "Opus 5.5 (1M context)", ContextWindowSize: 0, EffortLevel: "xhigh"},
+			want: "Opus 5.5 (1M context) (xhigh)",
 		},
 		{
 			// A trailing parenthetical that does NOT mention "context" must be
 			// preserved — only context-bearing parentheticals are stripped.
 			name: "non-context trailing parenthetical preserved when capacity present",
-			p:    Payload{ModelDisplayName: "Sonnet 4.6 (beta)", ContextWindowSize: 200_000, EffortLevel: "low"},
-			want: "Sonnet 4.6 (beta) 200k (low)",
+			p:    Payload{ModelDisplayName: "Sonnet 5.5 (beta)", ContextWindowSize: 200_000, EffortLevel: "low"},
+			want: "Sonnet 5.5 (beta) 200k (low)",
 		},
 	}
 
@@ -1381,7 +1381,7 @@ func TestRenderPanel_DegradationMatrix(t *testing.T) {
 
 	// Common payload fragments reused across rows.
 	const (
-		modelStr = "Opus 4.8 1M (high)"
+		modelStr = "Opus 5.5 1M (high)"
 		ctxStr   = "[████░░░░░░] 42%"
 		costStr  = "$0.42"
 	)
@@ -1396,7 +1396,7 @@ func TestRenderPanel_DegradationMatrix(t *testing.T) {
 			build: func(root string) Payload {
 				return Payload{
 					Workdir:           root,
-					ModelDisplayName:  "Opus 4.8",
+					ModelDisplayName:  "Opus 5.5",
 					ContextWindowSize: 1_000_000,
 					EffortLevel:       "high",
 					UsedPercentage:    floatPtr(42),
@@ -1415,7 +1415,7 @@ func TestRenderPanel_DegradationMatrix(t *testing.T) {
 			build: func(root string) Payload {
 				return Payload{
 					Workdir:           root,
-					ModelDisplayName:  "Opus 4.8",
+					ModelDisplayName:  "Opus 5.5",
 					ContextWindowSize: 1_000_000,
 					EffortLevel:       "high",
 					UsedPercentage:    floatPtr(42),
@@ -1452,7 +1452,7 @@ func TestRenderPanel_DegradationMatrix(t *testing.T) {
 			build: func(root string) Payload {
 				return Payload{
 					Workdir:           root,
-					ModelDisplayName:  "Opus 4.8",
+					ModelDisplayName:  "Opus 5.5",
 					ContextWindowSize: 1_000_000,
 					EffortLevel:       "high",
 					UsedPercentage:    nil,
@@ -1471,7 +1471,7 @@ func TestRenderPanel_DegradationMatrix(t *testing.T) {
 			build: func(root string) Payload {
 				return Payload{
 					Workdir:           root,
-					ModelDisplayName:  "Opus 4.8",
+					ModelDisplayName:  "Opus 5.5",
 					ContextWindowSize: 1_000_000,
 					EffortLevel:       "high",
 					UsedPercentage:    floatPtr(42),

@@ -1,8 +1,8 @@
 ---
 name: crafter-analyzer
 description: Architect-analyst agent with two modes — (A) Project Mapping: analyze a codebase and propose .crafter/ content (with .planning fallback); (B) Research/Investigation: investigate specific questions about the codebase, gather evidence, and report findings. Called by the crafter orchestrator. Never modifies files.
-model: fable
-effort: low
+model: opus
+effort: high
 tools: Read, Grep, Glob, Bash
 memory: project
 ---

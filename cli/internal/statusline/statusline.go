@@ -99,7 +99,7 @@ func abbrevCapacity(size int) string {
 }
 
 // reContextParenthetical matches a trailing " (… context)" group in a model
-// display name, e.g. " (1M context)" in "Opus 4.8 (1M context)". It is used
+// display name, e.g. " (1M context)" in "Opus 5.5 (1M context)". It is used
 // by modelSection to strip the redundant capacity parenthetical when crafter
 // is itself appending its own abbreviated capacity token.
 //
@@ -110,7 +110,7 @@ func abbrevCapacity(size int) string {
 //   - end-of-string anchor
 var reContextParenthetical = regexp.MustCompile(`(?i)\s+\([^)]*context[^)]*\)\s*$`)
 
-// modelSection renders the model section, e.g. "Opus 4.8 1M (high)".
+// modelSection renders the model section, e.g. "Opus 5.5 1M (high)".
 //
 // It concatenates ModelDisplayName, the abbreviated ContextWindowSize, and the
 // EffortLevel in parentheses. Degradation:
@@ -120,12 +120,12 @@ var reContextParenthetical = regexp.MustCompile(`(?i)\s+\([^)]*context[^)]*\)\s*
 //
 // When ContextWindowSize > 0, any trailing " (… context)" parenthetical in
 // ModelDisplayName is stripped before appending the abbreviated capacity, so
-// a display name like "Opus 4.8 (1M context)" with ContextWindowSize=1000000
-// renders as "Opus 4.8 1M (high)" rather than "Opus 4.8 (1M context) 1M (high)".
+// a display name like "Opus 5.5 (1M context)" with ContextWindowSize=1000000
+// renders as "Opus 5.5 1M (high)" rather than "Opus 5.5 (1M context) 1M (high)".
 // The strip is skipped when ContextWindowSize == 0 so no information is lost.
 //
-// So the possible forms are "Opus 4.8 1M (high)", "Opus 4.8 1M",
-// "Opus 4.8 (high)", and "Opus 4.8".
+// So the possible forms are "Opus 5.5 1M (high)", "Opus 5.5 1M",
+// "Opus 5.5 (high)", and "Opus 5.5".
 func modelSection(p Payload) string {
 	if p.ModelDisplayName == "" {
 		return ""
