@@ -6,7 +6,7 @@ Use the Task tool to spawn agents. Each agent is defined in the `agents/` direct
 - Runs as a native agent with its own tools (Read, Grep, Glob, Bash, etc.)
 - Receives a task description and high-level pointers — it explores the codebase itself
 - Returns a structured result to the orchestrator
-- Has no memory of this run's other steps or agents, beyond its own project-scoped `.claude/agent-memory/<agent>/MEMORY.md`
+- Has no memory of this run's other steps or agents, beyond its own project-scoped `.claude/agent-memory/<agent>/MEMORY.md` (the `crafter-reviewer` has no memory at all)
 
 **Git hygiene.** Agent memory is per-developer and must never appear in commits. The Crafter repo's own `.gitignore` already includes `.claude/agent-memory/`. Downstream projects MUST add `.claude/agent-memory/` to their `.gitignore`.
 
@@ -19,7 +19,8 @@ The orchestrator is a **dispatcher** only: it manages workflow, communicates wit
 | `crafter-planner` | Researcher + architect — explores enough context to produce execution contracts with outcomes, boundaries, seams, and verification evidence (Medium/Large scope only) |
 | `crafter-implementer` | Executor — implements the approved contract it was given (the whole task for Small/Medium, one whole phase for Large), runs the relevant tests/typechecks, and reports evidence and deviations |
 | `crafter-analyzer` | Investigator — project mapping or research/investigation tasks |
-| `crafter-checker` | QA + code reviewer in one — checks drift against the contract and reviews the code in a single fresh-context pass (modes: full pass, delta pass) |
+| `crafter-checker` | Contract checker — checks drift and verification evidence against the contract with the full task context (modes: full pass, delta pass); in a delta pass it reports the status of every prior finding, code findings included |
+| `crafter-reviewer` | Context-free adversarial code reviewer — reviews a change range (a PR, `base..head`, or the working tree, optionally restricted to paths) with no task context; runs in parallel with the Checker and standalone via `/crafter-review` |
 
 ## Model Configuration
 
@@ -29,10 +30,11 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 |---|---|---|---|
 | `crafter-planner` | `opus` | high | Opus 5.5 at high effort; plan errors propagate to every later step |
 | `crafter-implementer` | `opus` | medium | Opus 5.5 at medium effort; minimal diffs, terse reports |
-| `crafter-checker` | `opus` | high | Opus 5.5 at high effort; drift and review without invented findings |
+| `crafter-checker` | `opus` | medium | Opus 5.5 at medium effort; drift and evidence checks against an explicit contract |
+| `crafter-reviewer` | `opus` | high | Opus 5.5 at high effort; adversarial review without invented findings |
 | `crafter-analyzer` | `opus` | medium | Opus 5.5 at medium effort; research and root-cause investigation feed the plan |
 
-`opus` (Opus 5.5) replaced `fable`. `medium` is the Opus 5.5 default and matches Opus 5 at `high`; `high` is kept for Planner and Checker, where plan and review quality carry the most leverage.
+`opus` (Opus 5.5) replaced `fable`. `medium` is the Opus 5.5 default and matches Opus 5 at `high`; `high` is kept for Planner and Reviewer, where plan and review quality carry the most leverage; the Checker compares against an explicit contract, so `medium` suffices.
 
 Always include the `model` parameter in every Task tool invocation. Do not rely on model inheritance from the orchestrator.
 
@@ -44,9 +46,9 @@ Agent files also include a fallback `model` for direct invocation (`/agents` wit
 
 Before spawning any agent via the Task tool, re-read the caveman and ponytail markers per `rules/core.md` — **Skill Detection: Caveman and Ponytail** (canonical), then:
 
-1. **Caveman (all agents, audience-based level, English only):** If caveman is active **and** the detected user conversation language (per § Report Language / `rules/core.md` — **Language Rules**) is English, append the directive below, choosing the level by the agent's audience. For any other language append nothing for caveman (ponytail is unaffected): caveman's mechanics are English-specific, and for other languages the hard output-format limits in each agent's own prompt (e.g. `agents/crafter-checker.md` § Output format) do the work.
+1. **Caveman (all agents, audience-based level, English only):** If caveman is active **and** the detected user conversation language (per § Report Language / `rules/core.md` — **Language Rules**) is English, append the directive below, choosing the level by the agent's audience. For any other language append nothing for caveman (ponytail is unaffected): caveman's mechanics are English-specific, and for other languages the hard output-format limits in each agent's own prompt (e.g. `agents/crafter-reviewer.md` § Output format) do the work.
    - **caveman-full** for `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` — their output is agent-facing (the orchestrator consumes/digests it).
-   - **caveman-lite** for `crafter-checker` — its report is relayed verbatim to the user (see `rules/core.md` carve-out (a)), so it is human-facing and must stay in the lighter register.
+   - **caveman-lite** for `crafter-checker` and `crafter-reviewer` — their reports are relayed verbatim to the user (see `rules/core.md` carve-out (a)), so they are human-facing and must stay in the lighter register.
 
    Append (replace `<LEVEL>` with `full` or `lite` per the above):
 
@@ -66,7 +68,7 @@ Before spawning any agent via the Task tool, re-read the caveman and ponytail ma
    **ponytail** is active at level `<LEVEL>` — apply YAGNI / the-ladder / shortest-working-diff discipline. Definition: `rules/core.md` § Ponytail.
    ```
 
-   Replace `<LEVEL>` with the level read from `$HOME/.claude/.ponytail-active`. Do not append this line for any other agent (checker, analyzer).
+   Replace `<LEVEL>` with the level read from `$HOME/.claude/.ponytail-active`. Do not append this line for any other agent (checker, reviewer, analyzer).
 
 3. **No-op:** When both markers are absent, append nothing and do not mention the skills.
 
@@ -75,6 +77,8 @@ Before spawning any agent via the Task tool, re-read the caveman and ponytail ma
 Independent of the caveman and ponytail markers, and emitted on **every** spawn: the orchestrator names the user's conversation language (as detected per `rules/core.md` — **Language Rules**) in the spawned agent's prompt, and the agent writes the free-text prose of its returned report — finding descriptions, recommendations, summaries — in that language. Only that final report prose switches language: the agent's reasoning, intermediate notes, tool queries, any scratch or plan text, and MEMORY.md entries stay English regardless of the user's language — English intermediate work is cheaper and terser, and translation happens once, at the report.
 
 Always English regardless of the user's language: code, identifiers, file paths, required headings, table column names, status-line formats, every persistent file (`.crafter/*`, task files, plans — see `rules/task-lifecycle.md`), and — the same carve-out the caveman directive carries in item 1 above — any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines): `crafter pr-body` renders it into the PR body and the buffers under `.crafter/run/` are persistent files. Crafter targets no specific language; it follows whichever one the user writes in.
+
+The language line, the no-filler rule below, and the skill directives block are **not task context** — they shape the report, not the judgment. They are the only things besides the change range that the context-free `crafter-reviewer` receives.
 
 **No-filler rule (always on, language-independent).** The spawn prompt always carries the following, regardless of the caveman/ponytail markers and of the user's language — it replaces caveman for non-English users and is cheaper than a style directive:
 

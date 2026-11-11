@@ -382,6 +382,7 @@ _EXPECTED_FILES_REL=(
   "skills/crafter-status/SKILL.md"
   "skills/crafter-map-project/SKILL.md"
   "skills/crafter-scaffold-task/SKILL.md"
+  "skills/crafter-review/SKILL.md"
   "crafter/VERSION"
   "crafter/rules/core.md"
   "crafter/rules/do-workflow.md"
@@ -408,6 +409,7 @@ _EXPECTED_FILES_REL=(
   "agents/crafter-planner.md"
   "agents/crafter-implementer.md"
   "agents/crafter-checker.md"
+  "agents/crafter-reviewer.md"
   "agents/crafter-analyzer.md"
 )
 

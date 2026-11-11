@@ -29,23 +29,24 @@
 - On resume, outcomes from an interrupted run may already exist. Inspect the current state first, finish what remains, and do not redo completed work.
 
 ### CHECK
-- One `crafter-checker` pass per execution unit — per task under Small/Medium, per phase under Large. It covers drift against the contract and code review in a single fresh-context pass. There is no separate verification spawn and no separate review spawn.
-- Drift findings are classified as: harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery. No drift at all is the OK case.
-- Review issues carry a severity: Critical, Major, Minor, or Suggestion. The Checker reports **every** finding at every severity — filtering is the orchestrator's job, never the Checker's.
-- **The Checker's report is always reproduced in full, verbatim, before any commit.** Copy the Drift findings, Diff summary, Issues found, and Contract deviations sections as markdown tables, as-is. Never convert them to prose or bullet lists.
+- One check pass per execution unit — per task under Small/Medium, per phase under Large — made of two spawns run in parallel, each in a fresh context: the `crafter-checker` judges drift and verification evidence against the contract with the full task context, and the `crafter-reviewer` reviews the code from the change range alone (the working tree), with no task context of any kind. There is no separate verification spawn.
+- Drift findings come from the Checker, attributed to a plan step and classified as: harmful drift, scope drift, beneficial local drift, or plan-obsoleting discovery. No drift at all is the OK case.
+- Code findings come from the Reviewer and carry a severity: Critical, Major, Minor, or Suggestion. The Reviewer reports **every** finding at every severity — filtering is the orchestrator's job, never the Reviewer's. The orchestrator never merges or deduplicates the two reports' rows by judgment.
+- **Both reports are always reproduced in full, verbatim, before any commit.** Copy the Checker's Drift findings, Diff summary, and Contract deviations sections and the Reviewer's summary line and Findings table as markdown tables, as-is. Never convert them to prose or bullet lists.
 - **Minor findings stop for a user decision:** fix all, pick numbers to fix, or defer all. Chosen Minors enter the fix loop; each deferred one is recorded as `Decision (Tech Debt — user-deferred): Minor — <description>`. Under `--auto`, Minor findings are recorded as `Decision (Tech Debt — auto-recorded)` without a stop.
 - **Suggestion findings do not gate anything.** Record each one in the task file's `## Decisions` section as `Decision (Tech Debt — auto-recorded): Suggestion — <description>` and continue without waiting for the user. Auto-proceed suppresses the wait, never the display.
-- **Critical and Major findings, and harmful drift, always STOP.** Present the report, wait for the user's response, then enter the fix loop — there is no "proceed anyway" for those. Minor findings in the same report are decided in the same stop.
+- **Critical and Major code findings, and harmful drift, always STOP.** Present the reports, wait for the user's response, then enter the fix loop — there is no "proceed anyway" for those. Minor findings in the same pass are decided in the same stop.
+- **Reachability send-back.** The orchestrator never downgrades a severity. A new Critical or Major code finding that names neither a trigger nor a reachability state goes back to the `crafter-reviewer` as a `reachability check` — the same range plus that one finding row, still with no task context — at most once per finding, without counting as a fix-loop iteration.
 - Scope drift requires user approval or replanning. Beneficial local drift may continue only when recorded as a `Decision (Orchestrator Accepted)` entry. A plan-obsoleting discovery returns to PLAN.
-- Steps are checked off after the check pass, in one batch. A step stays unchecked only when a Critical or Major finding, or harmful / scope / plan-obsoleting drift, is attributed to it; Minor and Suggestion findings never block the tick.
-- The user may ask for a deferred Minor finding to be fixed at any point — including after the commit and at the end of the run. Re-delegate it to the Implementer and run a delta Checker pass.
+- Steps are checked off after the check pass, in one batch. A step stays unchecked only when harmful, scope, or plan-obsoleting drift is attributed to it. Code findings carry no step attribution: they never block a step tick and gate only the `Check` line. Minor and Suggestion findings never block anything but their own decision.
+- The user may ask for a deferred Minor finding to be fixed at any point — including after the commit and at the end of the run. Re-delegate it to the Implementer and re-check the fix with both agents (a Checker delta pass and a Reviewer pass on the fix's files).
 
 #### Fix loop
 
-- Entry condition: Critical/Major findings, Minor findings the user chose to fix, or harmful drift. The iteration count is incremented at loop entry — the first pass is iteration 1.
-- Each pass: re-delegate to `crafter-implementer` with the findings → spawn `crafter-checker` in **delta pass** mode with the files the fix changed plus the list of prior findings. The Checker reports the status of each prior finding and any new findings in the delta. Recall inside the delta stays full — no high-severity filtering.
-- **Widening.** If the fix touched files outside the delta, the next pass runs a full Checker pass instead, then returns to delta passes. The iteration count and the cap are unaffected.
-- **Cap: 5 iterations.** A 6th never starts automatically. If the cap is reached with Critical/Major or chosen Minor findings still present, stop and ask the user to choose:
+- Entry condition: Critical/Major code findings, Minor findings the user chose to fix, or harmful drift. The iteration count is incremented at loop entry — the first pass is iteration 1.
+- Each pass: re-delegate to `crafter-implementer` with the open findings → re-check with both agents in parallel. The `crafter-checker` runs in **delta pass** mode with the files the fix changed plus every prior open finding, drift and code alike, and reports the status of each plus any new drift in the delta. The `crafter-reviewer` reviews the working tree restricted to the files the fix changed; every row it reports is a new code finding. The open set after the pass is the prior findings the Checker did not report `resolved`, plus the new findings from both reports.
+- **Widening.** If the Checker reports the fix touched files outside the delta, the next pass is a full pass for both agents, then delta re-checks resume. The iteration count and the cap are unaffected.
+- **Cap: 5 iterations.** A 6th never starts automatically. If the cap is reached with Critical/Major code findings, chosen Minor findings, or harmful drift still present, stop and ask the user to choose:
   - **(a) manual override** — authorize iteration beyond the cap; re-enter the loop only on explicit user instruction.
   - **(b) accept-without-commit** — accept the unresolved findings and proceed without committing; record a Decision noting that the green-commit invariant is deliberately broken here.
   - **(c) replan-and-abort** — abandon the current work and return to planning.
@@ -58,7 +59,7 @@
 
 Extension skills are **supplemental specialists** — they advise, annotate, or enrich workflow phases as domain specialists. They must never:
 
-- **Replace a core agent** — extension skills cannot substitute for the Analyzer, Planner, Implementer, or Checker. Core-agent identities are fixed in `skills/crafter-do/SKILL.md`.
+- **Replace a core agent** — extension skills cannot substitute for the Analyzer, Planner, Implementer, Checker, or Reviewer. Core-agent identities are fixed in `skills/crafter-do/SKILL.md`.
 - **Bypass approval, check, or commit gates** — the APPROVE gate, the CHECK pass, and the green-commit invariant all apply regardless of which extension skills are active.
 - **Violate the safety envelope** — all behaviors forbidden in `docs/skill-contract.md` → **Safety Envelope** apply to extension skills without exception.
 
@@ -87,7 +88,7 @@ The following conditions are gates in the default flow but are **not blocking un
 
 - **Manual-verification exception** — recorded into the UAT buffer rather than blocking execution.
 - **Critical/Major findings the fix loop can clear within budget** — the loop fixes them and continues; what was auto-fixed is recorded in Decisions.
-- **Critical/Major review findings routed to `gap`/`uat` by the Checker** — recorded as buffer entries, the run continues. They count as handled, not open, for the step tick, the Check gate tick, and the transition to Step 6b.
+- **Drift findings routed to `gap`/`uat` by the Checker, and fix-loop code findings the Implementer leaves unfixed and tags `[gap-worthy]`/`[uat-worthy]`** — recorded as buffer entries, the run continues. They count as handled, not open, for the step tick, the Check gate tick, and the transition to Step 6b. Critical/Major code findings themselves always enter the fix loop — the orchestrator routes code findings by severity, not by a classification table.
 - **Minor findings** — recorded into Decisions as `Decision (Tech Debt — auto-recorded)` instead of stopping for a user decision. (Suggestion findings are auto-recorded in all runs.)
 - **Drift outcomes that do not threaten green commits** — recorded into the Gaps or UAT buffer; execution continues.
 - **All phase-summary approval gates** — under `--auto`, the Phase Summary is not surfaced to the user; the commit proceeds automatically once the work is green.
@@ -101,13 +102,13 @@ The escape hatch is the catch-all exit for situations the other three retained g
 - Missing auth or secret the run cannot proceed without
 - Hard contradiction in inputs (e.g., the task file's request and the approved plan diverge irreconcilably mid-execution)
 - Infrastructure outage (CI service down, registry unreachable, etc.)
-- Irrecoverable agent blocker (the Implementer or Checker hits a state it cannot recover from after exhausting in-step retries)
+- Irrecoverable agent blocker (the Implementer, Checker, or Reviewer hits a state it cannot recover from after exhausting in-step retries)
 
 **Behavior on trigger:** same exit semantics as the other retained gates — exit with state, the task file remains the handoff artifact, the unresolved blocker is recorded as a Decision in the task file, no commit, run terminates without violating the green-commit invariant.
 
 **Agent-side signal criteria:** each agent has a defined mechanism for emitting a blocker signal; see the respective agent prompt for the authoritative definition. In summary:
 
-- The **Checker** (`agents/crafter-checker.md` → `## Behavior under --auto`) routes each Critical, Major, or drift finding into one of four buckets — `gap`, `uat`, `escape-hatch`, `auto-fixable` — with `auto-fixable` as the catch-all default. Only `escape-hatch` is a blocker signal; a plan-obsoleting discovery always routes there.
+- The **Checker** (`agents/crafter-checker.md` → `## Behavior under --auto`) routes each drift finding into one of four buckets — `gap`, `uat`, `escape-hatch`, `auto-fixable` — with `auto-fixable` as the catch-all default. Only `escape-hatch` is a blocker signal; a plan-obsoleting discovery always routes there. The Reviewer has no `--auto` mode and emits no blocker signal; its code findings are routed by the orchestrator's severity mapping.
 - The **Implementer** (`agents/crafter-implementer.md` → `## Behavior under --auto`) emits a blocker when it encounters a genuine impediment that cannot be classified as uat-worthy or gap-worthy.
 
 **Rarity expectation:** in healthy `--auto` runs this exit should be uncommon. Most issues should be either auto-fixable within the fix-loop budget, recordable as Decisions or buffer entries, or caught by one of the other three gates. The escape hatch is the safety net, not a routine path.
@@ -135,8 +136,8 @@ Each run that reaches execution gets a dedicated scratch directory: `{PROJECT_PA
 
 | Scope | Characteristics | Workflow |
 |---|---|---|
-| **Small** | 1–3 files, clear intent, isolated change | Inline completeness + scope → inline plan in the task file → approval → whole task in one Implementer spawn → one Checker pass → commit → post-change |
-| **Medium** | Multiple files, clear intent, cross-cutting | Inline completeness + scope → `crafter-planner` (flat step list, one contract) → approval → whole task in one Implementer spawn → one Checker pass → commit → post-change |
-| **Large** | Incomplete/vague request, architectural impact, many files, or unfamiliar territory | Inline completeness + scope → discuss/research until complete → `crafter-planner` (vertical phases, one contract per phase) → approval → per phase: one Implementer spawn → one Checker pass → commit → session break |
+| **Small** | 1–3 files, clear intent, isolated change | Inline completeness + scope → inline plan in the task file → approval → whole task in one Implementer spawn → one check pass (Checker + Reviewer) → commit → post-change |
+| **Medium** | Multiple files, clear intent, cross-cutting | Inline completeness + scope → `crafter-planner` (flat step list, one contract) → approval → whole task in one Implementer spawn → one check pass (Checker + Reviewer) → commit → post-change |
+| **Large** | Incomplete/vague request, architectural impact, many files, or unfamiliar territory | Inline completeness + scope → discuss/research until complete → `crafter-planner` (vertical phases, one contract per phase) → approval → per phase: one Implementer spawn → one check pass (Checker + Reviewer) → commit → session break |
 
 When scope is ambiguous, ask the user rather than guessing. However, if the user has already provided a clear, detailed request, do not ask them to repeat or clarify what they have already stated. Scope ambiguity means you cannot determine whether the change is Small/Medium/Large — it does not mean you need more information about the user's intent.
