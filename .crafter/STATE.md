@@ -99,5 +99,5 @@ Everything is released as of **v0.14.1** (2026-07-07). v0.14.0 shipped the cavem
 ## Known Issues
 
 - Deferred findings from the checker-severity task (2026-09-09), still open after the split (the reachability-variant item moved to the Reviewer and is obsolete): `rules/delegation.md` rationale calls `.crafter/run/` buffers persistent (they are scratch); SKILL.md Pre-Spawn Gate heading no longer covers the language pointer. Nothing blocking.
-- Deferred Suggestions from the checker/reviewer split (2026-11-11): path-only `/crafter-review src/foo` is passed as a range, not a path-restricted working tree; stale "24 files installed" comment at `tests/test_install.sh:378`; the fix-loop Implementer field list omits the finding number the `--auto` instruction asks it to return. Not yet verified live: `/crafter-review` and the parallel Step 5 (needs install of this version). Nothing blocking.
+- Not yet verified live (checker/reviewer split, 2026-11-11): `/crafter-review` and the parallel Step 5 — needs install of this version.
 - Deferred Minor/Suggestion findings from the workflow-streamlining refactor are listed in the PR description on `refactor/streamline-workflow`. Nothing blocking.

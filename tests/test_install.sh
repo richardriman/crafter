@@ -375,7 +375,7 @@ _run_installer_no_cmd() {
 # ---------------------------------------------------------------------------
 # Shared file list used by global-install tests (issue #9: avoid duplication)
 # ---------------------------------------------------------------------------
-# 24 files installed by install_global / install_to
+# Files installed by install_global / install_to
 _EXPECTED_FILES_REL=(
   "skills/crafter-do/SKILL.md"
   "skills/crafter-debug/SKILL.md"
