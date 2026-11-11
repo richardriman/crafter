@@ -3,7 +3,7 @@
 ## Metadata
 - **Date:** 2026-11-11
 - **Work branch:** feat/split-checker-reviewer
-- **Status:** active
+- **Status:** completed
 - **Scope:** Medium
 
 ## Request
@@ -122,3 +122,4 @@ Split today's single `crafter-checker` along the context line. The Checker keeps
 - **Decision (Tech Debt — auto-recorded):** Suggestion — the fix-loop Implementer spawn field list "(severity or classification, file, line, description)" omits the finding number that the new `--auto` instruction asks the Implementer to return (`rules/do/step-5-check.md:51`, `skills/crafter-do/SKILL.md:246`).
 
 ## Outcome
+Implemented as planned in commit `434ddb5`: contract-only `crafter-checker` (effort medium), new context-free `crafter-reviewer`, standalone `/crafter-review` skill, `crafter-do` Step 5 / fix loop / Steps 7–9 and `crafter-debug` Step 6 running both agents in parallel, shared rules and docs in sync. Fix loop took 2 iterations: D1 (`--auto` input for leaving code-unresolvable findings tagged), pass-qualified finding identity `<number>@<pass>`, `--auto` indication on Checker delta/widened passes, reviewer reading from the head revision unless the range head is a clean `HEAD`. Three Suggestions deferred as tech debt (see Decisions). `tests/test_install.sh` 64/0 outside the sandbox. Not verified live — needs install of this version.
