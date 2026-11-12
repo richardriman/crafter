@@ -108,7 +108,7 @@ An extension skill must never:
 
 4. **Rewrite or replace an approved plan** — Once the APPROVE gate closes, the plan is sealed. Skills must not alter plan content, reorder steps, or amend phase contracts without re-entering the PLAN → APPROVE cycle.
 
-5. **Disable, skip, or short-circuit the check pass** — The CHECK gate in `rules/do-workflow.md` is mandatory. Skills must not suppress drift classifications, skip verification evidence, skip the Reviewer, or omit the Checker's drift and diff-summary tables or the Reviewer's findings table.
+5. **Disable, skip, or short-circuit the check pass** — The CHECK gate in `rules/do-workflow.md` is mandatory. Skills must not suppress drift classifications, skip verification evidence, skip the Reviewer, or omit the Checker's drift findings or the Reviewer's findings.
 
 6. **Perform destructive git operations** — Skills must not force-push, rewrite history (`git rebase -i`, `git reset --hard` on shared branches), delete remote branches, or perform any operation that would break the green-commit invariant defined in `rules/do-workflow.md`.
 

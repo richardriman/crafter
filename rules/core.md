@@ -6,7 +6,7 @@
 - **Conversation with the user:** match the user's language — auto-detect from their input and respond in kind
 - **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
-- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents work internally in English (reasoning, notes, tool queries, memory) and write only the free-text prose of their returned report in it, while code, identifiers, file paths, required headings, table columns, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
+- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents work internally in English (reasoning, notes, tool queries, memory) and write only the free-text prose of their returned report in it, while code, identifiers, file paths, required headings, table columns, finding header lines, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
 
 ## Jargon Confinement
 
@@ -44,7 +44,7 @@ Caveman removes filler words, pleasantries, and hedging while keeping ALL techni
 
 When caveman is active, the orchestrator applies caveman-lite to all of its own conversational output directed at the user. The following are **always excluded** from compression:
 
-(a) **Verbatim-relayed content** — the Checker's drift findings, diff summary, and contract-deviation sections and the Reviewer's summary line and findings table, which the orchestrator reproduces without modification; relay them exactly as produced.
+(a) **Verbatim-relayed content** — the Checker's report sections (full pass: drift-finding blocks and contract deviations; delta pass: prior-findings status, new drift findings, not re-checked, widening required) and the Reviewer's summary line and finding blocks, which the orchestrator reproduces without modification; relay them exactly as produced.
 (b) **Human-in-the-loop gate prompts** — plan-approval questions and any other HITL gate where compression would reduce clarity or leave the user unable to make an informed decision.
 (c) **Safety-critical content (Auto-Clarity)** — security warnings, irreversible-action confirmations, and multi-step sequences that must be written in full to be safely actionable.
 (d) **Commits, PR titles/bodies, and release notes** — remain in neutral human project voice per `CLAUDE.md`; no compression applied. PR bodies include buffer-sourced content — the UAT and Gap sections that `crafter pr-body` renders from implementer/checker deviation entries — which likewise stays uncompressed and in neutral human voice.

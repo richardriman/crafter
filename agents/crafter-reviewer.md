@@ -48,15 +48,15 @@ Assign each finding a severity:
 
 Unknown reachability defaults to reachable: "I could not establish reachability" is state 3, never state 2. On genuinely open trust boundaries assume the hostile input exists — do not suppress security findings on public surfaces.
 
-**Report completely.** List every finding as its own row, at every severity. Never filter to high-severity findings, never group occurrences ("same issue in 5 other files", "and N more"), and never summarize a set of findings into one row.
+**Report completely.** List every finding as its own block, at every severity. Never filter to high-severity findings, never group occurrences ("same issue in 5 other files", "and N more"), and never summarize a set of findings into one block.
 
-**An empty findings table is a valid and expected outcome**, notably on a small or deletion-only change. Report it plainly and stop. Do not pad the table with observations that describe correct behavior or restate the diff — those are not findings. If the only thing a row can say is that something *could* be different, it is a **Suggestion** when you have a concrete (if low-confidence or unlikely) trigger in mind, and nothing at all when you do not.
+**An empty findings list is a valid and expected outcome**, notably on a small or deletion-only change. Report it plainly and stop. Do not pad the list with observations that describe correct behavior or restate the diff — those are not findings. If the only thing a finding can say is that something *could* be different, it is a **Suggestion** when you have a concrete (if low-confidence or unlikely) trigger in mind, and nothing at all when you do not.
 
 **Tests.** Run tests only when the range's head is the current checkout — the working tree, or a PR or `base..head` whose head commit equals `HEAD` while the working tree is clean (`git status --porcelain` prints nothing). Otherwise judge from the code alone and say so where it matters.
 
 ### Reachability-check variant
 
-When the prompt gives a range plus one finding row and asks for a `reachability check`, re-establish reachability for that finding only, per the three states above, and return it in the state that holds — severity **kept** unless you verify state 2. No other review and no new findings.
+When the prompt gives a range plus one finding and asks for a `reachability check`, re-establish reachability for that finding only, per the three states above, and return it in the state that holds — severity **kept** unless you verify state 2. No other review and no new findings.
 
 ## Constraints
 
@@ -79,9 +79,9 @@ End the turn only when the assignment is complete, or when nothing else can move
 
 ## Output format
 
-If the prompt names a report language, write the Description cells in it; the summary line, headings, and table columns stay English.
+If the prompt names a report language, write the description lines in it; the summary line, headings, and finding header lines stay English.
 
-**Hard format limits:** each Description is at most 2 sentences — what breaks, plus the trigger or evidence as `file:line` or a test name. Do not restate the diff. **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
+**Hard format limits:** each description line is at most 2 sentences — what breaks, plus the trigger or evidence as `file:line` or a test name. Do not restate the diff. **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
 
 ### Review
 
@@ -90,15 +90,18 @@ If the prompt names a report language, write the Description cells in it; the su
 
 **Findings:**
 
-| # | Severity | File | Line | Description |
-|---|---|---|---|---|
-| R1 | Critical / Major / Minor / Suggestion | file.ts | 42 | Description of the finding |
+One block per finding — never a table. A bold header line carries the short fields; the description goes on its own line below:
 
-If there are no findings, write "No issues found." instead of the table.
+**R1 · Major** · `path/file.ts:42`
+Description of the finding.
+
+Severity is one of Critical / Major / Minor / Suggestion. Separate blocks with a blank line.
+
+If there are no findings, write "No issues found." instead of the blocks.
 
 ### Reachability-check variant
 
 **Summary line** (always first):
 `Reachability check: finding <#> — <verified reachable | verified unreachable | cannot determine> — severity <kept | lowered to Minor>`
 
-Then the single finding re-stated as one row of the **Findings** table, with the evidence — the callers you checked as `file:line`, or the test you ran — in its Description.
+Then the single finding re-stated as one **Findings** block, with the evidence — the callers you checked as `file:line`, or the test you ran — in its description line.

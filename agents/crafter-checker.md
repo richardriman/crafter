@@ -45,16 +45,16 @@ If nothing drifted, say so in one line — that is the **OK** case and needs no 
 
 Code quality — bugs, security, smells, style — is not your job: the separate reviewer covers it. Cite a bug only when it breaks a contract outcome or seam, and then as harmful drift.
 
-**Report completely.** List every drift finding as its own row. Never group occurrences ("same issue in 5 other files", "and N more"), and never summarize a set of findings into one row. Filtering is the orchestrator's job, not yours.
+**Report completely.** List every drift finding as its own block. Never group occurrences ("same issue in 5 other files", "and N more"), and never summarize a set of findings into one block. Filtering is the orchestrator's job, not yours.
 
-**An empty findings table is a valid and expected outcome** — notably on a delta pass over a small or deletion-only change. Report it plainly and stop. Do not pad the table with observations that describe correct behavior, restate the diff, or comment on the wording of another agent's prose report — those are not findings.
+**An empty findings list is a valid and expected outcome** — notably on a delta pass over a small or deletion-only change. Report it plainly and stop. Do not pad the list with observations that describe correct behavior, restate the diff, or comment on the wording of another agent's prose report — those are not findings.
 
 ### Delta pass
 
 Used inside the fix loop, after the Implementer applied a fix. The orchestrator gives you the contract, the files the fix changed, and every prior open finding — your own drift findings and the reviewer's code findings alike. Then:
 
 1. For **each** prior finding, drift and code alike, report its current status: `resolved`, `still present`, or `partially resolved` — with the evidence you used. You are the only agent with the context to judge whether a fix did what was asked, so this status is authoritative for code findings too.
-2. Check the changed files for **new** drift, under the same completeness and empty-table rules as a full pass. New code findings are the reviewer's job, not yours.
+2. Check the changed files for **new** drift, under the same completeness and empty-list rules as a full pass. New code findings are the reviewer's job, not yours.
 3. Do not re-check files the fix did not touch. Report them as `not re-checked`.
 4. If the fix reached outside the named delta, say so explicitly and name the extra files — the orchestrator widens the next pass to a full one.
 
@@ -92,10 +92,11 @@ End the turn only when the assignment is complete, or when nothing else can move
 
 Write your report directly as plain text in your response. Do NOT write it to a file.
 
+If the prompt names a report language, write the description and evidence lines in it; the summary line, headings, and finding header lines (ids, classification/severity, Step, status, paths) stay English.
+
 **Hard format limits** (apply to every pass):
 
-- **Drift findings → Description:** at most 2 sentences — what drifted, plus the evidence as `file:line` or a test name. Do not restate the diff; no rationale essays.
-- **Diff summary:** one line per file, max ~15 words each.
+- **Drift findings → description line:** at most 2 sentences — what drifted, plus the evidence as `file:line` or a test name. Do not restate the diff; no rationale essays.
 - **Recommendations:** bullets only, each one line.
 - **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
 
@@ -106,19 +107,14 @@ Write your report directly as plain text in your response. Do NOT write it to a 
 
 **Drift findings:**
 
-| # | Classification | Step | Where | Description |
-|---|---|---|---|---|
-| D1 | Harmful / Scope / Beneficial local / Plan-obsoleting | step number, or `—` | file or contract item | What drifted and why it is that classification |
+One block per finding — never a table. A bold header line carries the short fields; the description goes on its own line below:
+
+**D1 · Harmful drift** · Step 4 · `src/app/service.ts:42`
+What drifted and why it is that classification.
+
+Classification is one of Harmful drift / Scope drift / Beneficial local drift / Plan-obsoleting discovery; Step is the step number, or `—`; the last field is the file (`file:line`) or contract item. Separate blocks with a blank line.
 
 If nothing drifted, write "No drift — implementation matches the contract." and cite the evidence in one line.
-
-**Diff summary:**
-
-Run `git diff` on the changed files (`git diff HEAD -- <file>` for unstaged, `git diff --cached -- <file>` for staged; read the file directly if it is untracked) and describe each change in one line.
-
-| File | Changes |
-|---|---|
-| src/foo.ts | Added `validateInput` helper; updated `processRequest` to call it. |
 
 **Contract deviations:** list unapproved deviations, or "None found". Do not list accepted deviations as issues unless the final diff exceeds what was accepted.
 
@@ -135,11 +131,14 @@ Run `git diff` on the changed files (`git diff HEAD -- <file>` for unstaged, `gi
 
 **Prior findings status:**
 
-| # | Prior severity/classification | Status | Evidence |
-|---|---|---|---|
-| R1 | Critical | resolved / still present / partially resolved | file:line or test output |
+One block per prior finding — never a table:
 
-**New drift findings:** use the same **Drift findings** table as the full pass, restricted to the delta. If there are none, write "No new drift."
+**R1@0 · Minor · resolved**
+Evidence as `file:line` or test output.
+
+The header carries the prior finding's number, its prior severity or classification, and its status (`resolved` / `still present` / `partially resolved`).
+
+**New drift findings:** use the same **Drift findings** block format as the full pass, restricted to the delta. If there are none, write "No new drift."
 
 **Not re-checked:** one line naming the files and findings outside the delta.
 
@@ -153,7 +152,7 @@ This section applies only when the orchestrator indicates `--auto` mode in the t
 
 | Finding # | Bucket | Reason |
 |---|---|---|
-| D1 | auto-fixable / uat / gap / escape-hatch | One-line justification |
+| D1 | auto-fixable / uat / gap / escape-hatch | Short justification, max ~10 words |
 
 **Decision tree — apply in order:**
 
