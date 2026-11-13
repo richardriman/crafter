@@ -18,4 +18,4 @@ Spawn the **`crafter-reviewer`** agent with `model: opus`. The prompt carries on
 
 Pass nothing else — no description of the change, no conversation context, no project notes. The reviewer is meant to see the change cold.
 
-Reproduce the reviewer's report unchanged — the summary line and the finding blocks as-is, never reformatted into tables, prose, or bullet lists. Do not add your own findings, re-rank, or fix anything.
+Reproduce the reviewer's report unchanged — the summary line and the finding list as-is, exactly as the reviewer wrote it — never reformatted into tables or prose, items never re-shaped. Do not add your own findings, re-rank, or fix anything.

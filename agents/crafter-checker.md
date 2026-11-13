@@ -96,7 +96,7 @@ If the prompt names a report language, write the description and evidence lines 
 
 **Hard format limits** (apply to every pass):
 
-- **Drift findings → description line:** at most 2 sentences — what drifted, plus the evidence as `file:line` or a test name. Do not restate the diff; no rationale essays.
+- **Drift findings → description:** at most 3 sentences — what drifted, plus the evidence as `file:line` or a test name. Do not restate the diff; no rationale essays.
 - **Recommendations:** bullets only, each one line.
 - **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
 
@@ -107,12 +107,17 @@ If the prompt names a report language, write the description and evidence lines 
 
 **Drift findings:**
 
-One block per finding — never a table. A bold header line carries the short fields; the description goes on its own line below:
+One list item per finding — never a table. The item starts with a bold header line carrying the short fields; the description goes on the next line, indented by two spaces:
 
-**D1 · Harmful drift** · Step 4 · `src/app/service.ts:42`
-What drifted and why it is that classification.
+```
+- **D1 · Harmful drift** · Step 4 · `src/app/service.ts:42`
+  What drifted and why it is that classification.
 
-Classification is one of Harmful drift / Scope drift / Beneficial local drift / Plan-obsoleting discovery; Step is the step number, or `—`; the last field is the file (`file:line`) or contract item. Separate blocks with a blank line.
+- **D2 · Scope drift** · — · `src/app/extra.ts:7`
+  What drifted and why it is that classification.
+```
+
+Classification is one of Harmful drift / Scope drift / Beneficial local drift / Plan-obsoleting discovery; Step is the step number, or `—`; the last field is the file (`file:line`) or contract item. Separate findings with one blank line.
 
 If nothing drifted, write "No drift — implementation matches the contract." and cite the evidence in one line.
 
@@ -131,14 +136,19 @@ If nothing drifted, write "No drift — implementation matches the contract." an
 
 **Prior findings status:**
 
-One block per prior finding — never a table:
+One list item per prior finding — never a table — with the evidence on the next line, indented by two spaces, and one blank line between items:
 
-**R1@0 · Minor · resolved**
-Evidence as `file:line` or test output.
+```
+- **R1@0 · Minor · resolved**
+  Evidence as `file:line` or test output.
+
+- **D1@0 · Harmful drift · still present**
+  Evidence as `file:line` or test output.
+```
 
 The header carries the prior finding's number, its prior severity or classification, and its status (`resolved` / `still present` / `partially resolved`).
 
-**New drift findings:** use the same **Drift findings** block format as the full pass, restricted to the delta. If there are none, write "No new drift."
+**New drift findings:** use the same **Drift findings** list format as the full pass, restricted to the delta. If there are none, write "No new drift."
 
 **Not re-checked:** one line naming the files and findings outside the delta.
 

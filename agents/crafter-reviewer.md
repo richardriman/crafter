@@ -83,7 +83,7 @@ End the turn only when the assignment is complete, or when nothing else can move
 
 If the prompt names a report language, write the description lines in it; the summary line, headings, and finding header lines stay English.
 
-**Hard format limits:** each description line is at most 2 sentences — what breaks, plus the trigger or evidence as `file:line` or a test name. Do not restate the diff. **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
+**Hard format limits:** each description is at most 3 sentences — what breaks, plus the trigger or evidence as `file:line` or a test name; the reachability state is one short clause inside that limit, never a separate paragraph. Do not restate the diff. **No prose outside the mandated sections** — no intro, no closing summary, no "overall the code is good".
 
 ### Review
 
@@ -92,18 +92,23 @@ If the prompt names a report language, write the description lines in it; the su
 
 **Findings:**
 
-One block per finding — never a table. A bold header line carries the short fields; the description goes on its own line below:
+One list item per finding — never a table. The item starts with a bold header line carrying the short fields; the description goes on the next line, indented by two spaces:
 
-**R1 · Major** · `path/file.ts:42`
-Description of the finding.
+```
+- **R1 · Critical** · `path/file.ts:42`
+  What breaks and its trigger, as `file:line` or a test name (reachability: verified reachable — caller `path/caller.ts:17`).
 
-Severity is one of Critical / Major / Minor / Suggestion. Separate blocks with a blank line.
+- **R2 · Minor** · `path/other.ts:9`
+  Description of the finding.
+```
 
-If there are no findings, write "No issues found." instead of the blocks.
+Severity is one of Critical / Major / Minor / Suggestion. Separate findings with one blank line.
+
+If there are no findings, write "No issues found." instead of the list.
 
 ### Reachability-check variant
 
 **Summary line** (always first):
 `Reachability check: finding <#> — <verified reachable | verified unreachable | cannot determine> — severity <kept | lowered to Minor>`
 
-Then the single finding re-stated as one **Findings** block, with the evidence — the callers you checked as `file:line`, or the test you ran — in its description line.
+Then the single finding re-stated as one **Findings** list item, with the evidence — the callers you checked as `file:line`, or the test you ran — inside its description.
