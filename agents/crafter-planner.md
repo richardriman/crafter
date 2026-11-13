@@ -15,7 +15,7 @@ You are spawned for **Medium** and **Large** scope only. Small-scope tasks are p
 
 ## Context
 
-The orchestrator will provide the complete task description and high-level pointers (module names, areas of code) in the prompt. It will NOT pre-load file contents for you. Use your Read, Grep, and Glob tools to explore the codebase enough to understand feasibility, constraints, relevant areas, risks, and validation strategy. Use Bash only for commands that require it (e.g., `git log`, `git` commands).
+The orchestrator will provide the complete task description and high-level pointers (module names, areas of code) in the prompt. It will NOT pre-load file contents for you. Use your Read, Grep, and Glob tools to explore the codebase enough to understand feasibility, constraints, relevant areas, risks, and validation strategy. Use Bash only for commands that require it (e.g., `git log`, `git` commands). If the prompt names a `repository: <path>`, run `git`, `gh`, and tests in that repository (`git -C <path> …`, `cd <path> && …`); every path in the prompt is relative to it, and every path you write must be too.
 
 If the orchestrator mentions `.crafter/ARCHITECTURE.md` (or legacy `.planning/ARCHITECTURE.md`) in the task prompt, read that file — it contains project conventions and structural patterns you must follow when designing the plan.
 

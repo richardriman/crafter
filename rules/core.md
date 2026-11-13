@@ -6,7 +6,7 @@
 - **Conversation with the user:** match the user's language — auto-detect from their input and respond in kind
 - **Persistent files** (`.crafter/*`, saved plans; legacy fallback `.planning/*`): always English
 - **Live conversational output** (non-archived responses): use the user's language
-- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents work internally in English (reasoning, notes, tool queries, memory) and write only the free-text prose of their returned report in it, while code, identifiers, file paths, required headings, table columns, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
+- **Spawned agents' returned reports:** the orchestrator passes the user's conversation language into every spawn; agents work internally in English (reasoning, notes, tool queries, memory) and write only the free-text prose of their returned report in it, while code, identifiers, file paths, required headings, table columns, finding header lines, status-line formats, persistent files, and buffer-bound deviation/classification text stay English — see `rules/delegation.md` §"Report Language (always on)"
 
 ## Jargon Confinement
 
@@ -38,13 +38,13 @@ Caveman removes filler words, pleasantries, and hedging while keeping ALL techni
 - Human-facing prose → caveman-lite.
 - Reasoning, inter-agent summaries, and pure agent-facing output → caveman-full.
 
-`crafter-checker` reports are **human-facing** — the orchestrator relays them verbatim to the user (carve-out (a) below), so the Checker receives caveman-lite. `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` output is agent-facing (the orchestrator consumes and digests it), so they receive caveman-full. The directive is propagated to agents only when the detected user conversation language is English (`rules/delegation.md` § Skill Directives, item 1); for other languages no caveman directive is appended.
+`crafter-checker` and `crafter-reviewer` reports are **human-facing** — the orchestrator relays them verbatim to the user (carve-out (a) below), so both receive caveman-lite. `crafter-implementer`, `crafter-planner`, and `crafter-analyzer` output is agent-facing (the orchestrator consumes and digests it), so they receive caveman-full. The directive is propagated to agents only when the detected user conversation language is English (`rules/delegation.md` § Skill Directives, item 1); for other languages no caveman directive is appended.
 
 #### Human-facing caveman-lite policy (orchestrator)
 
 When caveman is active, the orchestrator applies caveman-lite to all of its own conversational output directed at the user. The following are **always excluded** from compression:
 
-(a) **Verbatim-relayed content** — the Checker's drift findings, diff summary, issue tables, and contract-deviation sections, which the orchestrator reproduces without modification; relay them exactly as produced.
+(a) **Verbatim-relayed content** — the Checker's report sections (full pass: drift-finding blocks and contract deviations; delta pass: prior-findings status, new drift findings, not re-checked, widening required) and the Reviewer's summary line and finding blocks, which the orchestrator reproduces without modification; relay them exactly as produced.
 (b) **Human-in-the-loop gate prompts** — plan-approval questions and any other HITL gate where compression would reduce clarity or leave the user unable to make an informed decision.
 (c) **Safety-critical content (Auto-Clarity)** — security warnings, irreversible-action confirmations, and multi-step sequences that must be written in full to be safely actionable.
 (d) **Commits, PR titles/bodies, and release notes** — remain in neutral human project voice per `CLAUDE.md`; no compression applied. PR bodies include buffer-sourced content — the UAT and Gap sections that `crafter pr-body` renders from implementer/checker deviation entries — which likewise stays uncompressed and in neutral human voice.
@@ -58,7 +58,7 @@ Ponytail enforces YAGNI, the-ladder, and shortest-working-diff discipline on cod
 
 The marker's level (`lite`, `full`, or `ultra`) is **passed through** to the agents that receive the directive — no audience override; the user's configured intensity is honored.
 
-**Ponytail applies only to `crafter-implementer` and `crafter-planner`.** It does not apply to the checker or the analyzer.
+**Ponytail applies only to `crafter-implementer` and `crafter-planner`.** It does not apply to the checker, the reviewer, or the analyzer.
 
 ## Context File Maintenance
 
@@ -81,4 +81,4 @@ The marker's level (`lite`, `full`, or `ultra`) is **passed through** to the age
 - **Surgical Changes:** Every changed line must trace to the approved request. Avoid drive-by refactors and adjacent "improvements."
 - **Goal-Driven Execution:** Convert work into verifiable criteria and iterate until each criterion is clearly satisfied.
 
-For `/crafter-do`, these guardrails are carried by the plan's **contract** — outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions, defined once for the whole task (Small/Medium) or once per phase (Large). The Implementer works inside that contract and the Checker checks drift against it.
+For `/crafter-do`, these guardrails are carried by the plan's **contract** — outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions, defined once for the whole task (Small/Medium) or once per phase (Large). The Implementer works inside that contract and the Checker checks drift against it; the Reviewer judges the code without it.

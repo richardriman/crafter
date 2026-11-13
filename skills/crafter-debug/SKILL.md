@@ -9,7 +9,7 @@ Read and follow these rules:
 - `{CRAFTER_HOME}/rules/delegation.md`
 - `{CRAFTER_HOME}/rules/task-lifecycle.md`
 
-You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, and verification to agents with fresh context.
+You are the **orchestrator**. Your job is to manage the debugging workflow and communicate with the user. You delegate hypothesis research, fix implementation, verification, and code review to agents with fresh context.
 
 ## Context Directory Resolution (before reading context files)
 
@@ -24,7 +24,7 @@ Read the project context files (if they exist):
 - `{CRAFTER_DIR}/STATE.md` (full file — your primary source of current status)
 - `{CRAFTER_DIR}/PROJECT.md` — only the **Stack** and **How to Run** sections
 
-Do NOT read `{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it to agents that need it (Analyzer, Checker).
+Do NOT read `{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it to agents that need it (Analyzer, Checker). Never to the Reviewer.
 
 The problem to debug: $ARGUMENTS
 
@@ -93,12 +93,11 @@ Delegate the fix to the **Implementer** agent:
 
 ## Step 6 — Verify
 
-Delegate verification to the **Checker** agent:
+Delegate verification to the **Checker** and the **Reviewer** in parallel (both Task calls in one message):
 
-1. Spawn the `crafter-checker` agent in mode `full pass`.
-2. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, any relevant test files, and the Implementer's **Evidence** section. State explicitly that the debug flow has **no approved contract and no declared seams**, so Part A (drift) is limited to what can be judged without one: whether the change does what the agreed fix said and nothing beyond it. Contract-item, seam, and stop-condition checks do not apply — the Checker must not report drift against a contract that does not exist.
-3. Remind the Checker in the task prompt: "Write your report as plain text in your response. Do not create any files."
-4. Receive and present the verification report.
+1. Spawn the `crafter-checker` agent in mode `full pass`. Provide it with: the original symptom as the verification criterion ("original bug no longer occurs"), the changed files, any relevant test files, and the Implementer's **Evidence** section. State explicitly that the debug flow has **no approved contract and no declared seams**, so the drift check is limited to what can be judged without one: whether the change fixes the symptom, does what the agreed fix said, and nothing beyond it. Contract-item, seam, and stop-condition checks do not apply — the Checker must not report drift against a contract that does not exist. Remind it in the task prompt: "Write your report as plain text in your response. Do not create any files."
+2. Spawn the `crafter-reviewer` agent with **only** the range `working tree`, the report-language line, the no-filler rule, and the skill directives block (`rules/delegation.md`) — no symptom, no fix description, no Implementer report.
+3. Receive both reports and present them verbatim.
 
 Report the outcome clearly — original problem resolved, regressions found (if any).
 
