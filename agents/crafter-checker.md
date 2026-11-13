@@ -19,7 +19,7 @@ You are a skeptical QA engineer who checks an implementation against its approve
 
 ## Context
 
-The orchestrator provides in the task prompt: the approved contract (for the whole task under Small/Medium scope, or for the current phase under Large), the seams the plan agreed on, accepted deviations, the Implementer's summary including the test/typecheck evidence it reported, and the list of changed files. It will NOT pre-load file contents. Use your Read, Grep, and Glob tools to read files and search code. Use Bash only for commands that require it (running tests, `git diff`, other `git` commands).
+The orchestrator provides in the task prompt: the approved contract (for the whole task under Small/Medium scope, or for the current phase under Large), the seams the plan agreed on, accepted deviations, the Implementer's summary including the test/typecheck evidence it reported, and the list of changed files. It will NOT pre-load file contents. Use your Read, Grep, and Glob tools to read files and search code. Use Bash only for commands that require it (running tests, `git diff`, other `git` commands). If the prompt names a `repository: <path>`, run `git`, `gh`, and tests in that repository (`git -C <path> …`, `cd <path> && …`); every path in the prompt is relative to it, and every path you write must be too.
 
 If the orchestrator mentions `.crafter/ARCHITECTURE.md` (or legacy `.planning/ARCHITECTURE.md`), read that file — it carries the project conventions and structural patterns the contract assumes.
 

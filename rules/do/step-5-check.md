@@ -12,8 +12,8 @@ There is no separate verification spawn.
 ## Full pass
 
 1. Spawn both agents in parallel:
-   - The `crafter-checker` in mode `full pass`, with: the approved contract (including its seams and verification evidence), accepted deviations, the Implementer's per-step report **including its Evidence section**, the list of changed files, a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if available, and — under `--auto` — the `--auto` indication. Remind it in the task prompt: "Write your report as plain text in your response. Do not create any files."
-   - The `crafter-reviewer` with **only**: the range `working tree` (the unit stays uncommitted until Step 6b), the report-language line and the no-filler rule (`rules/delegation.md` § Report Language), and the skill directives block. No contract, no Implementer report, no file list, no ARCHITECTURE.md, no `--auto` indication, no extension context.
+   - The `crafter-checker` in mode `full pass`, with: the approved contract (including its seams and verification evidence), accepted deviations, the Implementer's per-step report **including its Evidence section**, the list of changed files, a mention of `{CRAFTER_DIR}/ARCHITECTURE.md` if available, and — under `--auto` — the `--auto` indication. Remind it in the task prompt: "Write your report as plain text in your response. Do not create any files."
+   - The `crafter-reviewer` with **only**: the range `working tree` (the unit stays uncommitted until Step 6b), the line `repository: {PROJECT_PATH}` when `PROJECT_PATH` is not `.`, the report-language line and the no-filler rule (`rules/delegation.md` § Report Language), and the skill directives block. No contract, no Implementer report, no file list, no ARCHITECTURE.md, no `--auto` indication, no extension context.
 
    Neither agent gets file contents — both read files themselves.
 2. Initialize the fix-loop iteration count at 0.

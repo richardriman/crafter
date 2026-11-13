@@ -108,7 +108,7 @@ The installer no longer needs `node` to edit `settings.json` — all JSON mutati
 | `/crafter-debug <problem>` | Systematic, hypothesis-driven debugging workflow |
 | `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
 | `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
-| `/crafter-review [<PR>\|<base..head>]` | Context-free adversarial review of a PR, a commit range, or (with no argument) the working tree — works on any repository |
+| `/crafter-review [--project <path>] [<PR>\|<base..head>]` | Context-free adversarial review of a PR, a commit range, or (with no argument) the working tree — works on any repository; `--project` picks a nested repository in a multi-repo workspace |
 
 `/crafter-do` enforces change guardrails across planning, implementation, and checking: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**. Plans are execution contracts — one contract for the whole task under Small and Medium scope, one per vertical phase under Large — and each execution unit ends with a check pass in which a contract checker and a context-free code reviewer run in parallel.
 

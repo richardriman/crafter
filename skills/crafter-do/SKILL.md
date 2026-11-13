@@ -73,7 +73,7 @@ The supported flags are `--ext` and `--auto`. **`--fast` was removed.** If it is
    - Else if `{PROJECT_PATH}/.planning/` exists: set `CRAFTER_DIR` to `.planning`; proactively offer migration (`git -C {PROJECT_PATH} mv .planning .crafter`); ask the user and wait for a response; if approved and succeeds set `CRAFTER_DIR` to `.crafter`, otherwise continue with `.planning`.
    - Else: set `CRAFTER_DIR` to `.crafter`.
 
-Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow.
+Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow — task files, context files, everything you read or write yourself. Paths handed to agents are relative to `{PROJECT_PATH}` instead (`rules/delegation.md` § Target Repository).
 
 ---
 
@@ -90,6 +90,8 @@ Do NOT read `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` yourself — pass it 
 Before **every** `Task` spawn in this skill — including re-delegations phrased in prose (e.g. "re-delegate to the Implementer"), not only "Spawn the `crafter-<agent>` agent" instructions — apply `{CRAFTER_HOME}/rules/delegation.md` §"Skill Directives — Caveman and Ponytail" at that moment: **re-read the `$HOME/.claude/.caveman-active` and `.ponytail-active` markers fresh at that moment — never cached from session start** — then append the `## Active skill directives` block it defines (or nothing, when both markers are absent). The rest of the marker-reading rules live in `{CRAFTER_HOME}/rules/core.md` — **Skill Detection: Caveman and Ponytail**. This gate is the source of enforcement; each spawn instruction below carries only a short level marker as a reminder, not a restatement of the rule.
 
 Also apply `{CRAFTER_HOME}/rules/delegation.md` §"Report Language (always on)" at every spawn — it is unconditional, independent of the markers: name the user's conversation language in the prompt so the agent's returned prose comes back in it, while code, paths, required headings, table columns, finding header lines, status-line formats, all persistent files, and buffer-bound deviation/classification text stay English.
+
+Also apply `{CRAFTER_HOME}/rules/delegation.md` §"Target Repository (always on)" at every spawn: when `PROJECT_PATH` is not `.`, the prompt carries `repository: {PROJECT_PATH}` and every path in it is relative to `{PROJECT_PATH}` (`{CRAFTER_DIR}/ARCHITECTURE.md`, not `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md`).
 
 ## Workflow Master Plan (navigation map)
 
@@ -178,7 +180,7 @@ Do not proceed to planning until the request is complete enough to plan. Once co
 
 **Small scope — inline, no spawn.** Write the plan yourself into the task file's `## Plan` section: a `**Plan status:** draft` line, 3–6 sentences covering outcome, scope boundary, non-goals, seams, verification evidence, and stop conditions, then a flat checklist (`- [ ] Step 1: <outcome>`) closed by a `- [ ] Check` gate line. No phase headings. Present it and wait for approval.
 
-**Medium / Large — spawn the `crafter-planner` agent.** Pass: the complete user request, the completeness/refinement notes, the task file path, the scope classification, high-level pointers to relevant modules or areas of code, and a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if it exists. Do not inject file contents. The agent internally reads `{CRAFTER_HOME}/rules/do/step-3-plan.md`, writes the full plan to the task file, and returns a structured summary covering Approach, Steps, Assumptions, Contract, Seams, Verification, and Risks. Medium produces a flat step list with one contract; Large produces vertical phases with one contract per phase.
+**Medium / Large — spawn the `crafter-planner` agent.** Pass: the complete user request, the completeness/refinement notes, the task file path (repo-relative: `{CRAFTER_DIR}/tasks/<file>`), the scope classification, high-level pointers to relevant modules or areas of code, and a mention of `{CRAFTER_DIR}/ARCHITECTURE.md` if it exists. Do not inject file contents. The agent internally reads `{CRAFTER_HOME}/rules/do/step-3-plan.md`, writes the full plan to the task file, and returns a structured summary covering Approach, Steps, Assumptions, Contract, Seams, Verification, and Risks. Medium produces a flat step list with one contract; Large produces vertical phases with one contract per phase.
 
 *(Skill directive level for this spawn: caveman-full; ponytail — see Pre-Spawn Gate above.)*
 
@@ -215,8 +217,8 @@ Do not inject file contents — the Implementer uses its own Read/Grep/Glob tool
 
 Spawn **both agents in parallel** (both Task calls in one message):
 
-- **`crafter-checker`** in mode `full pass` — drift and verification evidence against the contract. Pass: the approved contract with its seams and verification evidence, accepted deviations, the Implementer's per-step report **including its Evidence section**, the list of changed files, a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if available, and the `--auto` indication when set. Include the reminder: "Write your report as plain text in your response. Do not create any files."
-- **`crafter-reviewer`** — context-free code review. Pass **only**: the range `working tree` (the unit stays uncommitted until Step 6b), the report-language line, the no-filler rule, and the skill directives block. No contract, no Implementer report, no file list, no ARCHITECTURE.md, no `--auto` indication, no extension context.
+- **`crafter-checker`** in mode `full pass` — drift and verification evidence against the contract. Pass: the approved contract with its seams and verification evidence, accepted deviations, the Implementer's per-step report **including its Evidence section**, the list of changed files, a mention of `{CRAFTER_DIR}/ARCHITECTURE.md` if available, and the `--auto` indication when set. Include the reminder: "Write your report as plain text in your response. Do not create any files."
+- **`crafter-reviewer`** — context-free code review. Pass **only**: the range `working tree` (the unit stays uncommitted until Step 6b), the line `repository: {PROJECT_PATH}` when `PROJECT_PATH` is not `.`, the report-language line, the no-filler rule, and the skill directives block. No contract, no Implementer report, no file list, no ARCHITECTURE.md, no `--auto` indication, no extension context.
 
 Do not inject file contents. The Checker internally reads `{CRAFTER_HOME}/rules/do/step-5-check.md`; the Reviewer reads no Crafter rules. Initialize the fix-loop **iteration count at 0**.
 
@@ -303,7 +305,7 @@ The final commit has already landed via Step 6b. These steps cover end-of-task f
 2. **Consolidated end-of-task commit** — if any PROJECT.md/ARCHITECTURE.md updates or STATE.md changes exist, bundle them into one single consolidated commit per `{CRAFTER_HOME}/rules/post-change.md`; if none are needed, no follow-up commit is created.
 3. **Update STATE.md** — update `{PROJECT_PATH}/{CRAFTER_DIR}/STATE.md` (Recent Changes, Current Focus, Known Issues) and include it in the consolidated commit.
 4. **Complete the task file** — set Status to `completed`, fill in the `## Outcome` section, check off remaining plan steps.
-5. **List deferred findings** — name every finding recorded as `Decision (Tech Debt — user-deferred)` or `Decision (Tech Debt — auto-recorded)` during the run and offer to fix any of them now. If the user picks one, re-delegate it to the `crafter-implementer` *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)* and re-check the uncommitted fix with both agents in parallel, as in Step 5 (f.4): a `crafter-checker` delta pass and a `crafter-reviewer` pass on the range `working tree` restricted to the files the fix changed *(Skill directive level for both: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*.
+5. **List deferred findings** — name every finding recorded as `Decision (Tech Debt — user-deferred)` or `Decision (Tech Debt — auto-recorded)` during the run and offer to fix any of them now. If the user picks one, re-delegate it to the `crafter-implementer` *(Skill directive level: caveman-full; ponytail — see Pre-Spawn Gate above.)* and re-check the uncommitted fix with both agents in parallel, as in Step 5 (f.4): a `crafter-checker` delta pass and a `crafter-reviewer` pass on the range `working tree` restricted to the files the fix changed as the Implementer reports them *(Skill directive level for both: caveman-lite; no ponytail — see Pre-Spawn Gate above.)*.
 6. **Suggest session wrap-up** — if there is more to do, suggest the user run `/clear` and start the next task with `/crafter-do` or `/crafter-debug`.
 
 **Do not end the conversation until all 6 items above are addressed.**

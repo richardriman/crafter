@@ -78,10 +78,14 @@ Independent of the caveman and ponytail markers, and emitted on **every** spawn:
 
 Always English regardless of the user's language: code, identifiers, file paths, required headings, table column names, finding header lines, status-line formats, every persistent file (`.crafter/*`, task files, plans — see `rules/task-lifecycle.md`), and — the same carve-out the caveman directive carries in item 1 above — any deviation/discovery or classification text bound for a buffer entry (`[uat-worthy]`/`[gap-worthy]`, auto-routing lines): `crafter pr-body` renders it into the PR body and the buffers under `.crafter/run/` are persistent files. Crafter targets no specific language; it follows whichever one the user writes in.
 
-The language line, the no-filler rule below, and the skill directives block are **not task context** — they shape the report, not the judgment. They are the only things besides the change range that the context-free `crafter-reviewer` receives.
+The language line, the no-filler rule below, and the skill directives block are **not task context** — they shape the report, not the judgment. They are the only things besides the change range — and, when the target is not the current directory, a `repository: <path>` line (§ Target Repository) — that the context-free `crafter-reviewer` receives.
 
 **No-filler rule (always on, language-independent).** The spawn prompt always carries the following, regardless of the caveman/ponytail markers and of the user's language — it replaces caveman for non-English users and is cheaper than a style directive:
 
 - The returned report contains no greeting, no preamble or intro sentence, no closing summary or "overall" verdict, no pleasantries, and no hedging filler.
 - Only the sections the agent's output format mandates, in order.
 - Free-text cells and paragraphs say what is needed in the fewest sentences.
+
+## Target Repository (always on)
+
+In `/crafter-do` (and any skill that resolves `PROJECT_PATH`), when `PROJECT_PATH` is not `.`, **every** agent spawn — Analyzer, Planner, every Implementer (including the ARCHITECTURE.md check and deferred-finding fixes), Checker, Reviewer — carries the line `repository: {PROJECT_PATH}`. The agent runs `git`, `gh`, and tests in that repository, and every path in prompts, task-file contracts, file lists, and reports is relative to `{PROJECT_PATH}`: the orchestrator passes context files as `{CRAFTER_DIR}/ARCHITECTURE.md`, never `{PROJECT_PATH}/{CRAFTER_DIR}/...`, and passes file lists from the Implementer's report unchanged. Like the language line, the repository line is **not task context** — it only locates the code.
