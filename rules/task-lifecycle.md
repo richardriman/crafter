@@ -5,10 +5,20 @@
 - Location: `{PROJECT_PATH}/{CRAFTER_DIR}/tasks/<filename>.md` — where `PROJECT_PATH` and `CRAFTER_DIR` are determined by the orchestrator's project/context resolution step (see `skills/crafter-do/SKILL.md`).
 - Format: `YYYYMMDD-<topic>.md`
 - Topic derivation from branch: get the git branch name from the project directory (e.g., `git -C {PROJECT_PATH} branch --show-current`) and sanitize it (non-alphanumeric characters become dashes, collapse consecutive dashes, lowercase). No prefix stripping — the full branch name is preserved for traceability.
-- On main/master for fresh work: derive a proposed topic branch from the user's request (first few meaningful words, slug-ified using the same sanitization rules) and choose a suitable conventional prefix such as `fix/`, `feature/`, `refactor/`, `docs/`, or `chore/` based on intent. Present the proposed branch to the user and ask whether to create/switch to it before task creation. Do not silently keep working on main/master.
+- On main/master for fresh work: derive a proposed topic branch from the user's request per § Conventions precedence below — by default the first few meaningful words, slug-ified using the same sanitization rules, with a suitable conventional prefix such as `fix/`, `feature/`, `refactor/`, `docs/`, or `chore/` based on intent. Present the proposed branch to the user and ask whether to create/switch to it before task creation. Do not silently keep working on main/master.
 - Examples: branch `feat/add-health-check` → `20260220-feat-add-health-check.md`; branch `RR-do-cool-thing` → `20260220-rr-do-cool-thing.md`
 - Store the exact current git branch in task metadata as `**Work branch:** <branch>`. This field is the deterministic source of truth for where the task must be resumed/executed.
 - **Language:** All task file content — topic slug, request description, plan, decisions, outcome — must always be written in English, regardless of the user's conversation language. This reinforces the core rule: "Persistent files (.crafter/*, saved plans): always English."
+
+## Conventions precedence
+
+Defined conventions win over Crafter's defaults. For a proposed branch name, use the first that applies:
+
+1. The `### Conventions` branch naming in the workspace description, when a workspace is detected (`rules/workspace.md`).
+2. Otherwise the strictest branch-naming convention among the touched repos' own `CLAUDE.md` / `AGENTS.md` (today: the repo at `PROJECT_PATH`) — e.g. one that requires a tracker ID beats one that does not.
+3. Otherwise Crafter's fallback: `<prefix>/<slug>` as above.
+
+Include an issue-tracker ID when the request carries one. If the convention expects an ID and none is known, propose the name with a placeholder in the existing branch question and let the user fill it in or drop it — never a separate gate, never required. With no defined convention, branch proposals are unchanged.
 
 ## Resume Detection
 

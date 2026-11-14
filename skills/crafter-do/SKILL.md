@@ -11,6 +11,7 @@ Read and follow these rules:
 - `{CRAFTER_HOME}/rules/do-workflow.md`
 - `{CRAFTER_HOME}/rules/delegation.md`
 - `{CRAFTER_HOME}/rules/task-lifecycle.md`
+- `{CRAFTER_HOME}/rules/workspace.md`
 
 ## Skill options
 
@@ -75,6 +76,10 @@ The supported flags are `--ext` and `--auto`. **`--fast` was removed.** If it is
 
 Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow — task files, context files, everything you read or write yourself. Paths handed to agents are relative to `{PROJECT_PATH}` instead (`rules/delegation.md` § Target Repository).
 
+## Workspace Detection
+
+**Fully orchestrator-side — do NOT delegate.** Run the detection in `{CRAFTER_HOME}/rules/workspace.md` § Detection, starting at the resolved `PROJECT_PATH` (not the cwd). It never changes `PROJECT_PATH` or `CRAFTER_DIR`. If a workspace is detected, read its description for orientation and apply § Phase 1 behavior there; otherwise continue exactly as without it.
+
 ---
 
 Read the project context files for basic orientation (if they exist):
@@ -100,7 +105,8 @@ Use this section to route the entire workflow without loading any step module in
 | Step | Purpose | Routes to |
 |------|---------|-----------|
 | Flag Validation | Reject `--fast`; set active flags | Project Resolution |
-| Project Resolution | Resolve `PROJECT_PATH` and `CRAFTER_DIR` | Read project context |
+| Project Resolution | Resolve `PROJECT_PATH` and `CRAFTER_DIR` | Workspace Detection |
+| Workspace Detection | Find a described workspace root (`rules/workspace.md`); read its description, one-sentence notice; `PROJECT_PATH` unchanged | Read project context |
 | Read project context | Load `STATE.md` (full) and `PROJECT.md` (Stack + How to Run only) | Startup |
 | **Startup** (inline) | Extension discovery (`--ext` only) → resume detection → completeness + scope. No spawn. | Step 2 (gaps), Step 3 (complete enough to plan, or draft plan), or Step 4 (approved plan) |
 | **Step 2** — Discuss / Research | Grilling frontier rounds; `crafter-analyzer` for codebase-dependent gaps | Step 3 |

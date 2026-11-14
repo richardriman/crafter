@@ -51,7 +51,8 @@ crafter/
 │   ├── debug-workflow.md        # Debug workflow rules
 │   ├── delegation.md            # Agent spawning instruction
 │   ├── post-change.md           # Shared post-change steps (docs check, commit, STATE update)
-│   └── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
+│   ├── task-lifecycle.md        # Task file lifecycle rules (create, update, close)
+│   └── workspace.md             # Workspace detection rule and `## Workspace` description shape
 ├── templates/                   # Templates for .crafter/ file initialization
 │   ├── ARCHITECTURE.md          # Template for target project's ARCHITECTURE.md
 │   ├── PROJECT.md               # Template for target project's PROJECT.md

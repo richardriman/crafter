@@ -124,6 +124,12 @@ These files are loaded on-demand by Crafter skills (for example `/crafter-do`, `
 
 If an existing project still uses legacy `.planning/`, Crafter can run with fallback and proactively offers migration to `.crafter/` using `git mv`.
 
+### Workspaces (multi-repo)
+
+A workspace is a root repo with several nested repos that only work together. Run `/crafter-map-project` in the workspace root (or in a folder with at least two nested git repos) and Crafter drafts a `## Workspace` section — repositories, relationships, conventions, how to run and test — for the root's `CLAUDE.md` / `AGENTS.md`; nothing is written until you approve it. Crafter detects a workspace by that section (the `## Workspace` heading with a `### Repositories` subsection inside it) or by `.crafter/WORKSPACE.md`, searching from the resolved project directory (`/crafter-map-project`: the current directory) up to your home directory (or up to the filesystem root when that directory is outside your home).
+
+Branch names and commit format follow the workspace's or the repo's own conventions when they define any; Crafter's `<prefix>/<slug>` branches and conventional commits are only the fallback. Multi-repo tasks are not supported yet: `/crafter-do` still changes one repo per run, and `--project <path>` remains the manual way to pick a nested repo.
+
 ## Orchestrator / Agent Architecture
 
 Crafter commands run as **orchestrators**: the main context window manages the workflow and communicates with you, while specialized agents do the actual work in fresh context windows.

@@ -369,6 +369,7 @@ install_to() {
   cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
   cp "$SCRIPT_DIR/rules/task-lifecycle.md" "$rules_dest/task-lifecycle.md"
+  cp "$SCRIPT_DIR/rules/workspace.md"      "$rules_dest/workspace.md"
 
   mkdir -p "$rules_dest/do"
   cp "$SCRIPT_DIR/rules/do/flag-validation.md"        "$rules_dest/do/flag-validation.md"
