@@ -45,6 +45,11 @@ Produce a structured analysis report covering:
 
 If existing `.crafter/` files (or legacy `.planning/` files) were provided or are present, also identify what is outdated or missing compared to the current codebase.
 
+**Workspace sub-case.** When the orchestrator says the run is in workspace mode:
+
+- Do **not** draft `STATE.md`.
+- At the workspace root, also draft the `## Workspace` section in the shape of the rules file the orchestrator points to (or the update to an existing one). Always include the `### Repositories` subsection — with the heading it forms the detection marker. Base it on evidence only: nested repos with `.git`, their base branches, remotes, and references between them (API clients, generated copies, shared translations, compose/run files). List as questions for the user anything the code cannot show — unclear relationships, external repos known only by URL, and conventions not written down. Do not invent repos, relationships or conventions.
+
 **Output:** annotated directory tree followed by the proposed context-file contents as clearly labeled markdown blocks ready for the orchestrator to present to the user for approval.
 
 ### (B) Research / Investigation

@@ -390,6 +390,7 @@ _EXPECTED_FILES_REL=(
   "crafter/rules/delegation.md"
   "crafter/rules/post-change.md"
   "crafter/rules/task-lifecycle.md"
+  "crafter/rules/workspace.md"
   "crafter/rules/do/flag-validation.md"
   "crafter/rules/do/project-resolution.md"
   "crafter/rules/do/extension-skills.md"

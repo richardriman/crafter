@@ -18,7 +18,7 @@ The orchestrator commits **automatically** — no user prompt for the commit its
 1. **Check passed** — the check pass (Checker and Reviewer) closed with no Critical or Major code findings and no unresolved drift; no Minor finding the user chose to fix remains; deferred Minor and remaining Suggestion findings are recorded as tech-debt Decisions.
 2. **Approval signal received** — via one of the paths defined in the phase summary approval gate in `{CRAFTER_HOME}/skills/crafter-do/SKILL.md` (auto-commit by default | explicit user approval when the manual-verification exception applies).
 
-Use conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`
+Use the commit format the repo's own `CLAUDE.md` / `AGENTS.md` defines; else the one in the workspace description's `### Conventions` (`rules/workspace.md`); else conventional commits format: `feat` / `fix` / `refactor` / `docs` / `chore` / `test`. The PR title stays the commit subject; PR title and label conventions are not applied yet.
 
 One logical change = one commit.
 
@@ -46,9 +46,9 @@ After the final phase's per-phase commit has landed, the orchestrator may produc
 - PROJECT.md / ARCHITECTURE.md updates
 - STATE.md update
 
-If any of these updates exist, bundle them into a **single** commit using conventional commits format. Do not create separate commits for docs and STATE.md. If none of these updates are needed, no follow-up commit is created.
+If any of these updates exist, bundle them into a **single** commit using the commit format from § COMMIT. Do not create separate commits for docs and STATE.md. If none of these updates are needed, no follow-up commit is created.
 
-This commit shares the same constraints as the per-phase commit: automatic, no push to remote, conventional commits format.
+This commit shares the same constraints as the per-phase commit: automatic, no push to remote, same commit format.
 
 ## STATE.md commit-hash backfill
 
