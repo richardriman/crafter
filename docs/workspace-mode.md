@@ -85,7 +85,7 @@ Single-repo projects behave exactly as today. Workspace mode activates only when
 
 - **Same branch name in every touched repo.**
 - **Work happens in git worktrees, never by switching branches in the main checkouts.** — Branch switching collided in practice.
-- **Worktrees are not created inside the workspace folder.** Exact layout relative to the devcontainer is decided in Phase 0.
+- **Worktrees are not created inside the workspace folder.** Each task gets a workspace instance next to the workspace; layout, git-in-container and sharing rules are in [workspace-mode-phase0.md](workspace-mode-phase0.md).
 - **Commit only when the check of the whole change passes.** — The green-commit rule applies to the task, not per repo.
 
 ### Check, review, delivery
@@ -126,6 +126,8 @@ Phases 0 and 1 can run in parallel; Phase 2 needs both.
 ## Open Questions
 
 ### Where do per-task worktrees live, and how does the devcontainer see them? (Phase 0)
+
+**Settled** — see [workspace-mode-phase0.md](workspace-mode-phase0.md).
 
 **Candidate under evaluation:** a per-task workspace instance outside the main folder — a worktree of the workspace root repo, plus worktrees of touched repos at their canonical nested paths on the task branch, and untouched repos at their base so the whole system runs. It gets its own isolated container stack (a second full checkout with its own compose project name already works in practice).
 
