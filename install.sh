@@ -350,13 +350,14 @@ install_to() {
 
   echo "Installing Crafter $label..."
 
-  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project" "$skills_dest/crafter-buffer" "$skills_dest/crafter-scaffold-task"
+  mkdir -p "$skills_dest/crafter-do" "$skills_dest/crafter-debug" "$skills_dest/crafter-status" "$skills_dest/crafter-map-project" "$skills_dest/crafter-buffer" "$skills_dest/crafter-scaffold-task" "$skills_dest/crafter-review"
   cp "$SCRIPT_DIR/skills/crafter-do/SKILL.md"             "$skills_dest/crafter-do/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-debug/SKILL.md"          "$skills_dest/crafter-debug/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-status/SKILL.md"         "$skills_dest/crafter-status/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-map-project/SKILL.md"    "$skills_dest/crafter-map-project/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-buffer/SKILL.md"         "$skills_dest/crafter-buffer/SKILL.md"
   cp "$SCRIPT_DIR/skills/crafter-scaffold-task/SKILL.md"  "$skills_dest/crafter-scaffold-task/SKILL.md"
+  cp "$SCRIPT_DIR/skills/crafter-review/SKILL.md"         "$skills_dest/crafter-review/SKILL.md"
 
   mkdir -p "$crafter_dest"
   cp "$SCRIPT_DIR/VERSION"                 "$crafter_dest/VERSION"
@@ -368,6 +369,7 @@ install_to() {
   cp "$SCRIPT_DIR/rules/delegation.md"     "$rules_dest/delegation.md"
   cp "$SCRIPT_DIR/rules/post-change.md"    "$rules_dest/post-change.md"
   cp "$SCRIPT_DIR/rules/task-lifecycle.md" "$rules_dest/task-lifecycle.md"
+  cp "$SCRIPT_DIR/rules/workspace.md"      "$rules_dest/workspace.md"
 
   mkdir -p "$rules_dest/do"
   cp "$SCRIPT_DIR/rules/do/flag-validation.md"        "$rules_dest/do/flag-validation.md"
@@ -393,6 +395,7 @@ install_to() {
   cp "$SCRIPT_DIR/agents/crafter-planner.md"     "$agents_dest/crafter-planner.md"
   cp "$SCRIPT_DIR/agents/crafter-implementer.md" "$agents_dest/crafter-implementer.md"
   cp "$SCRIPT_DIR/agents/crafter-checker.md"     "$agents_dest/crafter-checker.md"
+  cp "$SCRIPT_DIR/agents/crafter-reviewer.md"    "$agents_dest/crafter-reviewer.md"
   cp "$SCRIPT_DIR/agents/crafter-analyzer.md"    "$agents_dest/crafter-analyzer.md"
 
   # Resolve the {CRAFTER_HOME} placeholder to the concrete install path

@@ -9,7 +9,7 @@ Write the plan yourself, directly into the task file's `## Plan` section: a `**P
 ## Medium / Large — delegate to `crafter-planner`
 
 1. Spawn the `crafter-planner` agent.
-2. Provide it with: the complete user request, the completeness/refinement notes, the task file path, the scope classification, high-level pointers to relevant modules or areas of code, and a mention of `{PROJECT_PATH}/{CRAFTER_DIR}/ARCHITECTURE.md` if it exists (the Planner reads it itself). Do not inject file contents.
+2. Provide it with: the complete user request, the completeness/refinement notes, the task file path (repo-relative: `{CRAFTER_DIR}/tasks/<file>`), the scope classification, high-level pointers to relevant modules or areas of code, and a mention of `{CRAFTER_DIR}/ARCHITECTURE.md` if it exists (the Planner reads it itself). Do not inject file contents.
 3. The Planner writes the full plan directly to the task file and returns a structured summary. **Medium:** a flat step list with one contract for the whole task. **Large:** vertical phases with one contract per phase. Never a contract per step.
 4. Present the Planner's summary to the user. It must include:
    - **Approach** — the overall strategy in 1–2 sentences

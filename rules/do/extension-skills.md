@@ -28,6 +28,6 @@ Compatible extension skills may be considered at three workflow phases:
 
 - **Startup (completeness and scope)** — a skill whose `When-Applies` matches the request may contribute domain-specific completeness criteria.
 - **Step 4 (Execute)** — a skill may be consulted as a domain specialist during implementation delegation; matching is against the execution unit (the whole task for Small/Medium, the current phase for Large).
-- **Step 5 (Check)** — a skill may provide additional review criteria beyond the core Checker's checklist.
+- **Step 5 (Check)** — a skill may provide additional criteria as supplemental context for the core Checker. It is never passed to the Reviewer, which receives no task context.
 
 In all cases the core agent for that phase runs first and is authoritative. Extension skill findings are supplemental context.

@@ -38,14 +38,15 @@ Crafter commands run as orchestrators: the main context window manages the workf
 
 This matters because running planning, implementation, and checking all in one context leads to context rot, compaction, and hallucinations as the conversation grows. Each agent starts clean with only the context it needs.
 
-Four roles cover the full workflow:
+Five roles cover the full workflow:
 
 - **Planner** — proposes the implementation plan
 - **Implementer** — implements the approved contract it was handed (the whole task, or a whole phase)
-- **Checker** — checks drift against the contract and reviews the code for bugs, security issues, and unapproved deviations — in one pass
+- **Checker** — checks drift and verification evidence against the contract
+- **Reviewer** — reviews the change for bugs, security issues, and regressions with no task context, so the author's view does not anchor it
 - **Analyzer** — reads and maps the codebase for research and architecture work
 
-Each execution unit ends with one Checker pass: the whole task for Small and Medium, each phase for Large. Drift and code review are covered together in a single fresh-context pass, so there is no separate verification stage. When findings need fixing, the follow-up passes are narrowed to the files the fix touched.
+Each execution unit ends with one check pass: the whole task for Small and Medium, each phase for Large. The Checker and the Reviewer run in parallel, each in a fresh context, so there is no separate verification stage. When findings need fixing, the follow-up passes are narrowed to the files the fix touched.
 
 ---
 

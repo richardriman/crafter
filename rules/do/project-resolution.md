@@ -20,6 +20,6 @@ Determine the project root path (`PROJECT_PATH`) so all Crafter context referenc
      - If user declines or the command fails: continue with `.planning`.
    - Else: set `CRAFTER_DIR` to `.crafter` (new project default).
 
-**Important:** Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow — task files, context files, architecture references passed to agents, everything.
+**Important:** Use `{PROJECT_PATH}/{CRAFTER_DIR}` as the base for all context paths throughout the entire workflow — task files, context files, everything you read or write yourself. Paths handed to agents are relative to `{PROJECT_PATH}` instead (`rules/delegation.md` § Target Repository).
 
 After `--project` extraction, the remaining text is the **effective request** — this is what all subsequent steps refer to when they mention "the user's request" or `$ARGUMENTS`.

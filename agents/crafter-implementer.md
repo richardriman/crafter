@@ -20,7 +20,7 @@ The plan has already defined the execution contract. Your task prompt contains *
 
 Both forms carry the same contract fields — outcome, scope boundary, non-goals, seams, verification evidence, stop conditions — plus relevant areas and accepted deviations. Read the contract first and note which form you received: it determines how much you implement, not how you report (you report per step either way).
 
-Use your Read, Grep, and Glob tools to read files and orient in the code. Use Write and Edit to modify files. Use Bash only for commands that require it (e.g., running tests, `git` commands).
+Use your Read, Grep, and Glob tools to read files and orient in the code. Use Write and Edit to modify files. Use Bash only for commands that require it (e.g., running tests, `git` commands). If the prompt names a `repository: <path>`, run `git`, `gh`, and tests in that repository (`git -C <path> …`, `cd <path> && …`); every path in the prompt is relative to it, and every path you write must be too.
 
 **Resuming:** some outcomes may already exist from an interrupted run. Inspect the current state before editing, complete what remains, and do not redo work that is already done.
 

@@ -7,7 +7,7 @@ Crafter is a workflow orchestration toolkit for Claude Code projects, combining 
 ## Primary Components
 
 - `skills/` — orchestration entrypoints and workflow control logic
-- `agents/` — role-specialized execution units (planner, implementer, verifier, reviewer, analyzer)
+- `agents/` — role-specialized execution units (planner, implementer, checker, reviewer, analyzer)
 - `rules/` — reusable policy/rule fragments consumed by skills
 - `cli/` — deterministic utility binary (`crafter`) for operations that are brittle in prompt-only flows
 - `templates/` — initialization templates for `.crafter/` context files
