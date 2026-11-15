@@ -20,7 +20,7 @@ The orchestrator is a **dispatcher** only: it manages workflow, communicates wit
 | `crafter-implementer` | Executor — implements the approved contract it was given (the whole task for Small/Medium, one whole phase for Large), runs the relevant tests/typechecks, and reports evidence and deviations |
 | `crafter-analyzer` | Investigator — project mapping or research/investigation tasks |
 | `crafter-checker` | Contract checker — checks drift and verification evidence against the contract with the full task context (modes: full pass, delta pass); in a delta pass it reports the status of every prior finding, code findings included |
-| `crafter-reviewer` | Context-free adversarial code reviewer — reviews a change range (a PR, `base..head`, or the working tree, optionally restricted to paths) with no task context; runs in parallel with the Checker and standalone via `/crafter-review` |
+| `crafter-reviewer` | Context-free code reviewer — reviews a change range (a PR, `base..head`, or the working tree, optionally restricted to paths) with no task context; runs in parallel with the Checker and standalone via `/crafter-review` |
 
 ## Model Configuration
 
@@ -31,7 +31,7 @@ When spawning agents via the Task tool, pass the `model` parameter according to 
 | `crafter-planner` | `opus` | high | Opus 5.5 at high effort; plan errors propagate to every later step |
 | `crafter-implementer` | `opus` | medium | Opus 5.5 at medium effort; minimal diffs, terse reports |
 | `crafter-checker` | `opus` | medium | Opus 5.5 at medium effort; drift and evidence checks against an explicit contract |
-| `crafter-reviewer` | `opus` | high | Opus 5.5 at high effort; adversarial review without invented findings |
+| `crafter-reviewer` | `opus` | high | Opus 5.5 at high effort; context-free review of the change |
 | `crafter-analyzer` | `opus` | medium | Opus 5.5 at medium effort; research and root-cause investigation feed the plan |
 
 `opus` (Opus 5.5) replaced `fable`. `medium` is the Opus 5.5 default and matches Opus 5 at `high`; `high` is kept for Planner and Reviewer, where plan and review quality carry the most leverage; the Checker compares against an explicit contract, so `medium` suffices.

@@ -108,7 +108,7 @@ The installer no longer needs `node` to edit `settings.json` — all JSON mutati
 | `/crafter-debug <problem>` | Systematic, hypothesis-driven debugging workflow |
 | `/crafter-status` | Display current project state from `.crafter/STATE.md` (with `.planning` fallback) |
 | `/crafter-map-project` | Initialize or update `.crafter/` context files from codebase analysis |
-| `/crafter-review [--project <path>] [<PR>\|<base..head>]` | Context-free adversarial review of a PR, a commit range, or (with no argument) the working tree — works on any repository; `--project` picks a nested repository in a multi-repo workspace |
+| `/crafter-review [--project <path>] [<PR>\|<base..head>]` | Context-free review of a PR, a commit range, or (with no argument) the working tree — works on any repository; `--project` picks a nested repository in a multi-repo workspace |
 
 `/crafter-do` enforces change guardrails across planning, implementation, and checking: **Think Before Coding**, **Simplicity First**, **Surgical Changes**, and **Goal-Driven Execution**. Plans are execution contracts — one contract for the whole task under Small and Medium scope, one per vertical phase under Large — and each execution unit ends with a check pass in which a contract checker and a context-free code reviewer run in parallel.
 
@@ -141,7 +141,7 @@ This matters because running planning, implementation, and checking all in one c
 | **Planner** | Tech lead — writes the execution contract | `/crafter-do` PLAN step (Medium and Large; Small is planned inline) |
 | **Implementer** | Senior developer — implements the approved contract it was handed (the whole task, or a whole phase) and runs the relevant tests | `/crafter-do` EXECUTE step, `/crafter-debug` fix step |
 | **Checker** | QA engineer — checks drift and verification evidence against the contract, and judges whether each fix resolved its finding | `/crafter-do` CHECK step, `/crafter-debug` verification |
-| **Reviewer** | Adversarial code reviewer — sees only the change range, no task context, and looks for bugs, security issues, and regressions | `/crafter-do` CHECK step, `/crafter-debug` verification, `/crafter-review` |
+| **Reviewer** | Code reviewer — sees only the change range, no task context, and reviews that change | `/crafter-do` CHECK step, `/crafter-debug` verification, `/crafter-review` |
 | **Analyzer** | Architect-analyst — reads and maps the codebase | `/crafter-map-project`, Large scope research, `/crafter-debug` hypothesis |
 
 Agents for each role are defined as native Claude Code agents in `~/.claude/agents/`. The orchestrator spawns agents by name and provides each one with only the context it needs.

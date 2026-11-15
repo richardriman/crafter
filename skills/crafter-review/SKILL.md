@@ -1,6 +1,6 @@
 ---
 name: "crafter-review"
-description: "Context-free adversarial review of a PR, a base..head range, or the working tree"
+description: "Context-free review of a PR, a base..head range, or the working tree"
 ---
 
 Usage: `/crafter-review [--project <path>] [<PR>|<base..head>]` — a PR URL or number, a `base..head` range, or nothing for the working tree (uncommitted changes against `HEAD`, including untracked files). Optional paths after the range restrict the review to them; paths alone (no range) mean the working tree restricted to those paths. `--project <path>` reviews the git repository in that directory instead of the current one — for a workspace whose sub-directories are separate git repositories; restricting paths are then relative to that repository's root, not the current directory.
